@@ -89,7 +89,7 @@ export default function App({ username, email, plan }: { username: string; email
       <nav style={{ background: 'rgba(17,27,48,.97)', borderBottom: '1px solid rgba(201,168,76,.18)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(10px)', paddingTop: 'env(safe-area-inset-top)' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1.25rem', display: 'flex', alignItems: 'center', overflowX: 'auto' }}>
           <button onClick={() => setTab('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: '14px 0', marginRight: 24, flexShrink: 0 }}>
-            <img src="/icon-192.png" alt="" style={{ width: 26, height: 26, borderRadius: 7 }} />
+            <img src="/logo-guessbet.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
             <span style={{ fontFamily: "'Montserrat',sans-serif", fontWeight: 900, fontSize: 18, letterSpacing: '-.02em', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>GuessBet</span>
           </button>
           {(['home','calc','hist','mybet','premium'] as Tab[]).map((t) => {

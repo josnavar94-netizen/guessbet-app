@@ -63,7 +63,7 @@ a { color: inherit; text-decoration: none; }
 .auth-logo .brand img {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  object-fit: contain;
 }
 
 .auth-logo .brand span {
