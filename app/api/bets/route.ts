@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
+import { cookies } from 'next/headers';
 import { sql } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+
+const DEVICE_COOKIE = 'gb_device';
+const DEVICE_MAX_AGE = 60 * 60 * 24 * 365; // 1 año
+
+function getClientIp(req: NextRequest): string | null {
+  const fwd = req.headers.get('x-forwarded-for');
+  return fwd ? fwd.split(',')[0].trim() : null;
+}
 
 export async function GET() {
   const s = await getSession();
@@ -17,26 +27,50 @@ export async function POST(req: NextRequest) {
     if (!match_name || !pick_label || !odds || !stake)
       return NextResponse.json({ error: 'Faltan campos.' }, { status: 400 });
 
+    const cookieStore = cookies();
+    let deviceId = cookieStore.get(DEVICE_COOKIE)?.value;
+    const isNewDevice = !deviceId;
+    if (!deviceId) deviceId = randomUUID();
+    const ip = getClientIp(req);
+
     const userResult = await sql`SELECT plan FROM users WHERE id=${s.userId}`;
     const plan = userResult.rows[0]?.plan ?? 'free';
 
     if (plan !== 'premium') {
-      const countResult = await sql`SELECT COUNT(*)::int AS count FROM bets WHERE user_id=${s.userId}`;
-      if (countResult.rows[0].count >= 1) {
+      const userCount = await sql`
+        SELECT COUNT(*)::int AS count FROM bets
+        WHERE user_id=${s.userId} AND created_at::date = CURRENT_DATE
+      `;
+      const deviceCount = !isNewDevice
+        ? await sql`
+            SELECT COUNT(*)::int AS count FROM bets
+            WHERE device_id=${deviceId} AND created_at::date = CURRENT_DATE
+          `
+        : null;
+      if (userCount.rows[0].count >= 1 || (deviceCount && deviceCount.rows[0].count >= 1)) {
         return NextResponse.json(
-          { error: 'Límite de apuestas alcanzado. Hazte PRO para apostar sin límites.' },
+          { error: 'Tu plan Free permite 1 apuesta por día. Hazte PRO para apostar sin límites.' },
           { status: 403 }
         );
       }
     }
 
     const result = await sql`
-      INSERT INTO bets (user_id, match_name, pick_label, odds, stake, ev, bookie, competition, match_date, result, pl)
+      INSERT INTO bets (user_id, match_name, pick_label, odds, stake, ev, bookie, competition, match_date, result, pl, device_id, ip)
       VALUES (${s.userId}, ${match_name}, ${pick_label}, ${odds}, ${stake},
-              ${ev ?? null}, ${bookie ?? null}, ${competition ?? 'Mundial 2026'}, ${match_date ?? null}, 'open', 0)
+              ${ev ?? null}, ${bookie ?? null}, ${competition ?? 'Mundial 2026'}, ${match_date ?? null}, 'open', 0,
+              ${deviceId}, ${ip})
       RETURNING *
     `;
-    return NextResponse.json({ bet: result.rows[0] });
+    const res = NextResponse.json({ bet: result.rows[0] });
+    res.cookies.set(DEVICE_COOKIE, deviceId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: DEVICE_MAX_AGE,
+      path: '/',
+    });
+    return res;
   } catch (err) {
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }

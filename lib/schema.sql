@@ -26,3 +26,8 @@ CREATE TABLE IF NOT EXISTS bets (
 );
 
 CREATE INDEX IF NOT EXISTS idx_bets_user_id ON bets(user_id);
+
+-- Migración: antiabuso multi-cuenta (ejecutar una vez en Vercel Storage → Query)
+ALTER TABLE bets ADD COLUMN IF NOT EXISTS device_id VARCHAR(64);
+ALTER TABLE bets ADD COLUMN IF NOT EXISTS ip VARCHAR(45);
+CREATE INDEX IF NOT EXISTS idx_bets_device_id ON bets(device_id);
