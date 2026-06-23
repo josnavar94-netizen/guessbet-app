@@ -17,18 +17,18 @@ export default function Landing() {
     <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f0ece0', fontFamily: "'Outfit', sans-serif" }}>
 
       {/* NAV */}
-      <nav style={{ borderBottom: '1px solid rgba(201,168,76,.15)', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60, position: 'sticky', top: 0, background: 'rgba(10,15,30,.95)', backdropFilter: 'blur(10px)', zIndex: 100 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/icon-192.png?v=2" alt="" style={{ width: 28, height: 28, borderRadius: 7 }} />
-          <span style={{ fontFamily: "'Montserrat',sans-serif", fontWeight: 900, fontSize: 20, letterSpacing: '-.02em', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+      <nav style={{ borderBottom: '1px solid rgba(201,168,76,.15)', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 60, position: 'sticky', top: 0, background: 'rgba(10,15,30,.95)', backdropFilter: 'blur(10px)', zIndex: 100, paddingTop: 'env(safe-area-inset-top)' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0, minWidth: 0 }}>
+          <img src="/icon-192.png?v=2" alt="" style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0 }} />
+          <span style={{ fontFamily: "'Montserrat',sans-serif", fontWeight: 900, fontSize: 'clamp(15px,4.5vw,20px)', letterSpacing: '-.02em', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', whiteSpace: 'nowrap' }}>
             GuessBet
           </span>
         </span>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <a href="/login" style={{ height: 36, padding: '0 16px', display: 'inline-flex', alignItems: 'center', fontSize: 13, fontWeight: 600, color: '#c9a84c', border: '1px solid rgba(201,168,76,.3)', borderRadius: 8, textDecoration: 'none' }}>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <a href="/login" style={{ height: 34, padding: '0 10px', display: 'inline-flex', alignItems: 'center', fontSize: 12, fontWeight: 600, color: '#c9a84c', border: '1px solid rgba(201,168,76,.3)', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap' }}>
             Iniciar sesión
           </a>
-          <a href="/register" style={{ height: 36, padding: '0 16px', display: 'inline-flex', alignItems: 'center', fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', borderRadius: 8, textDecoration: 'none' }}>
+          <a href="/register" style={{ height: 34, padding: '0 10px', display: 'inline-flex', alignItems: 'center', fontSize: 12, fontWeight: 700, background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap' }}>
             Crear cuenta
           </a>
         </div>
