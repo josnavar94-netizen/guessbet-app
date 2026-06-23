@@ -6,7 +6,12 @@ import { modelProbs, getH2H, MODEL, WC_REAL, FLAG_CODES, FIXTURES } from '@/lib/
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
   const code = FLAG_CODES[name];
   if (!code) return null;
-  return <img src={`https://flagcdn.com/h${size === 16 ? 20 : 40}/${code}.png`} alt="" style={{ height: size, width: 'auto', borderRadius: 2, flexShrink: 0, verticalAlign: 'middle' }} />;
+  const width = Math.round(size * 1.34);
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width, height: size, borderRadius: 2, overflow: 'hidden', flexShrink: 0, verticalAlign: 'middle' }}>
+      <img src={`https://flagcdn.com/h${size === 16 ? 20 : 40}/${code}.png`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    </span>
+  );
 }
 
 type Bet = { label: string; prob: number; odd: number };
@@ -206,12 +211,12 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 32px 1fr', gap: 8, marginBottom: 10, alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
             {FLAG_CODES[home] && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><Flag name={home} /></span>}
-            <input value={home} onChange={e => setHome(e.target.value)} style={{ ...inp, paddingLeft: FLAG_CODES[home] ? 34 : 12 }} />
+            <input value={home} onChange={e => setHome(e.target.value)} style={{ ...inp, paddingLeft: FLAG_CODES[home] ? 38 : 12 }} />
           </div>
           <div style={{ textAlign: 'center', fontSize: 11, color: '#7a8aaa' }}>VS</div>
           <div style={{ position: 'relative' }}>
             {FLAG_CODES[away] && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><Flag name={away} /></span>}
-            <input value={away} onChange={e => setAway(e.target.value)} style={{ ...inp, paddingLeft: FLAG_CODES[away] ? 34 : 12 }} />
+            <input value={away} onChange={e => setAway(e.target.value)} style={{ ...inp, paddingLeft: FLAG_CODES[away] ? 38 : 12 }} />
           </div>
         </div>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#7a8aaa', cursor: 'pointer' }}>

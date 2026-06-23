@@ -12,7 +12,12 @@ type Tab = 'home' | 'calc' | 'hist' | 'mybet' | 'premium';
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
   const code = FLAG_CODES[name];
   if (!code) return null;
-  return <img src={`https://flagcdn.com/h${size <= 16 ? 20 : 40}/${code}.png`} alt="" style={{ height: size, width: 'auto', borderRadius: 2, flexShrink: 0, verticalAlign: 'middle' }} />;
+  const width = Math.round(size * 1.34);
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width, height: size, borderRadius: 2, overflow: 'hidden', flexShrink: 0, verticalAlign: 'middle' }}>
+      <img src={`https://flagcdn.com/h${size <= 16 ? 20 : 40}/${code}.png`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    </span>
+  );
 }
 
 type DbBet = {
