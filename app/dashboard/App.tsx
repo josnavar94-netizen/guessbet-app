@@ -164,7 +164,7 @@ export default function App({ username, email, plan }: { username: string; email
         </div>
 
         {/* Fila 2: pestañas — con su propio scroll horizontal */}
-        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1.25rem', display: 'flex', alignItems: 'center', overflowX: 'auto', borderTop: '1px solid rgba(201,168,76,.08)' }}>
+        <div className="h-scroll" style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1.25rem', display: 'flex', alignItems: 'center', overflowX: 'auto', borderTop: '1px solid rgba(201,168,76,.08)' }}>
           {(['home','calc','hist','mybet','premium'] as Tab[]).map((t) => {
             const labels: Record<Tab,string> = { home: 'Inicio', calc: 'Analizar un partido', hist: 'Resultados pasados', mybet: 'Mis apuestas', premium: 'Premium', account: 'Mi cuenta' };
             return (
@@ -422,7 +422,7 @@ function HistTab() {
     <div>
       <h1 style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:26, marginBottom:4 }}>Partidos ya jugados</h1>
       <p style={{ fontSize:13, color:'#7a8aaa', marginBottom:'1.5rem' }}>Resultados reales del Mundial 2026</p>
-      <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:8, marginBottom:'1.25rem', scrollbarWidth:'none' }}>
+      <div className="h-scroll" style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:8, marginBottom:'1.25rem', scrollbarWidth:'none' }}>
         {[{key:'all',day:'Todo',month:`${results.length} partidos`,count:0},...dateKeys.map(k=>({key:k,day:k.split('-')[2],month:months[k.split('-')[1]]||'',count:byDate[k].count}))].map(chip => (
           <button key={chip.key} onClick={() => setSelectedDate(chip.key)} style={{ flexShrink:0, background:selectedDate===chip.key?'rgba(201,168,76,.15)':'var(--sur)', border:`1px solid ${selectedDate===chip.key?'rgba(201,168,76,.4)':'rgba(201,168,76,.15)'}`, borderRadius:11, padding:'8px 14px', cursor:'pointer', textAlign:'center', minWidth:60 }}>
             <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:18, color:selectedDate===chip.key?'#c9a84c':'#f0ece0', lineHeight:1 }}>{chip.day}</div>

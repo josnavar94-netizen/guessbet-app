@@ -11,6 +11,8 @@
   .install-grid { grid-template-columns: 1fr !important; }
 }
 
+.h-scroll { touch-action: pan-x; overscroll-behavior-x: contain; }
+
 :root {
   --bg: #0a0f1e;
   --sur: #111b30;
@@ -37,7 +39,6 @@ html, body {
   max-width: 100vw;
   overflow-x: hidden;
   overscroll-behavior-y: none;
-  touch-action: pan-y;
 }
 
 img, table { max-width: 100%; }
