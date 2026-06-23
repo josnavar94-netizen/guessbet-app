@@ -135,6 +135,8 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
     { label: `Gana ${home} (1)`, prob: result.p.home, oddKey: 'home' },
     { label: 'Empatan (X)', prob: result.p.draw, oddKey: 'draw' },
     { label: `Gana ${away} (2)`, prob: result.p.away, oddKey: 'away' },
+    { label: 'Más de 2.5 goles', prob: result.p.over25, oddKey: 'over' },
+    { label: 'Menos de 2.5 goles', prob: result.p.under25, oddKey: 'under' },
     { label: 'Ambos equipos anotan', prob: result.p.btts, oddKey: 'btts' },
     { label: 'NO ambos anotan', prob: result.bttsNo, oddKey: 'bttsno' },
     { label: `Gana ${home} o empatan`, prob: result.dcHomeDraw, oddKey: 'dc1x' },
@@ -191,7 +193,7 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
         </div>
         <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>¿Cuántos goles habrá?</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
-          {[['btts', 'Ambos anotan']].map(([k, ph]) => (
+          {[['over', 'Más de 2.5 goles'], ['under', 'Menos de 2.5 goles'], ['btts', 'Ambos anotan']].map(([k, ph]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
               <span style={{ fontSize: 13 }}>{ph}</span>
               <input type="number" step="0.01" placeholder="1.90" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
