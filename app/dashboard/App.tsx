@@ -63,6 +63,12 @@ export default function App({ username, email, plan }: { username: string; email
 
   useEffect(() => { fetchBets(); fetchUsage(); }, [fetchBets, fetchUsage]);
 
+  useEffect(() => {
+    const onPullRefresh = () => { fetchBets(); fetchUsage(); };
+    window.addEventListener('app:refresh', onPullRefresh);
+    return () => window.removeEventListener('app:refresh', onPullRefresh);
+  }, [fetchBets, fetchUsage]);
+
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/');

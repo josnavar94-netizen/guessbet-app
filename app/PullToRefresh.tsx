@@ -53,7 +53,12 @@ export default function PullToRefresh({ children }: { children: React.ReactNode 
         setRefreshing(true);
         setPull(THRESHOLD);
         navigator.vibrate?.(20);
-        window.location.reload();
+        window.dispatchEvent(new CustomEvent('app:refresh'));
+        setTimeout(() => {
+          setRefreshing(false);
+          setPull(0);
+          setArmed(false);
+        }, 700);
       } else {
         setPull(0);
         setArmed(false);
