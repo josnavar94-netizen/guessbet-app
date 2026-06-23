@@ -420,7 +420,11 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
                       <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, userOdd, fairOdd)} style={{ width: 16, height: 16, accentColor: '#3aae6c', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</div>
-                        <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>Modelo {(m.prob * 100).toFixed(1)}% {uOdd ? `· Tu cuota ${((1 / uOdd) * 100).toFixed(1)}%` : ''}</div>
+                        <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>
+                          Modelo {(m.prob * 100).toFixed(1)}%
+                          {uOdd && <> · Tu cuota {((1 / uOdd) * 100).toFixed(1)}%</>}
+                          {uOdd && <> · Dif. <span style={{ color: ev.cls === 'pos' ? '#3aae6c' : ev.cls === 'neg' ? '#d95050' : '#7a8aaa', fontWeight: 600 }}>{ev.txt}</span></>}
+                        </div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, color: '#6b9fd4', fontSize: 14 }}>{fairOdd > 0 ? fairOdd.toFixed(2) : '—'}</div>
