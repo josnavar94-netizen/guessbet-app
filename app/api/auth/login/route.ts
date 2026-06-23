@@ -19,7 +19,10 @@ export async function POST(req: NextRequest) {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return NextResponse.json({ error: 'Usuario o contraseña incorrectos.' }, { status: 401 });
 
-    await createSession({ userId: user.id, username: user.username, email: user.email, plan: user.plan });
+    const versionResult = await sql`UPDATE users SET session_version = session_version + 1 WHERE id=${user.id} RETURNING session_version`;
+    const sv = versionResult.rows[0].session_version;
+
+    await createSession({ userId: user.id, username: user.username, email: user.email, plan: user.plan, sv });
     return NextResponse.json({ ok: true, user: { id: user.id, username: user.username, email: user.email, plan: user.plan } });
   } catch (err) {
     console.error(err);

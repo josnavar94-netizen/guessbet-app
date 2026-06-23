@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       RETURNING id, email, username, plan
     `;
     const user = result.rows[0];
-    await createSession({ userId: user.id, username: user.username, email: user.email, plan: user.plan });
+    await createSession({ userId: user.id, username: user.username, email: user.email, plan: user.plan, sv: 0 });
     return NextResponse.json({ ok: true, user: { id: user.id, username: user.username, email: user.email, plan: user.plan } });
   } catch (err) {
     console.error(err);

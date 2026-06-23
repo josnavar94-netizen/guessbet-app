@@ -43,3 +43,6 @@ CREATE TABLE IF NOT EXISTS bet_usage (
 );
 CREATE INDEX IF NOT EXISTS idx_bet_usage_user_date ON bet_usage(user_id, used_date);
 CREATE INDEX IF NOT EXISTS idx_bet_usage_device_date ON bet_usage(device_id, used_date);
+
+-- Migración: sesión única por cuenta (ejecutar una vez en Vercel Storage → Query)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0;
