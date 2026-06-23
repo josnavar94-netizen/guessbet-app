@@ -370,40 +370,114 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
             ))}
           </div>
 
-          {/* Main markets — stacked cards (mobile-first) */}
-          {activeTab === 'main' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: '1rem' }}>
-              {mkts.map((m, i) => {
-                const userOdd = odds[m.oddKey] || '';
-                const uOdd = toD(userOdd);
-                const fairOdd = m.prob > 0 ? 1 / m.prob : 0;
-                const ev = eC(m.prob, uOdd);
-                const isSelected = selected.some(s => s.label === m.label);
-                const positive = ev.ev !== null && ev.ev > 5;
-                return (
-                  <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isSelected ? 'rgba(58,174,108,.08)' : 'var(--sur)', border: `1px solid ${isSelected ? 'rgba(58,174,108,.3)' : 'rgba(201,168,76,.12)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, userOdd, fairOdd)} style={{ width: 16, height: 16, accentColor: '#3aae6c', flexShrink: 0 }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</div>
-                      <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>Modelo {(m.prob * 100).toFixed(1)}% {uOdd ? `· Tu cuota ${((1 / uOdd) * 100).toFixed(1)}%` : ''}</div>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, color: '#6b9fd4', fontSize: 14 }}>{fairOdd > 0 ? fairOdd.toFixed(2) : '—'}</div>
-                      {ev.ev !== null && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 10, background: positive ? 'rgba(58,174,108,.18)' : 'rgba(201,168,76,.1)', color: positive ? '#3aae6c' : '#c9a84c' }}>{ev.txt}</span>}
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          )}
+          {/* Main markets — table (desktop) + stacked cards (mobile) */}
+          {activeTab === 'main' && (() => {
+            const rows = mkts.map((m, i) => {
+              const userOdd = odds[m.oddKey] || '';
+              const uOdd = toD(userOdd);
+              const fairOdd = m.prob > 0 ? 1 / m.prob : 0;
+              const ev = eC(m.prob, uOdd);
+              const isSelected = selected.some(s => s.label === m.label);
+              const positive = ev.ev !== null && ev.ev > 5;
+              return { m, i, userOdd, uOdd, fairOdd, ev, isSelected, positive };
+            });
+            return (
+              <>
+                <div className="mkt-table" style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, overflow: 'hidden', marginBottom: '1rem' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        {['','Tipo de apuesta','Probabilidad','Según tu cuota','Diferencia','Cuota justa',''].map((h,hi)=>(
+                          <th key={hi} style={{fontSize:10,fontWeight:700,color:'#7a8aaa',textTransform:'uppercase',letterSpacing:'.05em',padding:'8px 10px',borderBottom:'1px solid rgba(201,168,76,.12)',textAlign:'left'}}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map(({ m, i, userOdd, uOdd, fairOdd, ev, isSelected }) => (
+                        <tr key={i} style={{ background: isSelected ? 'rgba(58,174,108,.05)' : 'transparent' }}>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
+                            <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, userOdd, fairOdd)} style={{ width: 15, height: 15, accentColor: '#3aae6c' }} />
+                          </td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontWeight: 500, fontSize: 13 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</span>
+                          </td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{(m.prob * 100).toFixed(1)}%</td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{uOdd ? ((1 / uOdd) * 100).toFixed(1) + '%' : '—'}</td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13, color: ev.cls === 'pos' ? '#3aae6c' : ev.cls === 'neg' ? '#d95050' : '#7a8aaa', fontWeight: ev.cls !== 'neu' ? 700 : 400 }}>{ev.txt}</td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontFamily: "'Outfit',sans-serif", fontWeight: 700, color: '#6b9fd4', fontSize: 14 }}>{fairOdd > 0 ? fairOdd.toFixed(2) : '—'}</td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
+                            {ev.ev !== null && <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: ev.ev > 5 ? 'rgba(58,174,108,.13)' : 'rgba(201,168,76,.1)', color: ev.ev > 5 ? '#3aae6c' : '#c9a84c' }}>{ev.ev > 5 ? 'Conviene ✓' : 'No conviene'}</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-          {/* Secondary markets — stacked cards */}
+                <div className="mkt-cards" style={{ flexDirection: 'column', gap: 8, marginBottom: '1rem' }}>
+                  {rows.map(({ m, i, userOdd, uOdd, fairOdd, ev, isSelected, positive }) => (
+                    <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isSelected ? 'rgba(58,174,108,.08)' : 'var(--sur)', border: `1px solid ${isSelected ? 'rgba(58,174,108,.3)' : 'rgba(201,168,76,.12)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, userOdd, fairOdd)} style={{ width: 16, height: 16, accentColor: '#3aae6c', flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</div>
+                        <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>Modelo {(m.prob * 100).toFixed(1)}% {uOdd ? `· Tu cuota ${((1 / uOdd) * 100).toFixed(1)}%` : ''}</div>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, color: '#6b9fd4', fontSize: 14 }}>{fairOdd > 0 ? fairOdd.toFixed(2) : '—'}</div>
+                        {ev.ev !== null && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 10, background: positive ? 'rgba(58,174,108,.18)' : 'rgba(201,168,76,.1)', color: positive ? '#3aae6c' : '#c9a84c' }}>{ev.txt}</span>}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
+
+          {/* Secondary markets — table (desktop) + stacked cards (mobile) */}
           {activeTab === 'sec' && (
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: 11, color: '#7a8aaa', marginBottom: 8, lineHeight: 1.5 }}>
                 📐 Otras estimaciones del partido — cálculos aproximados, orientativos
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+              <div className="mkt-table" style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      {['','De qué se trata','Estimado','Referencia','Lo más probable','Cuota'].map((h,hi)=>(
+                        <th key={hi} style={{fontSize:10,fontWeight:700,color:'#7a8aaa',textTransform:'uppercase',letterSpacing:'.05em',padding:'8px 10px',borderBottom:'1px solid rgba(201,168,76,.12)',textAlign:'left'}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {secMkts.map((m, i) => {
+                      const hasPick = m.isOver !== null;
+                      const isSelected = selected.some(s => s.label === m.label + ': ' + m.pick);
+                      return (
+                        <tr key={i}>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
+                            {hasPick && m.fair && <input type="checkbox" checked={isSelected} onChange={() => toggleSecMarket(m.label + ': ' + m.pick, 0.55, m.fair!)} style={{ width: 15, height: 15, accentColor: '#3aae6c' }} />}
+                          </td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</span>
+                          </td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{m.est}</td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13, color: '#7a8aaa' }}>~{m.est - 1}</td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: hasPick ? 'rgba(58,174,108,.13)' : 'rgba(201,168,76,.1)', color: hasPick ? '#3aae6c' : '#c9a84c' }}>{m.pick}</span>
+                          </td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
+                            {m.fair ? <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 14, color: '#6b9fd4' }}>{m.fair.toFixed(2)}</span> : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <div style={{ padding: '10px 14px', fontSize: 11, color: '#7a8aaa' }}>Orientativo.</div>
+              </div>
+
+              <div className="mkt-cards" style={{ flexDirection: 'column', gap: 8 }}>
                 {secMkts.map((m, i) => {
                   const hasPick = m.isOver !== null;
                   const isSelected = selected.some(s => s.label === m.label + ': ' + m.pick);

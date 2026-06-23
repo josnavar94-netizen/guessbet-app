@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Montserrat:wght@800;900&display=swap');
 
+.mkt-cards { display: none; }
+.mkt-table { display: block; }
+@media (max-width: 700px) {
+  .mkt-cards { display: flex; }
+  .mkt-table { display: none; }
+}
+
 :root {
   --bg: #0a0f1e;
   --sur: #111b30;
