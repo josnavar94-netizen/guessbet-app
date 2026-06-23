@@ -16,6 +16,20 @@ export async function POST(req: NextRequest) {
     const { match_name, pick_label, odds, stake, ev, bookie, competition, match_date } = await req.json();
     if (!match_name || !pick_label || !odds || !stake)
       return NextResponse.json({ error: 'Faltan campos.' }, { status: 400 });
+
+    const userResult = await sql`SELECT plan FROM users WHERE id=${s.userId}`;
+    const plan = userResult.rows[0]?.plan ?? 'free';
+
+    if (plan !== 'premium') {
+      const countResult = await sql`SELECT COUNT(*)::int AS count FROM bets WHERE user_id=${s.userId}`;
+      if (countResult.rows[0].count >= 1) {
+        return NextResponse.json(
+          { error: 'Límite de apuestas alcanzado. Hazte PRO para apostar sin límites.' },
+          { status: 403 }
+        );
+      }
+    }
+
     const result = await sql`
       INSERT INTO bets (user_id, match_name, pick_label, odds, stake, ev, bookie, competition, match_date, result, pl)
       VALUES (${s.userId}, ${match_name}, ${pick_label}, ${odds}, ${stake},

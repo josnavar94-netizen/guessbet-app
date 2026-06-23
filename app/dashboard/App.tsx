@@ -56,7 +56,7 @@ export default function App({ username, email, plan }: { username: string; email
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
+    router.push('/');
   }
 
   async function saveBet(bet: Omit<DbBet, 'id' | 'result' | 'pl' | 'created_at'>) {
@@ -65,7 +65,13 @@ export default function App({ username, email, plan }: { username: string; email
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...bet, match_name: bet.match_name, pick_label: bet.pick_label }),
     });
-    if (res.ok) { await fetchBets(); setTab('mybet'); }
+    if (res.ok) {
+      await fetchBets();
+      setTab('mybet');
+    } else {
+      const data = await res.json().catch(() => null);
+      alert(data?.error || 'No se pudo guardar la apuesta.');
+    }
   }
 
   async function updateBet(id: number, result: 'won' | 'lost') {
