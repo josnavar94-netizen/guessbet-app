@@ -42,7 +42,7 @@ export default function PremiumTab({ plan }: { plan: string }) {
             <button
               onClick={() => setSelected('monthly')}
               style={{
-                textAlign: 'left', background: 'var(--sur)',
+                width: '100%', textAlign: 'left', background: 'var(--sur)', color: '#f0ece0', fontFamily: "'Outfit',sans-serif",
                 border: `1px solid ${selected === 'monthly' ? 'rgba(201,168,76,.4)' : 'rgba(201,168,76,.18)'}`,
                 borderRadius: 12, padding: '14px 16px', cursor: 'pointer',
               }}
@@ -57,7 +57,7 @@ export default function PremiumTab({ plan }: { plan: string }) {
             <button
               onClick={() => setSelected('annual')}
               style={{
-                position: 'relative', textAlign: 'left', background: 'var(--sur2)',
+                width: '100%', position: 'relative', textAlign: 'left', background: 'var(--sur2)', color: '#f0ece0', fontFamily: "'Outfit',sans-serif",
                 border: `2px solid ${selected === 'annual' ? '#c9a84c' : 'rgba(201,168,76,.25)'}`,
                 borderRadius: 12, padding: '14px 16px', cursor: 'pointer',
               }}
