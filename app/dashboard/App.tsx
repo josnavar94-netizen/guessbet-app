@@ -6,6 +6,7 @@ import { modelProbs, bestPick, getH2H, FLAG_CODES, FIXTURES, TOURNAMENTS, ACTIVE
 import CalcTab from './CalcTab';
 import PremiumTab from './PremiumTab';
 import InstallAppSection from '../InstallApp';
+import PullToRefresh from '../PullToRefresh';
 
 type Tab = 'home' | 'calc' | 'hist' | 'mybet' | 'premium';
 
@@ -130,13 +131,15 @@ export default function App({ username, email, plan }: { username: string; email
       </nav>
 
       {/* PAGES */}
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem' }}>
-        {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} />}
-        {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} />}
-        {tab === 'hist' && <HistTab />}
-        {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={deleteBet} />}
-        {tab === 'premium' && <PremiumTab plan={plan} />}
-      </div>
+      <PullToRefresh>
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem' }}>
+          {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} />}
+          {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} />}
+          {tab === 'hist' && <HistTab />}
+          {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={deleteBet} />}
+          {tab === 'premium' && <PremiumTab plan={plan} />}
+        </div>
+      </PullToRefresh>
     </div>
   );
 }
