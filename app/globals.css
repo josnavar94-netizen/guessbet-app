@@ -50,9 +50,23 @@ a { color: inherit; text-decoration: none; }
 }
 
 .auth-logo .brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Montserrat', sans-serif;
   font-size: 26px;
   font-weight: 900;
   letter-spacing: -.03em;
+}
+
+.auth-logo .brand img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.auth-logo .brand span {
   background: linear-gradient(135deg, #e8c96a 0%, #c9a84c 50%, #8a6a1f 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
