@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { modelProbs, bestPick, getH2H, FLAGS, FIXTURES, TOURNAMENTS, ACTIVE_TOURNAMENT } from '@/lib/model';
-import CalcPage from './CalcPage';
+import CalcTab from './CalcTab';
+import PremiumTab from './PremiumTab';
 
-type Tab = 'home' | 'calc' | 'hist' | 'mybet';
+type Tab = 'home' | 'calc' | 'hist' | 'mybet' | 'premium';
 
 type DbBet = {
   id: number;
@@ -80,14 +81,15 @@ export default function App({ username, email, plan }: { username: string; email
       {/* NAV */}
       <nav style={{ background: 'rgba(17,27,48,.97)', borderBottom: '1px solid rgba(201,168,76,.18)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(10px)', paddingTop: 'env(safe-area-inset-top)' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1.25rem', display: 'flex', alignItems: 'center', overflowX: 'auto' }}>
-          <button onClick={() => setTab('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '14px 0', marginRight: 24, flexShrink: 0 }}>
-            <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 18, letterSpacing: '-.02em', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>GuessBet</span>
+          <button onClick={() => setTab('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: '14px 0', marginRight: 24, flexShrink: 0 }}>
+            <img src="/icon-192.png" alt="" style={{ width: 26, height: 26, borderRadius: 7 }} />
+            <span style={{ fontFamily: "'Montserrat',sans-serif", fontWeight: 900, fontSize: 18, letterSpacing: '-.02em', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>GuessBet</span>
           </button>
-          {(['home','calc','hist','mybet'] as Tab[]).map((t) => {
-            const labels: Record<Tab,string> = { home: 'Inicio', calc: 'Analizar un partido', hist: 'Resultados pasados', mybet: 'Mis apuestas' };
+          {(['home','calc','hist','mybet','premium'] as Tab[]).map((t) => {
+            const labels: Record<Tab,string> = { home: 'Inicio', calc: 'Analizar un partido', hist: 'Resultados pasados', mybet: 'Mis apuestas', premium: 'Premium' };
             return (
-              <button key={t} onClick={() => setTab(t)} style={{ background: 'none', border: 'none', borderBottom: tab === t ? '2px solid #c9a84c' : '2px solid transparent', color: tab === t ? '#c9a84c' : '#7a8aaa', fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: 500, padding: '14px 12px', cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: -1 }}>
-                {labels[t]}
+              <button key={t} onClick={() => setTab(t)} style={{ background: 'none', border: 'none', borderBottom: tab === t ? '2px solid #c9a84c' : '2px solid transparent', color: tab === t ? '#c9a84c' : t === 'premium' ? '#c9a84c' : '#7a8aaa', fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: t === 'premium' ? 700 : 500, padding: '14px 12px', cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: -1 }}>
+                {t === 'premium' ? '★ Premium' : labels[t]}
               </button>
             );
           })}
@@ -102,9 +104,10 @@ export default function App({ username, email, plan }: { username: string; email
       {/* PAGES */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem' }}>
         {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} />}
-        {tab === 'calc' && <CalcPage onBetSaved={async () => { await fetchBets(); setTab('mybet'); }} />}
+        {tab === 'calc' && <CalcTab onRegister={saveBet} />}
         {tab === 'hist' && <HistTab />}
         {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={deleteBet} />}
+        {tab === 'premium' && <PremiumTab plan={plan} />}
       </div>
     </div>
   );
@@ -240,171 +243,6 @@ function HomeTab({ username, setTab, bets }: { username: string; setTab: (t: Tab
 }
 
 // ─────────────────────────────────────────────
-// CALC TAB
-// ─────────────────────────────────────────────
-function CalcTab({ saveBet }: { saveBet: Function }) {
-  const upcoming = FIXTURES.flatMap(g => g.m.filter(m => !m.score).map(m => ({ ...m, group: g.g })));
-  const [selIdx, setSelIdx] = useState(0);
-  const [home, setHome] = useState(upcoming[0]?.h || '');
-  const [away, setAway] = useState(upcoming[0]?.a || '');
-  const [neutral, setNeutral] = useState(true);
-  const [odds, setOdds] = useState({ home:'',draw:'',away:'',over:'',under:'',btts:'' });
-  const [result, setResult] = useState<any>(null);
-  const [selected, setSelected] = useState<{label:string,prob:number,odd:number}[]>([]);
-  const [stake, setStake] = useState('1');
-  const [bookie, setBookie] = useState('Coolbet');
-  const [live, setLive] = useState(false);
-  const [liveMin, setLiveMin] = useState('45');
-  const [liveGh, setLiveGh] = useState('0');
-  const [liveGa, setLiveGa] = useState('0');
-
-  function calc() {
-    const p = modelProbs(home, away, neutral);
-    setResult({ p, home, away });
-  }
-
-  function toggleMarket(label: string, prob: number, odd: number) {
-    setSelected(prev => prev.find(m => m.label === label) ? prev.filter(m => m.label !== label) : [...prev, { label, prob, odd: odd||1/prob }]);
-  }
-
-  const combOdd = selected.reduce((a, m) => a * m.odd, 1);
-  const combProb = selected.reduce((a, m) => a * m.prob, 1);
-
-  async function register() {
-    if (!selected.length) return;
-    const pickText = selected.length > 1 ? `Combinada (${selected.length}): ${selected.map(m=>m.label).join(' + ')}` : selected[0].label;
-    await saveBet({ match_name: `${home} vs ${away}`, pick_label: pickText, odds: parseFloat(combOdd.toFixed(2)), stake: parseFloat(stake)||1, ev: parseFloat(((combProb*combOdd-1)*100).toFixed(1)), bookie, competition: 'Mundial 2026', match_date: null });
-    setSelected([]);
-  }
-
-  const mkts = result ? [
-    {label:`Gana ${home}`,prob:result.p.home},{label:'Empatan',prob:result.p.draw},{label:`Gana ${away}`,prob:result.p.away},
-    {label:'Más de 2.5 goles',prob:result.p.over25},{label:'Menos de 2.5 goles',prob:result.p.under25},{label:'Ambos anotan',prob:result.p.btts},
-  ] : [];
-
-  const inp = (style?: React.CSSProperties) => ({ style: { width:'100%', background:'var(--sur2)', border:'1px solid rgba(201,168,76,.24)', color:'#f0ece0', fontFamily:"'Outfit',sans-serif", fontSize:14, padding:'0 12px', height:42, borderRadius:9, ...style } });
-
-  return (
-    <div style={{ maxWidth: 780 }}>
-      <h1 style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:26, marginBottom:6 }}>¿Conviene apostar a este partido?</h1>
-      <p style={{ fontSize:13, color:'#7a8aaa', marginBottom:'1.5rem' }}>Ingresa las cuotas de tu casa y te decimos si hay ventaja.</p>
-
-      <div style={{ background:'var(--sur)', border:'1px solid var(--b)', borderRadius:12, padding:'1.25rem', marginBottom:'1rem' }}>
-        <div style={{ fontSize:11, fontWeight:700, color:'#7a8aaa', textTransform:'uppercase', marginBottom:10 }}>1 — Elige el partido</div>
-        <select onChange={e => { const i=parseInt(e.target.value); setSelIdx(i); setHome(upcoming[i].h); setAway(upcoming[i].a); setResult(null); setSelected([]); }} {...inp()}>
-          {upcoming.map((m,i) => <option key={i} value={i}>{m.t} · {m.h} vs {m.a}</option>)}
-        </select>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 32px 1fr', gap:8, marginTop:10, alignItems:'center' }}>
-          <input value={home} onChange={e=>setHome(e.target.value)} {...inp()} />
-          <div style={{ textAlign:'center', fontSize:11, color:'#7a8aaa' }}>VS</div>
-          <input value={away} onChange={e=>setAway(e.target.value)} {...inp()} />
-        </div>
-        <label style={{ display:'flex', alignItems:'center', gap:8, marginTop:10, fontSize:13, color:'#7a8aaa', cursor:'pointer' }}>
-          <input type="checkbox" checked={neutral} onChange={e=>setNeutral(e.target.checked)} style={{ accentColor:'#c9a84c' }} />
-          Sede neutral
-        </label>
-      </div>
-
-      <div style={{ background:'var(--sur)', border:'1px solid var(--b)', borderRadius:12, padding:'1.25rem', marginBottom:'1rem' }}>
-        <div style={{ fontSize:11, fontWeight:700, color:'#7a8aaa', textTransform:'uppercase', marginBottom:10 }}>2 — Cuotas de tu casa (opcional)</div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:8 }}>
-          {(['home','draw','away'] as const).map(k => (
-            <input key={k} type="number" step="0.01" placeholder={k==='home'?home:k==='away'?away:'Empate'} value={odds[k]} onChange={e=>setOdds({...odds,[k]:e.target.value})} {...inp()} />
-          ))}
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-          <input type="number" step="0.01" placeholder="Más de 2.5" value={odds.over} onChange={e=>setOdds({...odds,over:e.target.value})} {...inp()} />
-          <input type="number" step="0.01" placeholder="Menos de 2.5" value={odds.under} onChange={e=>setOdds({...odds,under:e.target.value})} {...inp()} />
-        </div>
-        <button onClick={calc} style={{ width:'100%', height:46, marginTop:12, background:'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color:'#0a0f1e', fontFamily:"'Outfit',sans-serif", fontSize:15, fontWeight:700, border:'none', borderRadius:10, cursor:'pointer' }}>
-          Ver el análisis
-        </button>
-      </div>
-
-      {result && (
-        <>
-          <div style={{ background:'var(--sur)', border:'1px solid rgba(201,168,76,.2)', borderRadius:12, padding:'1rem 1.25rem', marginBottom:'1rem', display:'flex', gap:24, alignItems:'center' }}>
-            <div><div style={{ fontSize:11, color:'#7a8aaa' }}>{home}</div><div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:28, color:'#c9a84c' }}>{result.p.xgH.toFixed(2)}</div></div>
-            <div style={{ color:'#7a8aaa' }}>vs</div>
-            <div><div style={{ fontSize:11, color:'#7a8aaa' }}>{away}</div><div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:28, color:'#c9a84c' }}>{result.p.xgA.toFixed(2)}</div></div>
-            <div style={{ fontSize:11, color:'#7a8aaa', marginLeft:'auto' }}>Goles esperados por equipo</div>
-          </div>
-
-          <div style={{ background:'var(--sur)', border:'1px solid var(--b)', borderRadius:12, overflow:'hidden', marginBottom:'1rem' }}>
-            <table style={{ width:'100%', borderCollapse:'collapse' }}>
-              <thead>
-                <tr>
-                  {['','Tipo de apuesta','Probabilidad','Cuota justa',''].map((h,i) => (
-                    <th key={i} style={{ fontSize:10, fontWeight:700, color:'#7a8aaa', textTransform:'uppercase', letterSpacing:'.05em', padding:'8px 10px', borderBottom:'1px solid rgba(201,168,76,.12)', textAlign:'left' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {mkts.map((m, i) => {
-                  const fairOdd = m.prob > 0 ? (1/m.prob).toFixed(2) : '—';
-                  const isSelected = selected.some(s => s.label === m.label);
-                  const userOdd = [odds.home,odds.draw,odds.away,odds.over,odds.under,odds.btts][i];
-                  const uOdd = userOdd ? parseFloat(userOdd) : null;
-                  const ev = uOdd ? ((m.prob * uOdd - 1)*100).toFixed(1) : null;
-                  return (
-                    <tr key={i}>
-                      <td style={{ padding:'9px 10px', borderBottom:'1px solid rgba(201,168,76,.08)' }}>
-                        <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, uOdd||1/m.prob)} style={{ width:15, height:15, accentColor:'#3aae6c' }} />
-                      </td>
-                      <td style={{ padding:'9px 10px', borderBottom:'1px solid rgba(201,168,76,.08)', fontWeight:500, fontSize:13 }}>{m.label}</td>
-                      <td style={{ padding:'9px 10px', borderBottom:'1px solid rgba(201,168,76,.08)', fontSize:13 }}>{(m.prob*100).toFixed(1)}%</td>
-                      <td style={{ padding:'9px 10px', borderBottom:'1px solid rgba(201,168,76,.08)', fontFamily:"'Outfit',sans-serif", fontWeight:700, color:'#6b9fd4', fontSize:14 }}>{fairOdd}</td>
-                      <td style={{ padding:'9px 10px', borderBottom:'1px solid rgba(201,168,76,.08)' }}>
-                        {ev !== null && (
-                          <span style={{ fontSize:11, fontWeight:700, padding:'2px 7px', borderRadius:20, background:parseFloat(ev)>3?'rgba(58,174,108,.13)':'rgba(201,168,76,.1)', color:parseFloat(ev)>3?'#3aae6c':'#c9a84c' }}>
-                            {parseFloat(ev)>0?'+':''}{ev}%
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {selected.length > 0 && (
-            <div style={{ background:'var(--sur)', border:'1px solid rgba(58,174,108,.28)', borderRadius:12, padding:'1.25rem' }}>
-              <div style={{ fontWeight:700, marginBottom:10 }}>🎯 Tu apuesta</div>
-              {selected.map((m,i) => (
-                <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid rgba(201,168,76,.08)', fontSize:13 }}>
-                  <span>{m.label}</span>
-                  <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, color:'#6b9fd4' }}>{m.odd.toFixed(2)}</span>
-                </div>
-              ))}
-              <div style={{ display:'flex', gap:16, margin:'12px 0', flexWrap:'wrap' }}>
-                <div><div style={{ fontSize:10, color:'#7a8aaa' }}>Cuota combinada</div><div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:20, color:'#c9a84c' }}>{combOdd.toFixed(2)}</div></div>
-                <div><div style={{ fontSize:10, color:'#7a8aaa' }}>Probabilidad</div><div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:20, color:'#6b9fd4' }}>{(combProb*100).toFixed(1)}%</div></div>
-              </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:8, alignItems:'end' }}>
-                <div>
-                  <div style={{ fontSize:11, color:'#7a8aaa', marginBottom:4 }}>¿Cuánto apostas?</div>
-                  <input type="number" step="0.1" value={stake} onChange={e=>setStake(e.target.value)} {...inp()} />
-                </div>
-                <div>
-                  <div style={{ fontSize:11, color:'#7a8aaa', marginBottom:4 }}>Casa de apuestas</div>
-                  <select value={bookie} onChange={e=>setBookie(e.target.value)} {...inp()}>
-                    {['Coolbet','Betano','Bet365','Jugabet','1xBet','Otra'].map(b => <option key={b}>{b}</option>)}
-                  </select>
-                </div>
-                <button onClick={register} style={{ height:42, padding:'0 16px', background:'linear-gradient(135deg,#e8c96a,#c9a84c)', color:'#0a0f1e', fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:13, border:'none', borderRadius:9, cursor:'pointer', whiteSpace:'nowrap' }}>
-                  + Registrar
-                </button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
 // HIST TAB
 // ─────────────────────────────────────────────
 function HistTab() {
@@ -460,10 +298,23 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
   const roi = totalStake > 0 ? ((totalPL/totalStake)*100).toFixed(1) : null;
   const filtered = filter === 'all' ? bets : bets.filter(b => b.result === filter);
 
+  // Racha actual (recorre desde la apuesta cerrada más reciente hacia atrás)
+  const closedDesc = [...closed].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  let streak = 0;
+  let streakType: 'won'|'lost'|null = closedDesc[0]?.result === 'lost' ? 'lost' : closedDesc[0]?.result === 'won' ? 'won' : null;
+  for (const b of closedDesc) {
+    if (b.result === streakType) streak++; else break;
+  }
+
+  // Profit acumulado (orden cronológico) para el mini-gráfico
+  const closedAsc = [...closed].sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  let running = 0;
+  const cumulative = closedAsc.map(b => { running += Number(b.pl); return running; });
+
   const statCard = (label: string, value: string|number, color?: string) => (
-    <div style={{ background:'var(--sur)', padding:'12px 14px', flex:1, minWidth:80 }}>
+    <div style={{ background:'var(--sur)', padding:'10px 12px' }}>
       <div style={{ fontSize:10, color:'#7a8aaa', textTransform:'uppercase', letterSpacing:'.03em', marginBottom:4 }}>{label}</div>
-      <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color: color || '#f0ece0' }}>{value}</div>
+      <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:18, color: color || '#f0ece0' }}>{value}</div>
     </div>
   );
 
@@ -482,12 +333,40 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
       </div>
 
       {/* Stats */}
-      <div style={{ display:'flex', gap:1, background:'rgba(201,168,76,.12)', border:'1px solid rgba(201,168,76,.2)', borderRadius:12, overflow:'hidden', marginBottom:'1.25rem' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(96px,1fr))', gap:1, background:'rgba(201,168,76,.12)', border:'1px solid rgba(201,168,76,.2)', borderRadius:12, overflow:'hidden', marginBottom:'1.25rem' }}>
         {statCard('Apuestas', bets.length)}
         {statCard('Aciertos', wr !== null ? wr+'%' : '—', wr !== null ? (wr>=50?'#3aae6c':'#d95050') : undefined)}
         {statCard('P&L', closed.length ? (totalPL>=0?'+':'')+totalPL.toFixed(2) : '—', totalPL>=0?'#3aae6c':'#d95050')}
         {statCard('ROI', roi ? (Number(roi)>=0?'+':'')+roi+'%' : '—', roi&&Number(roi)>=0?'#3aae6c':'#d95050')}
+        {statCard('Racha', streak > 0 ? `${streak} ${streakType==='won'?'ganadas':'perdidas'}` : '—', streak>0 ? (streakType==='won'?'#3aae6c':'#d95050') : undefined)}
       </div>
+
+      {/* Profit acumulado */}
+      {cumulative.length >= 2 && (
+        <div style={{ background:'var(--sur)', border:'1px solid rgba(201,168,76,.12)', borderRadius:12, padding:'12px 14px', marginBottom:'1.25rem' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+            <span style={{ fontSize:11, color:'#7a8aaa', textTransform:'uppercase', letterSpacing:'.04em' }}>Profit acumulado</span>
+            <span style={{ fontSize:10, color: totalPL>=0?'#3aae6c':'#d95050' }}>últimas {cumulative.length}</span>
+          </div>
+          {(() => {
+            const w = 600, h = 70;
+            const min = Math.min(0, ...cumulative);
+            const max = Math.max(0, ...cumulative);
+            const range = max - min || 1;
+            const pts = cumulative.map((v, i) => {
+              const x = cumulative.length > 1 ? (i / (cumulative.length - 1)) * w : 0;
+              const y = h - ((v - min) / range) * h;
+              return `${x.toFixed(1)},${y.toFixed(1)}`;
+            }).join(' ');
+            const lineColor = totalPL >= 0 ? '#3aae6c' : '#d95050';
+            return (
+              <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+                <polyline points={pts} fill="none" stroke={lineColor} strokeWidth="2.5" />
+              </svg>
+            );
+          })()}
+        </div>
+      )}
 
       {tab === 'nueva' ? (
         <div style={{ background:'var(--sur)', border:'1px solid var(--b)', borderRadius:12, padding:'1.25rem' }}>

@@ -181,31 +181,31 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
         <div style={secTitle}>2 — Cuotas de tu casa (opcional)</div>
         <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 12, lineHeight: 1.6 }}>Una "cuota" es el número que multiplica tu dinero si ganas. Ej: cuota 2.00 con $10 apostados = $20 de vuelta. Déjalo vacío si no tienes.</p>
         <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>¿Quién gana el partido?</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
           {[['home', `Gana ${home}`], ['draw', 'Empatan'], ['away', `Gana ${away}`]].map(([k, ph]) => (
-            <div key={k}>
-              <label style={label12}>{ph}</label>
-              <input type="number" step="0.01" placeholder="ej. 1.85" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={inp} />
+            <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
+              <span style={{ fontSize: 13 }}>{ph}</span>
+              <input type="number" step="0.01" placeholder="1.85" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
             </div>
           ))}
         </div>
         <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>¿Cuántos goles habrá?</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginBottom: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
           {[['btts', 'Ambos anotan']].map(([k, ph]) => (
-            <div key={k}>
-              <label style={label12}>{ph}</label>
-              <input type="number" step="0.01" placeholder="ej. 1.90" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={inp} />
+            <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
+              <span style={{ fontSize: 13 }}>{ph}</span>
+              <input type="number" step="0.01" placeholder="1.90" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
             </div>
           ))}
         </div>
         {/* Mercados adicionales */}
         <details style={{ marginBottom: 10 }}>
           <summary style={{ fontSize: 12, color: '#6b9fd4', cursor: 'pointer', marginBottom: 8 }}>▸ Ver más tipos de apuesta (Doble Oportunidad, Sin empate...)</summary>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
             {[['bttsno','NO ambos anotan'],['dc1x',`Gana ${home} o empatan`],['dcx2',`Empatan o gana ${away}`],['dc12',`Gana ${home} o ${away}`],['dnbh',`Gana ${home} (sin empate)`],['dnba',`Gana ${away} (sin empate)`]].map(([k,ph]) => (
-              <div key={k}>
-                <label style={label12}>{ph}</label>
-                <input type="number" step="0.01" placeholder="ej. 1.06" value={odds[k]||''} onChange={e=>setOdds({...odds,[k]:e.target.value})} style={inp} />
+              <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
+                <span style={{ fontSize: 13 }}>{ph}</span>
+                <input type="number" step="0.01" placeholder="1.06" value={odds[k]||''} onChange={e=>setOdds({...odds,[k]:e.target.value})} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
               </div>
             ))}
           </div>
@@ -221,15 +221,35 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
         </label>
         {live && (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
-              <div><label style={label12}>¿En qué minuto va?</label><input type="number" value={liveMin} onChange={e=>setLiveMin(e.target.value)} min="1" max="120" style={inp} /></div>
-              <div><label style={label12}>Goles {home}</label><input type="number" value={liveGh} onChange={e=>setLiveGh(e.target.value)} min="0" style={inp} /></div>
-              <div><label style={label12}>Goles {away}</label><input type="number" value={liveGa} onChange={e=>setLiveGa(e.target.value)} min="0" style={inp} /></div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(217,80,80,.2)', borderRadius: 9, padding: '8px 10px', marginBottom: 10 }}>
+              <span style={{ fontSize: 13 }}>Minuto actual</span>
+              <input type="number" value={liveMin} onChange={e=>setLiveMin(e.target.value)} min="1" max="120" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-              <div><label style={label12}>🟥 ¿Expulsados de {home}?</label><input type="number" value={liveRh} onChange={e=>setLiveRh(e.target.value)} min="0" max="5" style={inp} placeholder="0 si no hay" /></div>
-              <div><label style={label12}>🟥 ¿Expulsados de {away}?</label><input type="number" value={liveRa} onChange={e=>setLiveRa(e.target.value)} min="0" max="5" style={inp} placeholder="0 si no hay" /></div>
+
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>Marcador</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
+                <span style={{ fontSize: 13 }}>Goles {home}</span>
+                <input type="number" value={liveGh} onChange={e=>setLiveGh(e.target.value)} min="0" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
+                <span style={{ fontSize: 13 }}>Goles {away}</span>
+                <input type="number" value={liveGa} onChange={e=>setLiveGa(e.target.value)} min="0" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} />
+              </div>
             </div>
+
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>🟥 Expulsados</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(217,80,80,.18)', borderRadius: 9, padding: '6px 10px' }}>
+                <span style={{ fontSize: 13 }}>{home}</span>
+                <input type="number" value={liveRh} onChange={e=>setLiveRh(e.target.value)} min="0" max="5" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} placeholder="0" />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(217,80,80,.18)', borderRadius: 9, padding: '6px 10px' }}>
+                <span style={{ fontSize: 13 }}>{away}</span>
+                <input type="number" value={liveRa} onChange={e=>setLiveRa(e.target.value)} min="0" max="5" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} placeholder="0" />
+              </div>
+            </div>
+
             <div style={{ background: 'rgba(217,80,80,.1)', border: '1px solid rgba(217,80,80,.25)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#7a8aaa' }}>
               ⚡ El análisis tomará en cuenta cuánto tiempo queda, el marcador actual y los expulsados.
             </div>
@@ -283,83 +303,60 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
             ))}
           </div>
 
-          {/* Main markets table */}
+          {/* Main markets — stacked cards (mobile-first) */}
           {activeTab === 'main' && (
-            <div style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, overflow: 'hidden', marginBottom: '1rem' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    {['','Tipo de apuesta','Probabilidad','Según tu cuota','Diferencia','Cuota justa',''].map((h,i)=>(
-                      <th key={i} style={{fontSize:10,fontWeight:700,color:'#7a8aaa',textTransform:'uppercase',letterSpacing:'.05em',padding:'8px 10px',borderBottom:'1px solid rgba(201,168,76,.12)',textAlign:'left'}}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {mkts.map((m, i) => {
-                    const userOdd = odds[m.oddKey] || '';
-                    const uOdd = toD(userOdd);
-                    const fairOdd = m.prob > 0 ? 1 / m.prob : 0;
-                    const ev = eC(m.prob, uOdd);
-                    const isSelected = selected.some(s => s.label === m.label);
-                    return (
-                      <tr key={i} style={{ background: isSelected ? 'rgba(58,174,108,.05)' : 'transparent' }}>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
-                          <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, userOdd, fairOdd)} style={{ width: 15, height: 15, accentColor: '#3aae6c' }} />
-                        </td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontWeight: 500, fontSize: 13 }}>{m.label}</td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{(m.prob * 100).toFixed(1)}%</td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{uOdd ? ((1 / uOdd) * 100).toFixed(1) + '%' : '—'}</td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13, color: ev.cls === 'pos' ? '#3aae6c' : ev.cls === 'neg' ? '#d95050' : '#7a8aaa', fontWeight: ev.cls !== 'neu' ? 700 : 400 }}>{ev.txt}</td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontFamily: "'Outfit',sans-serif", fontWeight: 700, color: '#6b9fd4', fontSize: 14 }}>{fairOdd > 0 ? fairOdd.toFixed(2) : '—'}</td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
-                          {ev.ev !== null && <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: ev.ev > 5 ? 'rgba(58,174,108,.13)' : 'rgba(201,168,76,.1)', color: ev.ev > 5 ? '#3aae6c' : '#c9a84c' }}>{ev.ev > 5 ? 'Conviene ✓' : 'No conviene'}</span>}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: '1rem' }}>
+              {mkts.map((m, i) => {
+                const userOdd = odds[m.oddKey] || '';
+                const uOdd = toD(userOdd);
+                const fairOdd = m.prob > 0 ? 1 / m.prob : 0;
+                const ev = eC(m.prob, uOdd);
+                const isSelected = selected.some(s => s.label === m.label);
+                const positive = ev.ev !== null && ev.ev > 5;
+                return (
+                  <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isSelected ? 'rgba(58,174,108,.08)' : 'var(--sur)', border: `1px solid ${isSelected ? 'rgba(58,174,108,.3)' : 'rgba(201,168,76,.12)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, userOdd, fairOdd)} style={{ width: 16, height: 16, accentColor: '#3aae6c', flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500 }}>{m.label}</div>
+                      <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>Modelo {(m.prob * 100).toFixed(1)}% {uOdd ? `· Tu cuota ${((1 / uOdd) * 100).toFixed(1)}%` : ''}</div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, color: '#6b9fd4', fontSize: 14 }}>{fairOdd > 0 ? fairOdd.toFixed(2) : '—'}</div>
+                      {ev.ev !== null && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 10, background: positive ? 'rgba(58,174,108,.18)' : 'rgba(201,168,76,.1)', color: positive ? '#3aae6c' : '#c9a84c' }}>{ev.txt}</span>}
+                    </div>
+                  </label>
+                );
+              })}
             </div>
           )}
 
-          {/* Secondary markets */}
+          {/* Secondary markets — stacked cards */}
           {activeTab === 'sec' && (
-            <div style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, overflow: 'hidden', marginBottom: '1rem' }}>
-              <div style={{ padding: '10px 14px', fontSize: 12, fontWeight: 600, color: '#7a8aaa', borderBottom: '1px solid rgba(201,168,76,.1)' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: 11, color: '#7a8aaa', marginBottom: 8, lineHeight: 1.5 }}>
                 📐 Otras estimaciones del partido — cálculos aproximados, orientativos
               </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    {['','De qué se trata','Estimado','Referencia','Lo más probable','Cuota'].map((h,i)=>(
-                      <th key={i} style={{fontSize:10,fontWeight:700,color:'#7a8aaa',textTransform:'uppercase',letterSpacing:'.05em',padding:'8px 10px',borderBottom:'1px solid rgba(201,168,76,.12)',textAlign:'left'}}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {secMkts.map((m, i) => {
-                    const hasPick = m.isOver !== null;
-                    const isSelected = selected.some(s => s.label === m.label + ': ' + m.pick);
-                    return (
-                      <tr key={i}>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
-                          {hasPick && m.fair && <input type="checkbox" checked={isSelected} onChange={() => toggleSecMarket(m.label + ': ' + m.pick, 0.55, m.fair!)} style={{ width: 15, height: 15, accentColor: '#3aae6c' }} />}
-                        </td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{m.label}</td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{m.est}</td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13, color: '#7a8aaa' }}>~{m.est - 1}</td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: hasPick ? 'rgba(58,174,108,.13)' : 'rgba(201,168,76,.1)', color: hasPick ? '#3aae6c' : '#c9a84c' }}>{m.pick}</span>
-                        </td>
-                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
-                          {m.fair ? <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 14, color: '#6b9fd4' }}>{m.fair.toFixed(2)}</span> : '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              <div style={{ padding: '10px 14px', fontSize: 11, color: '#7a8aaa' }}>Orientativo.</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {secMkts.map((m, i) => {
+                  const hasPick = m.isOver !== null;
+                  const isSelected = selected.some(s => s.label === m.label + ': ' + m.pick);
+                  return (
+                    <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isSelected ? 'rgba(58,174,108,.08)' : 'var(--sur)', border: `1px solid ${isSelected ? 'rgba(58,174,108,.3)' : 'rgba(201,168,76,.12)'}`, borderRadius: 10, padding: '10px 12px', cursor: hasPick && m.fair ? 'pointer' : 'default' }}>
+                      {hasPick && m.fair ? (
+                        <input type="checkbox" checked={isSelected} onChange={() => toggleSecMarket(m.label + ': ' + m.pick, 0.55, m.fair!)} style={{ width: 16, height: 16, accentColor: '#3aae6c', flexShrink: 0 }} />
+                      ) : <div style={{ width: 16, flexShrink: 0 }} />}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500 }}>{m.label}</div>
+                        <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>Estimado: {m.est} · referencia ~{m.est - 1}</div>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: hasPick ? 'rgba(58,174,108,.13)' : 'rgba(201,168,76,.1)', color: hasPick ? '#3aae6c' : '#c9a84c' }}>{m.pick}</span>
+                        {m.fair && <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 13, color: '#6b9fd4', marginTop: 3 }}>{m.fair.toFixed(2)}</div>}
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           )}
 
