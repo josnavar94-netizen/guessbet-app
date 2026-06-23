@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { modelProbs, getH2H, MODEL, WC_REAL, FLAGS, FLAG_CODES, FIXTURES } from '@/lib/model';
+import { modelProbs, getH2H, MODEL, WC_REAL, FLAG_CODES, FIXTURES } from '@/lib/model';
 
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
   const code = FLAG_CODES[name];
@@ -198,7 +198,7 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
           {upcomingByDay.map((d, gi) => (
             <optgroup key={gi} label={d.day}>
               {d.items.map(({ m, idx }) => (
-                <option key={idx} value={idx}>{m.t} · {FLAGS[m.h] || ''} {m.h} vs {m.a} {FLAGS[m.a] || ''}</option>
+                <option key={idx} value={idx}>{m.t} · {m.h} vs {m.a}</option>
               ))}
             </optgroup>
           ))}
