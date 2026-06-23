@@ -40,6 +40,7 @@ export default function App({ username, email, plan }: { username: string; email
   const [tab, setTab] = useState<Tab>('home');
   const [bets, setBets] = useState<DbBet[]>([]);
   const [loadingBets, setLoadingBets] = useState(true);
+  const [usedToday, setUsedToday] = useState(false);
 
   // ── Fetch bets ──
   const fetchBets = useCallback(async () => {
@@ -52,7 +53,15 @@ export default function App({ username, email, plan }: { username: string; email
     setLoadingBets(false);
   }, []);
 
-  useEffect(() => { fetchBets(); }, [fetchBets]);
+  const fetchUsage = useCallback(async () => {
+    try {
+      const res = await fetch('/api/bets/usage');
+      const data = await res.json();
+      setUsedToday(!!data.usedToday);
+    } catch {}
+  }, []);
+
+  useEffect(() => { fetchBets(); fetchUsage(); }, [fetchBets, fetchUsage]);
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -67,6 +76,7 @@ export default function App({ username, email, plan }: { username: string; email
     });
     if (res.ok) {
       await fetchBets();
+      await fetchUsage();
       setTab('mybet');
     } else {
       const data = await res.json().catch(() => null);
@@ -122,7 +132,7 @@ export default function App({ username, email, plan }: { username: string; email
       {/* PAGES */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem' }}>
         {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} />}
-        {tab === 'calc' && <CalcTab onRegister={saveBet} />}
+        {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} />}
         {tab === 'hist' && <HistTab />}
         {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={deleteBet} />}
         {tab === 'premium' && <PremiumTab plan={plan} />}

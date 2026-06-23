@@ -80,7 +80,25 @@ function timeMin(t: string) {
   return m ? parseInt(m[1]) * 60 + parseInt(m[2]) : 0;
 }
 
-export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void }) {
+export default function CalcTab({ onRegister, locked, onUpgrade }: { onRegister: (bet: any) => void; locked?: boolean; onUpgrade?: () => void }) {
+  if (locked) {
+    return (
+      <div style={{ maxWidth: 480, margin: '3rem auto', textAlign: 'center' }}>
+        <div style={{ fontSize: 40, marginBottom: 14 }}>🔒</div>
+        <h1 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 22, marginBottom: 10 }}>Ya usaste tu análisis gratuito de hoy</h1>
+        <p style={{ fontSize: 13, color: '#7a8aaa', lineHeight: 1.6, marginBottom: 22 }}>
+          Tu plan Free incluye 1 análisis y apuesta por día. Vuelve mañana o hazte PRO para analizar partidos sin límites.
+        </p>
+        <button onClick={onUpgrade} style={{ height: 48, padding: '0 28px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontFamily: "'Outfit',sans-serif", fontSize: 15, fontWeight: 700, border: 'none', borderRadius: 10, cursor: 'pointer' }}>
+          Hazte PRO ahora →
+        </button>
+      </div>
+    );
+  }
+  return <CalcTabUnlocked onRegister={onRegister} />;
+}
+
+function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
   const upcoming = FIXTURES
     .flatMap(g => g.m.filter(m => !m.score).map(m => ({ ...m, group: g.g })))
     .sort((a, b) => dayNum(a.group) - dayNum(b.group) || timeMin(a.t) - timeMin(b.t));

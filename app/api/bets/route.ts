@@ -37,17 +37,17 @@ export async function POST(req: NextRequest) {
     const plan = userResult.rows[0]?.plan ?? 'free';
 
     if (plan !== 'premium') {
-      const userCount = await sql`
-        SELECT COUNT(*)::int AS count FROM bets
-        WHERE user_id=${s.userId} AND created_at::date = CURRENT_DATE
+      const userUsage = await sql`
+        SELECT COUNT(*)::int AS count FROM bet_usage
+        WHERE user_id=${s.userId} AND used_date = CURRENT_DATE
       `;
-      const deviceCount = !isNewDevice
+      const deviceUsage = !isNewDevice
         ? await sql`
-            SELECT COUNT(*)::int AS count FROM bets
-            WHERE device_id=${deviceId} AND created_at::date = CURRENT_DATE
+            SELECT COUNT(*)::int AS count FROM bet_usage
+            WHERE device_id=${deviceId} AND used_date = CURRENT_DATE
           `
         : null;
-      if (userCount.rows[0].count >= 1 || (deviceCount && deviceCount.rows[0].count >= 1)) {
+      if (userUsage.rows[0].count >= 1 || (deviceUsage && deviceUsage.rows[0].count >= 1)) {
         return NextResponse.json(
           { error: 'Tu plan Free permite 1 apuesta por día. Hazte PRO para apostar sin límites.' },
           { status: 403 }
@@ -62,6 +62,11 @@ export async function POST(req: NextRequest) {
               ${deviceId}, ${ip})
       RETURNING *
     `;
+
+    if (plan !== 'premium') {
+      await sql`INSERT INTO bet_usage (user_id, device_id, ip) VALUES (${s.userId}, ${deviceId}, ${ip})`;
+    }
+
     const res = NextResponse.json({ bet: result.rows[0] });
     res.cookies.set(DEVICE_COOKIE, deviceId, {
       httpOnly: true,

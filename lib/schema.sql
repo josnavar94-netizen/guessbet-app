@@ -31,3 +31,15 @@ CREATE INDEX IF NOT EXISTS idx_bets_user_id ON bets(user_id);
 ALTER TABLE bets ADD COLUMN IF NOT EXISTS device_id VARCHAR(64);
 ALTER TABLE bets ADD COLUMN IF NOT EXISTS ip VARCHAR(45);
 CREATE INDEX IF NOT EXISTS idx_bets_device_id ON bets(device_id);
+
+-- Migración: registro de uso diario Free, independiente de bets (no se borra si el usuario elimina su apuesta)
+CREATE TABLE IF NOT EXISTS bet_usage (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  device_id VARCHAR(64),
+  ip VARCHAR(45),
+  used_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_bet_usage_user_date ON bet_usage(user_id, used_date);
+CREATE INDEX IF NOT EXISTS idx_bet_usage_device_date ON bet_usage(device_id, used_date);
