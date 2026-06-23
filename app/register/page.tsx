@@ -33,7 +33,7 @@ export default function RegisterPage() {
     <div className="auth-wrap">
       <div style={{ width: '100%', maxWidth: 400 }}>
         <div className="auth-logo">
-          <div className="brand"><img src="/logo-guessbet.png" alt="" /><span>GuessBet</span></div>
+          <div className="brand"><img src="/icon-192.png" alt="" /><span>GuessBet</span></div>
           <p>Crea tu cuenta y empieza a apostar con inteligencia.</p>
         </div>
         <div className="auth-card">

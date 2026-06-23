@@ -32,7 +32,7 @@ export default function LoginPage() {
     <div className="auth-wrap">
       <div style={{ width: '100%', maxWidth: 400 }}>
         <div className="auth-logo">
-          <div className="brand"><img src="/logo-guessbet.png" alt="" /><span>GuessBet</span></div>
+          <div className="brand"><img src="/icon-192.png" alt="" /><span>GuessBet</span></div>
           <p>La ventaja que el mercado no quiere que tengas.</p>
         </div>
         <div className="auth-card">

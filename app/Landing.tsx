@@ -19,7 +19,7 @@ export default function Landing() {
       {/* NAV */}
       <nav style={{ borderBottom: '1px solid rgba(201,168,76,.15)', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60, position: 'sticky', top: 0, background: 'rgba(10,15,30,.95)', backdropFilter: 'blur(10px)', zIndex: 100 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo-guessbet.png" alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          <img src="/icon-192.png" alt="" style={{ width: 28, height: 28, borderRadius: 7 }} />
           <span style={{ fontFamily: "'Montserrat',sans-serif", fontWeight: 900, fontSize: 20, letterSpacing: '-.02em', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             GuessBet
           </span>
