@@ -284,6 +284,13 @@ function HistTab() {
 // ─────────────────────────────────────────────
 // MY BETS TAB
 // ─────────────────────────────────────────────
+function matchFlags(matchName: string) {
+  const parts = matchName.split(' vs ');
+  if (parts.length !== 2) return matchName;
+  const [a, b] = parts;
+  return `${FLAGS[a.trim()] ? FLAGS[a.trim()] + ' ' : ''}${a} vs ${FLAGS[b.trim()] ? FLAGS[b.trim()] + ' ' : ''}${b}`;
+}
+
 function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loading: boolean; updateBet: Function; deleteBet: Function }) {
   const [filter, setFilter] = useState<'all'|'open'|'won'|'lost'>('all');
   const [newBet, setNewBet] = useState({ match:'',pick:'',odds:'',stake:'',bookie:'Coolbet',comp:'Mundial 2026',date:'',ev:'' });
@@ -429,7 +436,7 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
               <div key={b.id} style={{ background:'var(--sur)', borderLeft:`3px solid ${bc}`, borderRadius:'0 11px 11px 0', border:'1px solid rgba(201,168,76,.1)', padding:'12px 14px', marginBottom:8 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
                   <div>
-                    <div style={{ fontWeight:600, fontSize:14 }}>{b.match_name}</div>
+                    <div style={{ fontWeight:600, fontSize:14 }}>{matchFlags(b.match_name)}</div>
                     <div style={{ fontSize:11, color:'#7a8aaa', marginTop:2 }}>{b.competition} · {b.bookie}</div>
                   </div>
                   <div style={{ display:'flex', gap:5 }}>
