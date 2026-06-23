@@ -60,8 +60,32 @@ const label12: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', display: 
 const card: React.CSSProperties = { background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1.25rem', marginBottom: '1rem' };
 const secTitle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#7a8aaa', textTransform: 'uppercase' as const, letterSpacing: '.08em', marginBottom: 12 };
 
+function dayLabel(group: string) {
+  const m = group.match(/·\s*([^(]+)/);
+  return m ? m[1].trim() : group;
+}
+
+function dayNum(group: string) {
+  const m = group.match(/(\d{1,2})\s*jun/);
+  return m ? parseInt(m[1]) : 99;
+}
+
+function timeMin(t: string) {
+  const m = t.match(/(\d{1,2}):(\d{2})/);
+  return m ? parseInt(m[1]) * 60 + parseInt(m[2]) : 0;
+}
+
 export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void }) {
-  const upcoming = FIXTURES.flatMap(g => g.m.filter(m => !m.score).map(m => ({ ...m, group: g.g })));
+  const upcoming = FIXTURES
+    .flatMap(g => g.m.filter(m => !m.score).map(m => ({ ...m, group: g.g })))
+    .sort((a, b) => dayNum(a.group) - dayNum(b.group) || timeMin(a.t) - timeMin(b.t));
+  const upcomingByDay: { day: string; items: { m: typeof upcoming[number]; idx: number }[] }[] = [];
+  upcoming.forEach((m, idx) => {
+    const day = dayLabel(m.group);
+    const last = upcomingByDay[upcomingByDay.length - 1];
+    if (last && last.day === day) last.items.push({ m, idx });
+    else upcomingByDay.push({ day, items: [{ m, idx }] });
+  });
   const [home, setHome] = useState(upcoming[0]?.h || '');
   const [away, setAway] = useState(upcoming[0]?.a || '');
   const [neutral, setNeutral] = useState(true);
@@ -171,7 +195,13 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
       <div style={card}>
         <div style={secTitle}>1 — Elige el partido</div>
         <select onChange={e => { const m = upcoming[parseInt(e.target.value)]; onFixtureChange(m); }} style={{ ...inp, marginBottom: 10, appearance: 'none' as const }}>
-          {upcoming.map((m, i) => <option key={i} value={i}>{m.t} · {FLAGS[m.h] || ''} {m.h} vs {m.a} {FLAGS[m.a] || ''}</option>)}
+          {upcomingByDay.map((d, gi) => (
+            <optgroup key={gi} label={d.day}>
+              {d.items.map(({ m, idx }) => (
+                <option key={idx} value={idx}>{m.t} · {FLAGS[m.h] || ''} {m.h} vs {m.a} {FLAGS[m.a] || ''}</option>
+              ))}
+            </optgroup>
+          ))}
         </select>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 32px 1fr', gap: 8, marginBottom: 10, alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
