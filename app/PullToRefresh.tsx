@@ -10,8 +10,10 @@ export default function PullToRefresh({ children }: { children: React.ReactNode 
   const [refreshing, setRefreshing] = useState(false);
   const [armed, setArmed] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
   const pulling = useRef(false);
+  const direction = useRef<'none' | 'vertical' | 'horizontal'>('none');
   const pullRef = useRef(0);
   const vibrated = useRef(false);
 
@@ -21,19 +23,30 @@ export default function PullToRefresh({ children }: { children: React.ReactNode 
 
     function onTouchStart(e: TouchEvent) {
       if (refreshing) return;
-      if (window.scrollY > 0) { startY.current = null; return; }
+      direction.current = 'none';
+      if (window.scrollY > 0) { startY.current = null; pulling.current = false; return; }
+      startX.current = e.touches[0].clientX;
       startY.current = e.touches[0].clientY;
       pulling.current = true;
       vibrated.current = false;
     }
 
     function onTouchMove(e: TouchEvent) {
-      if (!pulling.current || startY.current === null || refreshing) return;
-      const delta = e.touches[0].clientY - startY.current;
-      if (delta <= 0) { pullRef.current = 0; setPull(0); setArmed(false); return; }
+      if (!pulling.current || startY.current === null || startX.current === null || refreshing) return;
+      const deltaY = e.touches[0].clientY - startY.current;
+      const deltaX = e.touches[0].clientX - startX.current;
+
+      if (direction.current === 'none') {
+        if (Math.abs(deltaX) < 6 && Math.abs(deltaY) < 6) return;
+        direction.current = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
+        if (direction.current === 'horizontal') { pulling.current = false; return; }
+      }
+      if (direction.current === 'horizontal') return;
+
+      if (deltaY <= 0) { pullRef.current = 0; setPull(0); setArmed(false); return; }
       if (window.scrollY > 0) { pulling.current = false; pullRef.current = 0; setPull(0); setArmed(false); return; }
       if (e.cancelable) e.preventDefault();
-      const next = Math.min(delta * 0.5, MAX_PULL);
+      const next = Math.min(deltaY * 0.5, MAX_PULL);
       pullRef.current = next;
       setPull(next);
       const crossed = next >= THRESHOLD;
@@ -47,7 +60,7 @@ export default function PullToRefresh({ children }: { children: React.ReactNode 
     }
 
     function onTouchEnd() {
-      if (!pulling.current || refreshing) return;
+      if (!pulling.current || refreshing) { startX.current = null; startY.current = null; return; }
       pulling.current = false;
       if (pullRef.current >= THRESHOLD) {
         setRefreshing(true);
@@ -63,6 +76,7 @@ export default function PullToRefresh({ children }: { children: React.ReactNode 
         setPull(0);
         setArmed(false);
       }
+      startX.current = null;
       startY.current = null;
     }
 
