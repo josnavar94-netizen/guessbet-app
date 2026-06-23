@@ -320,11 +320,11 @@ function HistTab() {
       </div>
       <div>
         {filtered.map((m, i) => (
-          <div key={i} style={{ background:'var(--sur)', border:'1px solid rgba(201,168,76,.1)', borderRadius:11, padding:'12px 15px', marginBottom:8, display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
-            <span style={{ fontSize:11, color:'#7a8aaa', minWidth:42 }}>{m.d}</span>
-            <span style={{ flex:1, fontWeight:600, fontSize:13, display:'flex', alignItems:'center', gap:7 }}><Flag name={m.h} />{m.h}</span>
-            <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:16, color:'#c9a84c', background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', padding:'3px 12px', borderRadius:7, flexShrink:0 }}>{m.gh} - {m.ga}</span>
-            <span style={{ flex:1, fontWeight:600, fontSize:13, display:'flex', alignItems:'center', gap:7, justifyContent:'flex-end' }}>{m.a}<Flag name={m.a} /></span>
+          <div key={i} style={{ background:'var(--sur)', border:'1px solid rgba(201,168,76,.1)', borderRadius:11, padding:'12px 15px', marginBottom:8, display:'grid', gridTemplateColumns:'34px minmax(0,1fr) auto minmax(0,1fr)', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize:11, color:'#7a8aaa' }}>{m.d}</span>
+            <span style={{ fontWeight:600, fontSize:13, display:'flex', alignItems:'center', gap:7, minWidth:0 }}><Flag name={m.h} /><span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.h}</span></span>
+            <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:16, color:'#c9a84c', background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', padding:'3px 12px', borderRadius:7, whiteSpace:'nowrap' }}>{m.gh} - {m.ga}</span>
+            <span style={{ fontWeight:600, fontSize:13, display:'flex', alignItems:'center', gap:7, justifyContent:'flex-end', minWidth:0 }}><span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.a}</span><Flag name={m.a} /></span>
           </div>
         ))}
       </div>

@@ -8,7 +8,7 @@ export default function InstallAppSection() {
         GuessBet funciona como una app instalable en tu celular — sin pasar por la App Store ni Google Play.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 14 }} className="install-grid">
 
         {/* iPhone */}
         <div style={{ background: '#111b30', border: '1px solid rgba(201,168,76,.12)', borderRadius: 14, padding: '1.5rem' }}>
