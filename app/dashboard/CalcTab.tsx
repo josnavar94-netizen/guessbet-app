@@ -1,0 +1,431 @@
+'use client';
+
+import { useState } from 'react';
+import { modelProbs, getH2H, MODEL, WC_REAL, FLAGS, FIXTURES } from '@/lib/model';
+
+type Bet = { label: string; prob: number; odd: number };
+
+const LEAGUE_AVG = 1.68;
+
+function remainingXG(xgFull: number, minute: number) {
+  const rem = Math.max(0, 90 - Math.min(minute, 90)) / 90;
+  return xgFull * rem;
+}
+
+const RED_ATT = 0.27;
+const RED_DEF = 0.22;
+
+function applyRedCards(xgFor: number, xgAgainst: number, ownReds: number, oppReds: number) {
+  let adj = xgFor * Math.max(0.15, 1 - RED_ATT * ownReds);
+  adj = adj * (1 + RED_DEF * oppReds);
+  return Math.max(0.05, adj);
+}
+
+function inPlayProbs(xgH: number, xgA: number, min: number, scoreH: number, scoreA: number, redH: number, redA: number) {
+  let xgHR = remainingXG(xgH, min);
+  let xgAR = remainingXG(xgA, min);
+  xgHR = applyRedCards(xgHR, xgAR, redH, redA);
+  xgAR = applyRedCards(xgAR, xgHR, redA, redH);
+  const poi = (l: number, k: number) => { let p = Math.exp(-l); for (let i = 0; i < k; i++) p *= l / (i + 1); return p; };
+  let pH = 0, pD = 0, pA = 0, pO = 0, pB = 0;
+  for (let i = 0; i <= 10; i++) for (let j = 0; j <= 10; j++) {
+    const p = poi(xgHR, i) * poi(xgAR, j);
+    const tH = scoreH + i, tA = scoreA + j;
+    if (tH > tA) pH += p; else if (tH === tA) pD += p; else pA += p;
+    if (tH + tA > 2.5) pO += p;
+    if (tH > 0 && tA > 0) pB += p;
+  }
+  if (scoreH + scoreA > 2) pO = 1;
+  if (scoreH > 0 && scoreA > 0) pB = 1;
+  return { home: pH, draw: pD, away: pA, over25: pO, under25: 1 - pO, btts: pB, xgHR, xgAR };
+}
+
+function eC(mp: number, odd: number | null) {
+  if (!odd) return { txt: '—', cls: 'neu', ev: null };
+  const e = (mp - 1 / odd) * 100;
+  const ev = (mp * odd - 1) * 100;
+  return { txt: (e >= 0 ? '+' : '') + e.toFixed(1) + '%', cls: e > 3 ? 'pos' : e < -3 ? 'neg' : 'neu', ev };
+}
+
+function defQ(ga: number) { return ga < 1 ? 'sólida' : ga < 1.4 ? 'buena' : ga < 1.8 ? 'media' : 'débil'; }
+
+const inp: React.CSSProperties = { width: '100%', background: 'var(--sur2)', border: '1px solid rgba(201,168,76,.24)', color: '#f0ece0', fontFamily: "'Outfit',sans-serif", fontSize: 14, padding: '0 12px', height: 42, borderRadius: 9 };
+const label12: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', display: 'block', marginBottom: 4, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '.04em' };
+const card: React.CSSProperties = { background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1.25rem', marginBottom: '1rem' };
+const secTitle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#7a8aaa', textTransform: 'uppercase' as const, letterSpacing: '.08em', marginBottom: 12 };
+
+export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void }) {
+  const upcoming = FIXTURES.flatMap(g => g.m.filter(m => !m.score).map(m => ({ ...m, group: g.g })));
+  const [home, setHome] = useState(upcoming[0]?.h || '');
+  const [away, setAway] = useState(upcoming[0]?.a || '');
+  const [neutral, setNeutral] = useState(true);
+  const [odds, setOdds] = useState<Record<string, string>>({});
+  const [result, setResult] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'main' | 'sec'>('main');
+  const [selected, setSelected] = useState<Bet[]>([]);
+  const [stake, setStake] = useState('1');
+  const [bookie, setBookie] = useState('Coolbet');
+
+  // Live mode
+  const [live, setLive] = useState(false);
+  const [liveMin, setLiveMin] = useState('45');
+  const [liveGh, setLiveGh] = useState('0');
+  const [liveGa, setLiveGa] = useState('0');
+  const [liveRh, setLiveRh] = useState('0');
+  const [liveRa, setLiveRa] = useState('0');
+
+  function onFixtureChange(m: any) {
+    setHome(m.h); setAway(m.a);
+    setOdds({}); setResult(null); setSelected([]);
+    setLive(false); setLiveMin('45'); setLiveGh('0'); setLiveGa('0'); setLiveRh('0'); setLiveRa('0');
+  }
+
+  function toD(v: string) { const n = parseFloat(v); return (!v || isNaN(n) || n < 1.01) ? null : n; }
+
+  function calc() {
+    const pFull = modelProbs(home, away, neutral);
+    const mH = MODEL[home], mA = MODEL[away];
+    const wcH = WC_REAL[home], wcA = WC_REAL[away];
+    const hd = getH2H(home, away);
+    const min = parseInt(liveMin) || 0;
+    const gh = parseInt(liveGh) || 0;
+    const ga = parseInt(liveGa) || 0;
+    const rh = parseInt(liveRh) || 0;
+    const ra = parseInt(liveRa) || 0;
+    const p = live ? { ...inPlayProbs(pFull.xgH, pFull.xgA, min, gh, ga, rh, ra), xgH: 0, xgA: 0, eloH: pFull.eloH, eloA: pFull.eloA } : pFull;
+    if (live) { p.xgH = (p as any).xgHR; p.xgA = (p as any).xgAR; }
+    const dcHomeDraw = p.home + p.draw;
+    const dcAwayDraw = p.away + p.draw;
+    const dcHomeAway = p.home + p.away;
+    const bttsNo = 1 - p.btts;
+    const dnbHome = p.home / (p.home + p.away || 1);
+    const dnbAway = p.away / (p.home + p.away || 1);
+    const eloFav = p.eloH > p.eloA ? home : away;
+    const h2hExpl = hd && hd.data && hd.data.n >= 3 ? `Se tomó en cuenta que estos equipos ya se enfrentaron ${hd.data.n} veces antes` : 'No hay suficientes partidos anteriores entre estos dos equipos';
+    const xT = p.xgH + p.xgA;
+    const co = Math.round(xT * 2.8 + 7);
+    const sH = Math.round(p.xgH * 5 + 3);
+    const sA = Math.round(p.xgA * 5 + 2);
+    const ta = Math.round(xT * 0.8 + 2.5);
+    setResult({ p, mH, mA, wcH, wcA, hd, eloFav, h2hExpl, live, lv: { min, gh, ga, rh, ra }, dcHomeDraw, dcAwayDraw, dcHomeAway, bttsNo, dnbHome, dnbAway, sec: { co, sH, sA, ta } });
+  }
+
+  function toggleMarket(label: string, prob: number, userOddStr: string, fairOdd: number) {
+    const odd = toD(userOddStr) || fairOdd;
+    setSelected(prev => prev.find(m => m.label === label) ? prev.filter(m => m.label !== label) : [...prev, { label, prob, odd }]);
+  }
+
+  function toggleSecMarket(label: string, prob: number, odd: number) {
+    setSelected(prev => prev.find(m => m.label === label) ? prev.filter(m => m.label !== label) : [...prev, { label, prob, odd }]);
+  }
+
+  const combOdd = selected.reduce((a, m) => a * m.odd, 1);
+  const combProb = selected.reduce((a, m) => a * m.prob, 1);
+  const stakeN = parseFloat(stake) || 1;
+
+  async function register() {
+    if (!selected.length) return;
+    const pickText = selected.length > 1 ? `Combinada (${selected.length}): ${selected.map(m => m.label).join(' + ')}` : selected[0].label;
+    const ev = parseFloat(((combProb * combOdd - 1) * 100).toFixed(1));
+    await onRegister({ match_name: `${home} vs ${away}`, pick_label: pickText, odds: parseFloat(combOdd.toFixed(2)), stake: stakeN, ev, bookie, competition: 'Mundial 2026', match_date: null });
+    setSelected([]);
+  }
+
+  const mkts = result ? [
+    { label: `Gana ${home} (1)`, prob: result.p.home, oddKey: 'home' },
+    { label: 'Empatan (X)', prob: result.p.draw, oddKey: 'draw' },
+    { label: `Gana ${away} (2)`, prob: result.p.away, oddKey: 'away' },
+    { label: 'Ambos equipos anotan', prob: result.p.btts, oddKey: 'btts' },
+    { label: 'NO ambos anotan', prob: result.bttsNo, oddKey: 'bttsno' },
+    { label: `Gana ${home} o empatan`, prob: result.dcHomeDraw, oddKey: 'dc1x' },
+    { label: `Empatan o gana ${away}`, prob: result.dcAwayDraw, oddKey: 'dcx2' },
+    { label: `Gana ${home} o gana ${away}`, prob: result.dcHomeAway, oddKey: 'dc12' },
+    { label: `Gana ${home} (sin contar empate)`, prob: result.dnbHome, oddKey: 'dnbh' },
+    { label: `Gana ${away} (sin contar empate)`, prob: result.dnbAway, oddKey: 'dnba' },
+  ] : [];
+
+  const secMkts = result ? [
+    { label: 'Corners totales', est: result.sec.co, isOver: result.sec.co > 10, pick: `${result.sec.co > 10 ? 'Over' : 'Under'} ${result.sec.co - 2}.5`, fair: 1.85 },
+    { label: 'Tarjetas amarillas', est: result.sec.ta, isOver: null, pick: 'Orientativo', fair: null },
+    { label: `Tiros a puerta ${home}`, est: result.sec.sH, isOver: result.sec.sH > 4, pick: `${result.sec.sH > 4 ? 'Over' : 'Under'} ${result.sec.sH - 1}.5`, fair: 1.90 },
+    { label: `Tiros a puerta ${away}`, est: result.sec.sA, isOver: result.sec.sA > 3, pick: `${result.sec.sA > 3 ? 'Over' : 'Under'} ${result.sec.sA - 1}.5`, fair: 1.90 },
+  ] : [];
+
+  const hasOdds = Object.values(odds).some(v => toD(v) !== null);
+  const bestEV = result ? Math.max(...mkts.map(m => eC(m.prob, toD(odds[m.oddKey] || '')).ev || -999)) : -999;
+
+  return (
+    <div style={{ maxWidth: 780 }}>
+      <h1 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 26, marginBottom: 6 }}>¿Conviene apostar a este partido?</h1>
+      <p style={{ fontSize: 13, color: '#7a8aaa', marginBottom: '1.5rem' }}>Ingresa las cuotas de tu casa y te decimos si hay ventaja.</p>
+
+      {/* PASO 1 — PARTIDO */}
+      <div style={card}>
+        <div style={secTitle}>1 — Elige el partido</div>
+        <select onChange={e => { const m = upcoming[parseInt(e.target.value)]; onFixtureChange(m); }} style={{ ...inp, marginBottom: 10, appearance: 'none' as const }}>
+          {upcoming.map((m, i) => <option key={i} value={i}>{m.t} · {FLAGS[m.h] || ''} {m.h} vs {m.a} {FLAGS[m.a] || ''}</option>)}
+        </select>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 32px 1fr', gap: 8, marginBottom: 10, alignItems: 'center' }}>
+          <input value={home} onChange={e => setHome(e.target.value)} style={inp} />
+          <div style={{ textAlign: 'center', fontSize: 11, color: '#7a8aaa' }}>VS</div>
+          <input value={away} onChange={e => setAway(e.target.value)} style={inp} />
+        </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#7a8aaa', cursor: 'pointer' }}>
+          <input type="checkbox" checked={neutral} onChange={e => setNeutral(e.target.checked)} style={{ accentColor: '#c9a84c' }} />
+          Sede neutral
+        </label>
+      </div>
+
+      {/* PASO 2 — CUOTAS */}
+      <div style={card}>
+        <div style={secTitle}>2 — Cuotas de tu casa (opcional)</div>
+        <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 12, lineHeight: 1.6 }}>Una "cuota" es el número que multiplica tu dinero si ganas. Ej: cuota 2.00 con $10 apostados = $20 de vuelta. Déjalo vacío si no tienes.</p>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>¿Quién gana el partido?</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+          {[['home', `Gana ${home}`], ['draw', 'Empatan'], ['away', `Gana ${away}`]].map(([k, ph]) => (
+            <div key={k}>
+              <label style={label12}>{ph}</label>
+              <input type="number" step="0.01" placeholder="ej. 1.85" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={inp} />
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>¿Cuántos goles habrá?</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginBottom: 10 }}>
+          {[['btts', 'Ambos anotan']].map(([k, ph]) => (
+            <div key={k}>
+              <label style={label12}>{ph}</label>
+              <input type="number" step="0.01" placeholder="ej. 1.90" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={inp} />
+            </div>
+          ))}
+        </div>
+        {/* Mercados adicionales */}
+        <details style={{ marginBottom: 10 }}>
+          <summary style={{ fontSize: 12, color: '#6b9fd4', cursor: 'pointer', marginBottom: 8 }}>▸ Ver más tipos de apuesta (Doble Oportunidad, Sin empate...)</summary>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
+            {[['bttsno','NO ambos anotan'],['dc1x',`Gana ${home} o empatan`],['dcx2',`Empatan o gana ${away}`],['dc12',`Gana ${home} o ${away}`],['dnbh',`Gana ${home} (sin empate)`],['dnba',`Gana ${away} (sin empate)`]].map(([k,ph]) => (
+              <div key={k}>
+                <label style={label12}>{ph}</label>
+                <input type="number" step="0.01" placeholder="ej. 1.06" value={odds[k]||''} onChange={e=>setOdds({...odds,[k]:e.target.value})} style={inp} />
+              </div>
+            ))}
+          </div>
+        </details>
+      </div>
+
+      {/* PASO 3 — EN VIVO */}
+      <div style={card}>
+        <div style={secTitle}>3 — ¿El partido ya empezó? (opcional)</div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer', marginBottom: live ? 16 : 0 }}>
+          <input type="checkbox" checked={live} onChange={e => setLive(e.target.checked)} style={{ accentColor: '#d95050', width: 16, height: 16 }} />
+          <span style={{ color: live ? '#d95050' : '#7a8aaa', fontWeight: live ? 600 : 400 }}>Sí, el partido se está jugando ahora mismo</span>
+        </label>
+        {live && (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+              <div><label style={label12}>¿En qué minuto va?</label><input type="number" value={liveMin} onChange={e=>setLiveMin(e.target.value)} min="1" max="120" style={inp} /></div>
+              <div><label style={label12}>Goles {home}</label><input type="number" value={liveGh} onChange={e=>setLiveGh(e.target.value)} min="0" style={inp} /></div>
+              <div><label style={label12}>Goles {away}</label><input type="number" value={liveGa} onChange={e=>setLiveGa(e.target.value)} min="0" style={inp} /></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+              <div><label style={label12}>🟥 ¿Expulsados de {home}?</label><input type="number" value={liveRh} onChange={e=>setLiveRh(e.target.value)} min="0" max="5" style={inp} placeholder="0 si no hay" /></div>
+              <div><label style={label12}>🟥 ¿Expulsados de {away}?</label><input type="number" value={liveRa} onChange={e=>setLiveRa(e.target.value)} min="0" max="5" style={inp} placeholder="0 si no hay" /></div>
+            </div>
+            <div style={{ background: 'rgba(217,80,80,.1)', border: '1px solid rgba(217,80,80,.25)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#7a8aaa' }}>
+              ⚡ El análisis tomará en cuenta cuánto tiempo queda, el marcador actual y los expulsados.
+            </div>
+          </>
+        )}
+      </div>
+
+      <button onClick={calc} style={{ width: '100%', height: 48, background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontFamily: "'Outfit',sans-serif", fontSize: 15, fontWeight: 700, border: 'none', borderRadius: 10, cursor: 'pointer', marginBottom: '1.5rem' }}>
+        Ver el análisis →
+      </button>
+
+      {result && (
+        <>
+          {/* Edge bar */}
+          <div style={{ borderLeft: '3px solid #c9a84c', background: 'rgba(201,168,76,.08)', borderRadius: '0 8px 8px 0', padding: '10px 14px', fontSize: 13, color: '#7a8aaa', marginBottom: '1rem', lineHeight: 1.6 }}>
+            {live ? `⚡ Partido en vivo: minuto ${result.lv.min}, van ${result.lv.gh}-${result.lv.ga}. Quedan ~${Math.max(0,90-result.lv.min)} minutos.` :
+              !hasOdds ? 'Escribe al menos una cuota arriba para saber si conviene apostar.' :
+              bestEV > 5 ? '¡Buena noticia! Encontramos al menos una apuesta donde el modelo cree que tienes ventaja.' :
+              'El modelo y la cuota están bastante de acuerdo. No hay una ventaja clara aquí.'}
+          </div>
+
+          {/* xG strip */}
+          <div style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.2)', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1rem', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+            {[{name:home,xg:result.p.xgH},{name:away,xg:result.p.xgA}].map((t,i) => (
+              <div key={i}><div style={{fontSize:11,color:'#7a8aaa'}}>{t.name}</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:28,color:'#c9a84c'}}>{t.xg.toFixed(2)}</div><div style={{fontSize:10,color:'#7a8aaa'}}>{live?'goles que le faltan':'goles esperados'}</div></div>
+            ))}
+            <div style={{ marginLeft: 'auto', fontSize: 11, color: '#7a8aaa', textAlign: 'right' }}>ELO {result.p.eloH.toFixed(0)} vs {result.p.eloA.toFixed(0)}<br/>{neutral?'Sede neutral':'Con ventaja local'}</div>
+          </div>
+
+          {/* H2H */}
+          {result.hd && result.hd.data && result.hd.data.n >= 1 && (
+            <div style={{ background: 'rgba(107,159,212,.07)', border: '1px solid rgba(107,159,212,.2)', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#6b9fd4', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>🔄 Cuando estos dos equipos jugaron antes</div>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                {[{l:`${home} ganó`, v: result.hd.t1First ? result.hd.data.w1 : result.hd.data.l1},{l:'Empates',v:result.hd.data.d},{l:`${away} ganó`,v:result.hd.t1First?result.hd.data.l1:result.hd.data.w1},{l:'Total partidos',v:result.hd.data.n}].map((s,i)=>(
+                  <div key={i} style={{background:'rgba(107,159,212,.08)',border:'1px solid rgba(107,159,212,.18)',borderRadius:7,padding:'6px 14px',textAlign:'center', minWidth: '90px'}}>
+                    <div style={{fontSize:10,color:'#7a8aaa', marginBottom: 2, whiteSpace: 'nowrap'}}>{s.l}</div>
+                    <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:18,color:'#6b9fd4'}}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div style={{ display: 'flex', borderBottom: '1px solid rgba(201,168,76,.15)', marginBottom: '1rem' }}>
+            {[['main','Apuestas principales'],['sec','Otras opciones (corners, tarjetas...)']].map(([t,l])=>(
+              <button key={t} onClick={()=>setActiveTab(t as any)} style={{background:'none',border:'none',borderBottom:activeTab===t?'2px solid #c9a84c':'2px solid transparent',color:activeTab===t?'#c9a84c':'#7a8aaa',fontFamily:"'Outfit',sans-serif",fontSize:13,fontWeight:500,padding:'7px 14px 11px',cursor:'pointer',marginBottom:-1,whiteSpace:'nowrap'}}>
+                {l}
+              </button>
+            ))}
+          </div>
+
+          {/* Main markets table */}
+          {activeTab === 'main' && (
+            <div style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, overflow: 'hidden', marginBottom: '1rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {['','Tipo de apuesta','Probabilidad','Según tu cuota','Diferencia','Cuota justa',''].map((h,i)=>(
+                      <th key={i} style={{fontSize:10,fontWeight:700,color:'#7a8aaa',textTransform:'uppercase',letterSpacing:'.05em',padding:'8px 10px',borderBottom:'1px solid rgba(201,168,76,.12)',textAlign:'left'}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {mkts.map((m, i) => {
+                    const userOdd = odds[m.oddKey] || '';
+                    const uOdd = toD(userOdd);
+                    const fairOdd = m.prob > 0 ? 1 / m.prob : 0;
+                    const ev = eC(m.prob, uOdd);
+                    const isSelected = selected.some(s => s.label === m.label);
+                    return (
+                      <tr key={i} style={{ background: isSelected ? 'rgba(58,174,108,.05)' : 'transparent' }}>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
+                          <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, userOdd, fairOdd)} style={{ width: 15, height: 15, accentColor: '#3aae6c' }} />
+                        </td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontWeight: 500, fontSize: 13 }}>{m.label}</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{(m.prob * 100).toFixed(1)}%</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{uOdd ? ((1 / uOdd) * 100).toFixed(1) + '%' : '—'}</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13, color: ev.cls === 'pos' ? '#3aae6c' : ev.cls === 'neg' ? '#d95050' : '#7a8aaa', fontWeight: ev.cls !== 'neu' ? 700 : 400 }}>{ev.txt}</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontFamily: "'Outfit',sans-serif", fontWeight: 700, color: '#6b9fd4', fontSize: 14 }}>{fairOdd > 0 ? fairOdd.toFixed(2) : '—'}</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
+                          {ev.ev !== null && <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: ev.ev > 5 ? 'rgba(58,174,108,.13)' : 'rgba(201,168,76,.1)', color: ev.ev > 5 ? '#3aae6c' : '#c9a84c' }}>{ev.ev > 5 ? 'Conviene ✓' : 'No conviene'}</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Secondary markets */}
+          {activeTab === 'sec' && (
+            <div style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, overflow: 'hidden', marginBottom: '1rem' }}>
+              <div style={{ padding: '10px 14px', fontSize: 12, fontWeight: 600, color: '#7a8aaa', borderBottom: '1px solid rgba(201,168,76,.1)' }}>
+                📐 Otras estimaciones del partido — cálculos aproximados, orientativos
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {['','De qué se trata','Estimado','Referencia','Lo más probable','Cuota'].map((h,i)=>(
+                      <th key={i} style={{fontSize:10,fontWeight:700,color:'#7a8aaa',textTransform:'uppercase',letterSpacing:'.05em',padding:'8px 10px',borderBottom:'1px solid rgba(201,168,76,.12)',textAlign:'left'}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {secMkts.map((m, i) => {
+                    const hasPick = m.isOver !== null;
+                    const isSelected = selected.some(s => s.label === m.label + ': ' + m.pick);
+                    return (
+                      <tr key={i}>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
+                          {hasPick && m.fair && <input type="checkbox" checked={isSelected} onChange={() => toggleSecMarket(m.label + ': ' + m.pick, 0.55, m.fair!)} style={{ width: 15, height: 15, accentColor: '#3aae6c' }} />}
+                        </td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{m.label}</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{m.est}</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13, color: '#7a8aaa' }}>~{m.est - 1}</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: hasPick ? 'rgba(58,174,108,.13)' : 'rgba(201,168,76,.1)', color: hasPick ? '#3aae6c' : '#c9a84c' }}>{m.pick}</span>
+                        </td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
+                          {m.fair ? <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 14, color: '#6b9fd4' }}>{m.fair.toFixed(2)}</span> : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div style={{ padding: '10px 14px', fontSize: 11, color: '#7a8aaa' }}>Orientativo.</div>
+            </div>
+          )}
+
+          {/* Explanation panel */}
+          <div style={{ background: 'var(--sur2)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 10, padding: '14px 16px', marginBottom: '1rem', fontSize: 12, lineHeight: 1.9 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 10 }}>🔍 Por qué el modelo piensa esto</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 10 }}>
+              {[{name:home,m:result.mH,wc:result.wcH,xg:result.p.xgH},{name:away,m:result.mA,wc:result.wcA,xg:result.p.xgA}].map((t,i)=>(
+                <div key={i} style={{background:'var(--sur)',border:'1px solid rgba(201,168,76,.1)',borderRadius:8,padding:'10px 12px'}}>
+                  <div style={{fontWeight:600,marginBottom:6}}>{t.name}</div>
+                  <div style={{fontSize:11,color:'#7a8aaa'}}>Datos: {t.wc&&t.m?'Mundial + histórico':t.wc?'WC real':t.m?'Histórico':'Estimado'}</div>
+                  <div style={{fontSize:11,color:'#7a8aaa'}}>Nivel del equipo: <strong style={{color:'#6b9fd4'}}>{t.m?.elo||1500}</strong></div>
+                  <div style={{fontSize:11,color:'#7a8aaa'}}>Goles por partido: {t.m?t.m.avgGF.toFixed(2):'—'}</div>
+                  <div style={{fontSize:11,color:'#7a8aaa'}}>Goles recibidos: {t.m?t.m.avgGA.toFixed(2)+' ('+defQ(t.m.avgGA)+')':'—'}</div>
+                  <div style={{fontSize:12,fontWeight:500,color:'#6b9fd4',marginTop:6}}>Goles esperados hoy: {typeof t.xg==='number'?t.xg.toFixed(2):'—'}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 8, color: '#7a8aaa' }}>
+              <div>El favorito según el nivel histórico es <strong style={{color:'#6b9fd4'}}>{result.eloFav}</strong>.</div>
+              <div style={{marginTop:4}}>{result.h2hExpl}.</div>
+              {result.live && (result.lv.rh > 0 || result.lv.ra > 0) && (
+                <div style={{color:'#d95050',marginTop:4}}>
+                  🟥 Expulsados: {result.lv.rh > 0 ? `${home} juega con ${result.lv.rh} jugador${result.lv.rh>1?'es':''} menos` : ''}{result.lv.rh>0&&result.lv.ra>0?' · ':''}{result.lv.ra > 0 ? `${away} juega con ${result.lv.ra} jugador${result.lv.ra>1?'es':''} menos` : ''}.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bet Builder */}
+          {selected.length > 0 && (
+            <div style={{ background: 'var(--sur)', border: '1px solid rgba(58,174,108,.28)', borderRadius: 12, padding: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                <span style={{ fontWeight: 700 }}>🎯 Tu apuesta</span>
+                <span style={{ fontSize: 11, color: '#7a8aaa' }}>{selected.length} elegida{selected.length !== 1 ? 's' : ''}</span>
+              </div>
+              {selected.map((m, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>
+                  <span>{m.label}</span>
+                  <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 700, color: '#6b9fd4' }}>{m.odd.toFixed(2)}</span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: 20, margin: '12px 0', flexWrap: 'wrap' }}>
+                <div><div style={{ fontSize: 10, color: '#7a8aaa' }}>Cuota combinada</div><div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 22, color: '#c9a84c' }}>{combOdd.toFixed(2)}</div></div>
+                <div><div style={{ fontSize: 10, color: '#7a8aaa' }}>Probabilidad</div><div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 22, color: '#6b9fd4' }}>{(combProb * 100).toFixed(1)}%</div></div>
+                <div><div style={{ fontSize: 10, color: '#7a8aaa' }}>Si ganas</div><div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 22, color: '#3aae6c' }}>+{((combOdd - 1) * stakeN).toFixed(2)}</div></div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8, alignItems: 'end' }}>
+                <div>
+                  <label style={label12}>¿Cuánto vas a apostar?</label>
+                  <input type="number" step="0.1" value={stake} onChange={e => setStake(e.target.value)} style={inp} />
+                </div>
+                <div>
+                  <label style={label12}>¿En qué casa?</label>
+                  <select value={bookie} onChange={e => setBookie(e.target.value)} style={{ ...inp, appearance: 'none' as const }}>
+                    {['Coolbet', 'Betano', 'Bet365', 'Jugabet', '1xBet', 'Otra'].map(b => <option key={b}>{b}</option>)}
+                  </select>
+                </div>
+                <button onClick={register} style={{ height: 42, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c)', color: '#0a0f1e', fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 13, border: 'none', borderRadius: 9, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  + Registrar
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
