@@ -123,28 +123,22 @@ export default function App({ username, email, plan }: { username: string; email
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       {/* NAV */}
       <nav style={{ background: 'rgba(17,27,48,.97)', borderBottom: '1px solid rgba(201,168,76,.18)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(10px)', paddingTop: 'env(safe-area-inset-top)' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1.25rem', display: 'flex', alignItems: 'center', overflowX: 'auto' }}>
-          <button onClick={() => setTab('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: '14px 0', marginRight: 24, flexShrink: 0 }}>
-            <img src="/icon-192.png?v=2" alt="" style={{ width: 26, height: 26, borderRadius: 7 }} />
-            <span style={{ fontFamily: "'Montserrat',sans-serif", fontWeight: 900, fontSize: 18, letterSpacing: '-.02em', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>GuessBet</span>
+        {/* Fila 1: logo + usuario — siempre visibles, sin scroll */}
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <button onClick={() => setTab('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', flexShrink: 0, minWidth: 0 }}>
+            <img src="/icon-192.png?v=2" alt="" style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0 }} />
+            <span style={{ fontFamily: "'Montserrat',sans-serif", fontWeight: 900, fontSize: 18, letterSpacing: '-.02em', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', whiteSpace: 'nowrap' }}>GuessBet</span>
           </button>
-          {(['home','calc','hist','mybet','premium'] as Tab[]).map((t) => {
-            const labels: Record<Tab,string> = { home: 'Inicio', calc: 'Analizar un partido', hist: 'Resultados pasados', mybet: 'Mis apuestas', premium: 'Premium' };
-            return (
-              <button key={t} onClick={() => setTab(t)} style={{ background: 'none', border: 'none', borderBottom: tab === t ? '2px solid #c9a84c' : '2px solid transparent', color: tab === t ? '#c9a84c' : t === 'premium' ? '#c9a84c' : '#7a8aaa', fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: t === 'premium' ? 700 : 500, padding: '14px 12px', cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: -1 }}>
-                {t === 'premium' ? '★ Premium' : labels[t]}
-              </button>
-            );
-          })}
-          <div ref={menuRef} style={{ marginLeft: 'auto', position: 'relative', flexShrink: 0 }}>
+
+          <div ref={menuRef} style={{ position: 'relative', flexShrink: 0 }}>
             <button onClick={() => setMenuOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: menuOpen ? 'rgba(201,168,76,.1)' : 'transparent', border: '1px solid rgba(201,168,76,.18)', borderRadius: 8, padding: '5px 8px', cursor: 'pointer' }}>
-              <span style={{ fontSize: 12, color: '#f0ece0', fontWeight: 600 }}>👤 {username}</span>
+              <span style={{ fontSize: 12, color: '#f0ece0', fontWeight: 600, whiteSpace: 'nowrap' }}>👤 {username}</span>
               {plan === 'premium' && <span style={{ fontSize: 9, background: 'rgba(201,168,76,.15)', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', padding: '1px 6px', borderRadius: 10, fontWeight: 700 }}>PRO</span>}
               <span style={{ fontSize: 10, color: '#7a8aaa', transform: menuOpen ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>▾</span>
             </button>
 
             {menuOpen && (
-              <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 220, background: 'var(--sur)', border: '1px solid rgba(201,168,76,.2)', borderRadius: 12, boxShadow: '0 12px 30px rgba(0,0,0,.4)', overflow: 'hidden', zIndex: 200 }}>
+              <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 220, maxWidth: '85vw', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.2)', borderRadius: 12, boxShadow: '0 12px 30px rgba(0,0,0,.4)', overflow: 'hidden', zIndex: 200 }}>
                 <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(201,168,76,.12)' }}>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{username}</div>
                   <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>
@@ -167,6 +161,18 @@ export default function App({ username, email, plan }: { username: string; email
               </div>
             )}
           </div>
+        </div>
+
+        {/* Fila 2: pestañas — con su propio scroll horizontal */}
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1.25rem', display: 'flex', alignItems: 'center', overflowX: 'auto', borderTop: '1px solid rgba(201,168,76,.08)' }}>
+          {(['home','calc','hist','mybet','premium'] as Tab[]).map((t) => {
+            const labels: Record<Tab,string> = { home: 'Inicio', calc: 'Analizar un partido', hist: 'Resultados pasados', mybet: 'Mis apuestas', premium: 'Premium', account: 'Mi cuenta' };
+            return (
+              <button key={t} onClick={() => setTab(t)} style={{ background: 'none', border: 'none', borderBottom: tab === t ? '2px solid #c9a84c' : '2px solid transparent', color: tab === t ? '#c9a84c' : t === 'premium' ? '#c9a84c' : '#7a8aaa', fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: t === 'premium' ? 700 : 500, padding: '11px 12px', cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: -1, flexShrink: 0 }}>
+                {t === 'premium' ? '★ Premium' : labels[t]}
+              </button>
+            );
+          })}
         </div>
       </nav>
 
