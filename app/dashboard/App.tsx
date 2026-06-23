@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { modelProbs, bestPick, getH2H, FLAG_CODES, FIXTURES, TOURNAMENTS, ACTIVE_TOURNAMENT } from '@/lib/model';
 import CalcTab from './CalcTab';
 import PremiumTab from './PremiumTab';
 import InstallAppSection from '../InstallApp';
 
-type Tab = 'home' | 'calc' | 'hist' | 'mybet' | 'premium';
+type Tab = 'home' | 'calc' | 'hist' | 'mybet' | 'premium' | 'account';
 
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
   const code = FLAG_CODES[name];
@@ -41,6 +41,21 @@ export default function App({ username, email, plan }: { username: string; email
   const [bets, setBets] = useState<DbBet[]>([]);
   const [loadingBets, setLoadingBets] = useState(true);
   const [usedToday, setUsedToday] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    document.addEventListener('touchstart', onClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside);
+      document.removeEventListener('touchstart', onClickOutside);
+    };
+  }, [menuOpen]);
 
   // ── Fetch bets ──
   const fetchBets = useCallback(async () => {
@@ -121,10 +136,36 @@ export default function App({ username, email, plan }: { username: string; email
               </button>
             );
           })}
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-            <span style={{ fontSize: 12, color: '#7a8aaa' }}>👤 {username}</span>
-            {plan === 'premium' && <span style={{ fontSize: 10, background: 'rgba(201,168,76,.15)', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>PRO</span>}
-            <button onClick={logout} style={{ height: 30, padding: '0 10px', fontSize: 12, background: 'transparent', border: '1px solid rgba(201,168,76,.2)', borderRadius: 7, color: '#7a8aaa', cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>Salir</button>
+          <div ref={menuRef} style={{ marginLeft: 'auto', position: 'relative', flexShrink: 0 }}>
+            <button onClick={() => setMenuOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: menuOpen ? 'rgba(201,168,76,.1)' : 'transparent', border: '1px solid rgba(201,168,76,.18)', borderRadius: 8, padding: '5px 8px', cursor: 'pointer' }}>
+              <span style={{ fontSize: 12, color: '#f0ece0', fontWeight: 600 }}>👤 {username}</span>
+              {plan === 'premium' && <span style={{ fontSize: 9, background: 'rgba(201,168,76,.15)', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', padding: '1px 6px', borderRadius: 10, fontWeight: 700 }}>PRO</span>}
+              <span style={{ fontSize: 10, color: '#7a8aaa', transform: menuOpen ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>▾</span>
+            </button>
+
+            {menuOpen && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 220, background: 'var(--sur)', border: '1px solid rgba(201,168,76,.2)', borderRadius: 12, boxShadow: '0 12px 30px rgba(0,0,0,.4)', overflow: 'hidden', zIndex: 200 }}>
+                <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(201,168,76,.12)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{username}</div>
+                  <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>
+                </div>
+                {[
+                  { key: 'mybet' as Tab, icon: '🎯', label: 'Mis apuestas' },
+                  { key: 'account' as Tab, icon: '👤', label: 'Información personal' },
+                  { key: 'account' as Tab, icon: '💳', label: 'Método de pago' },
+                  { key: 'premium' as Tab, icon: '★', label: 'Premium' },
+                ].map((item, i) => (
+                  <button key={i} onClick={() => { setTab(item.key); setMenuOpen(false); }} style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', padding: '10px 14px', fontSize: 13, color: '#f0ece0', cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
+                    <span style={{ fontSize: 14, width: 16, textAlign: 'center' }}>{item.icon}</span>{item.label}
+                  </button>
+                ))}
+                <div style={{ borderTop: '1px solid rgba(201,168,76,.12)' }}>
+                  <button onClick={logout} style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', padding: '10px 14px', fontSize: 13, color: '#d95050', cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
+                    <span style={{ fontSize: 14, width: 16, textAlign: 'center' }}>⎋</span>Cerrar sesión
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </nav>
@@ -136,7 +177,73 @@ export default function App({ username, email, plan }: { username: string; email
         {tab === 'hist' && <HistTab />}
         {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={deleteBet} />}
         {tab === 'premium' && <PremiumTab plan={plan} />}
+        {tab === 'account' && <AccountTab username={username} email={email} plan={plan} setTab={setTab} logout={logout} />}
       </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// ACCOUNT TAB
+// ─────────────────────────────────────────────
+function AccountTab({ username, email, plan, setTab, logout }: { username: string; email: string; plan: string; setTab: (t: Tab) => void; logout: () => void }) {
+  const card: React.CSSProperties = { background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1.25rem', marginBottom: '1rem' };
+  const rowLabel: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 };
+
+  return (
+    <div style={{ maxWidth: 480, margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: '1.5rem' }}>
+        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#0a0f1e', flexShrink: 0 }}>
+          {username.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+            {username}
+            {plan === 'premium' && <span style={{ fontSize: 10, background: 'rgba(201,168,76,.15)', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>PRO</span>}
+          </div>
+          <div style={{ fontSize: 13, color: '#7a8aaa' }}>{email}</div>
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>👤 Información personal</div>
+        <div style={{ marginBottom: 12 }}>
+          <div style={rowLabel}>Nombre de usuario</div>
+          <div style={{ fontSize: 14 }}>{username}</div>
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <div style={rowLabel}>Correo electrónico</div>
+          <div style={{ fontSize: 14 }}>{email}</div>
+        </div>
+        <div>
+          <div style={rowLabel}>Plan actual</div>
+          <div style={{ fontSize: 14, color: plan === 'premium' ? '#c9a84c' : '#f0ece0' }}>{plan === 'premium' ? 'GuessBet PRO' : 'Free'}</div>
+        </div>
+        <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 14, lineHeight: 1.6 }}>Próximamente podrás editar tu nombre de usuario y cambiar tu contraseña desde aquí.</div>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>💳 Método de pago</div>
+        {plan === 'premium' ? (
+          <>
+            <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 12 }}>Tu suscripción PRO está activa.</div>
+            <button onClick={() => alert('Próximamente: gestión de método de pago.')} style={{ height: 40, padding: '0 16px', background: 'transparent', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', fontSize: 13, fontWeight: 600, borderRadius: 9, cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
+              Gestionar suscripción
+            </button>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 12 }}>No tienes un método de pago guardado todavía.</div>
+            <button onClick={() => setTab('premium')} style={{ height: 40, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, cursor: 'pointer', border: 'none', fontFamily: "'Outfit',sans-serif" }}>
+              Ver planes PRO
+            </button>
+          </>
+        )}
+      </div>
+
+      <button onClick={logout} style={{ width: '100%', height: 44, background: 'transparent', border: '1px solid rgba(217,80,80,.3)', color: '#d95050', fontSize: 13, fontWeight: 600, borderRadius: 9, cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
+        Cerrar sesión
+      </button>
     </div>
   );
 }
