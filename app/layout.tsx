@@ -19,8 +19,8 @@ export const metadata: Metadata = {
     title: 'GuessBet',
   },
   icons: {
-    apple: '/icon-192.png',
-    icon: '/icon-192.png',
+    apple: '/icon-192.png?v=2',
+    icon: '/icon-192.png?v=2',
   },
 };
 
@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icon-192.png?v=2" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="GuessBet" />
