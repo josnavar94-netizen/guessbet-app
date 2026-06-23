@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { modelProbs, bestPick, getH2H, FLAG_CODES, FIXTURES, TOURNAMENTS, ACTIVE_TOURNAMENT } from '@/lib/model';
 import CalcTab from './CalcTab';
 import PremiumTab from './PremiumTab';
+import InstallAppSection from '../InstallApp';
 
 type Tab = 'home' | 'calc' | 'hist' | 'mybet' | 'premium';
 
@@ -163,14 +164,32 @@ function HomeTab({ username, setTab, bets }: { username: string; setTab: (t: Tab
         </div>
       </div>
 
-      {/* Cómo funciona */}
+      {/* Qué hace GuessBet */}
       <div style={{ margin: '2rem 0' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: '#c9a84c', textTransform: 'uppercase', textAlign: 'center', marginBottom: '1.25rem' }}>Cómo funciona</div>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: '#c9a84c', textTransform: 'uppercase', textAlign: 'center', marginBottom: '1.25rem' }}>Qué hace GuessBet</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
           {[
-            { icon: '⚽', n: '1', title: 'Elige el partido', desc: 'Selecciona cualquier partido del Mundial 2026' },
-            { icon: '💰', n: '2', title: 'Ingresa la cuota', desc: 'Copia el número de tu casa de apuestas' },
-            { icon: '📊', n: '3', title: 'Recibe el análisis', desc: 'Te decimos si conviene o no apostar' },
+            { icon: '📊', title: 'Calcula la probabilidad real', desc: 'Modelo entrenado con más de 14.000 partidos de los últimos 20 años, ajustado con los resultados reales del Mundial 2026' },
+            { icon: '⚖️', title: 'Compara contra tu cuota', desc: 'Comparamos esa probabilidad contra la cuota de tu casa de apuestas y te decimos si hay una ventaja real o no' },
+            { icon: '📈', title: 'Registra tu rendimiento', desc: 'Guarda cada apuesta que haces y mide tu ROI, aciertos y racha real con el tiempo' },
+          ].map((s, i) => (
+            <div key={i} style={{ background: 'var(--sur)', border: '1px solid var(--b)', borderRadius: 12, padding: '1.25rem 1rem', textAlign: 'center' }}>
+              <div style={{ fontSize: 26, marginBottom: 10 }}>{s.icon}</div>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{s.title}</div>
+              <div style={{ fontSize: 12, color: '#7a8aaa', lineHeight: 1.6 }}>{s.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Cómo funciona, paso a paso */}
+      <div style={{ margin: '2rem 0' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: '#c9a84c', textTransform: 'uppercase', textAlign: 'center', marginBottom: '1.25rem' }}>Cómo se usa</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+          {[
+            { icon: '⚽', n: '1', title: 'Elige el partido', desc: 'Selecciona cualquier partido próximo del Mundial 2026, agrupados por fecha' },
+            { icon: '💰', n: '2', title: 'Copia la cuota', desc: 'Escribe el número que te ofrece tu casa de apuestas para cada mercado' },
+            { icon: '✅', n: '3', title: 'Decide con datos', desc: 'Te mostramos en qué apuestas el modelo cree que tienes ventaja' },
           ].map((s, i) => (
             <div key={i} style={{ background: 'var(--sur)', border: '1px solid var(--b)', borderRadius: 12, padding: '1.25rem 1rem', textAlign: 'center' }}>
               <div style={{ fontSize: 28, marginBottom: 8 }}>{s.icon}</div>
@@ -244,6 +263,11 @@ function HomeTab({ username, setTab, bets }: { username: string; setTab: (t: Tab
           </div>
         </div>
       )}
+
+      {/* Instala la app */}
+      <div style={{ margin: '2.5rem 0 1rem' }}>
+        <InstallAppSection />
+      </div>
     </div>
   );
 }
