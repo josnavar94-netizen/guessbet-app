@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { modelProbs, getH2H, MODEL, WC_REAL, FLAGS, FIXTURES } from '@/lib/model';
+import { modelProbs, getH2H, MODEL, WC_REAL, FLAGS, FLAG_CODES, FIXTURES } from '@/lib/model';
+
+function Flag({ name, size = 16 }: { name: string; size?: number }) {
+  const code = FLAG_CODES[name];
+  if (!code) return null;
+  return <img src={`https://flagcdn.com/h${size === 16 ? 20 : 40}/${code}.png`} alt="" style={{ height: size, width: 'auto', borderRadius: 2, flexShrink: 0, verticalAlign: 'middle' }} />;
+}
 
 type Bet = { label: string; prob: number; odd: number };
 
@@ -48,8 +54,6 @@ function eC(mp: number, odd: number | null) {
 }
 
 function defQ(ga: number) { return ga < 1 ? 'sólida' : ga < 1.4 ? 'buena' : ga < 1.8 ? 'media' : 'débil'; }
-
-function flag(name: string) { const f = FLAGS[name]; return f ? f + ' ' : ''; }
 
 const inp: React.CSSProperties = { width: '100%', background: 'var(--sur2)', border: '1px solid rgba(201,168,76,.24)', color: '#f0ece0', fontFamily: "'Outfit',sans-serif", fontSize: 14, padding: '0 12px', height: 42, borderRadius: 9 };
 const label12: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', display: 'block', marginBottom: 4, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '.04em' };
@@ -134,25 +138,25 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
   }
 
   const mkts = result ? [
-    { label: `Gana ${flag(home)}${home} (1)`, prob: result.p.home, oddKey: 'home' },
+    { label: `Gana ${home} (1)`, prob: result.p.home, oddKey: 'home', team: home },
     { label: 'Empatan (X)', prob: result.p.draw, oddKey: 'draw' },
-    { label: `Gana ${flag(away)}${away} (2)`, prob: result.p.away, oddKey: 'away' },
+    { label: `Gana ${away} (2)`, prob: result.p.away, oddKey: 'away', team: away },
     { label: 'Más de 2.5 goles', prob: result.p.over25, oddKey: 'over' },
     { label: 'Menos de 2.5 goles', prob: result.p.under25, oddKey: 'under' },
     { label: 'Ambos equipos anotan', prob: result.p.btts, oddKey: 'btts' },
     { label: 'NO ambos anotan', prob: result.bttsNo, oddKey: 'bttsno' },
-    { label: `Gana ${flag(home)}${home} o empatan`, prob: result.dcHomeDraw, oddKey: 'dc1x' },
-    { label: `Empatan o gana ${flag(away)}${away}`, prob: result.dcAwayDraw, oddKey: 'dcx2' },
-    { label: `Gana ${flag(home)}${home} o gana ${flag(away)}${away}`, prob: result.dcHomeAway, oddKey: 'dc12' },
-    { label: `Gana ${flag(home)}${home} (sin contar empate)`, prob: result.dnbHome, oddKey: 'dnbh' },
-    { label: `Gana ${flag(away)}${away} (sin contar empate)`, prob: result.dnbAway, oddKey: 'dnba' },
+    { label: `Gana ${home} o empatan`, prob: result.dcHomeDraw, oddKey: 'dc1x', team: home },
+    { label: `Empatan o gana ${away}`, prob: result.dcAwayDraw, oddKey: 'dcx2', team: away },
+    { label: `Gana ${home} o gana ${away}`, prob: result.dcHomeAway, oddKey: 'dc12' },
+    { label: `Gana ${home} (sin contar empate)`, prob: result.dnbHome, oddKey: 'dnbh', team: home },
+    { label: `Gana ${away} (sin contar empate)`, prob: result.dnbAway, oddKey: 'dnba', team: away },
   ] : [];
 
   const secMkts = result ? [
     { label: 'Corners totales', est: result.sec.co, isOver: result.sec.co > 10, pick: `${result.sec.co > 10 ? 'Over' : 'Under'} ${result.sec.co - 2}.5`, fair: 1.85 },
     { label: 'Tarjetas amarillas', est: result.sec.ta, isOver: null, pick: 'Orientativo', fair: null },
-    { label: `Tiros a puerta ${flag(home)}${home}`, est: result.sec.sH, isOver: result.sec.sH > 4, pick: `${result.sec.sH > 4 ? 'Over' : 'Under'} ${result.sec.sH - 1}.5`, fair: 1.90 },
-    { label: `Tiros a puerta ${flag(away)}${away}`, est: result.sec.sA, isOver: result.sec.sA > 3, pick: `${result.sec.sA > 3 ? 'Over' : 'Under'} ${result.sec.sA - 1}.5`, fair: 1.90 },
+    { label: `Tiros a puerta ${home}`, est: result.sec.sH, isOver: result.sec.sH > 4, pick: `${result.sec.sH > 4 ? 'Over' : 'Under'} ${result.sec.sH - 1}.5`, fair: 1.90, team: home },
+    { label: `Tiros a puerta ${away}`, est: result.sec.sA, isOver: result.sec.sA > 3, pick: `${result.sec.sA > 3 ? 'Over' : 'Under'} ${result.sec.sA - 1}.5`, fair: 1.90, team: away },
   ] : [];
 
   const hasOdds = Object.values(odds).some(v => toD(v) !== null);
@@ -171,13 +175,13 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
         </select>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 32px 1fr', gap: 8, marginBottom: 10, alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
-            {FLAGS[home] && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', fontSize: 16, pointerEvents: 'none' }}>{FLAGS[home]}</span>}
-            <input value={home} onChange={e => setHome(e.target.value)} style={{ ...inp, paddingLeft: FLAGS[home] ? 32 : 12 }} />
+            {FLAG_CODES[home] && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><Flag name={home} /></span>}
+            <input value={home} onChange={e => setHome(e.target.value)} style={{ ...inp, paddingLeft: FLAG_CODES[home] ? 34 : 12 }} />
           </div>
           <div style={{ textAlign: 'center', fontSize: 11, color: '#7a8aaa' }}>VS</div>
           <div style={{ position: 'relative' }}>
-            {FLAGS[away] && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', fontSize: 16, pointerEvents: 'none' }}>{FLAGS[away]}</span>}
-            <input value={away} onChange={e => setAway(e.target.value)} style={{ ...inp, paddingLeft: FLAGS[away] ? 32 : 12 }} />
+            {FLAG_CODES[away] && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><Flag name={away} /></span>}
+            <input value={away} onChange={e => setAway(e.target.value)} style={{ ...inp, paddingLeft: FLAG_CODES[away] ? 34 : 12 }} />
           </div>
         </div>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#7a8aaa', cursor: 'pointer' }}>
@@ -192,10 +196,10 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
         <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 12, lineHeight: 1.6 }}>Una "cuota" es el número que multiplica tu dinero si ganas. Ej: cuota 2.00 con $10 apostados = $20 de vuelta. Déjalo vacío si no tienes.</p>
         <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>¿Quién gana el partido?</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
-          {[['home', `Gana ${flag(home)}${home}`], ['draw', 'Empatan'], ['away', `Gana ${flag(away)}${away}`]].map(([k, ph]) => (
+          {[['home', `Gana ${home}`, home], ['draw', 'Empatan', null], ['away', `Gana ${away}`, away]].map(([k, ph, team]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
-              <span style={{ fontSize: 13 }}>{ph}</span>
-              <input type="number" step="0.01" placeholder="1.85" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
+              <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>{team && <Flag name={team} />}{ph}</span>
+              <input type="number" step="0.01" placeholder="1.85" value={odds[k as string] || ''} onChange={e => setOdds({ ...odds, [k as string]: e.target.value })} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
             </div>
           ))}
         </div>
@@ -212,7 +216,7 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
         <details style={{ marginBottom: 10 }}>
           <summary style={{ fontSize: 12, color: '#6b9fd4', cursor: 'pointer', marginBottom: 8 }}>▸ Ver más tipos de apuesta (Doble Oportunidad, Sin empate...)</summary>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
-            {[['bttsno','NO ambos anotan'],['dc1x',`Gana ${flag(home)}${home} o empatan`],['dcx2',`Empatan o gana ${flag(away)}${away}`],['dc12',`Gana ${flag(home)}${home} o ${flag(away)}${away}`],['dnbh',`Gana ${flag(home)}${home} (sin empate)`],['dnba',`Gana ${flag(away)}${away} (sin empate)`]].map(([k,ph]) => (
+            {[['bttsno','NO ambos anotan'],['dc1x',`Gana ${home} o empatan`],['dcx2',`Empatan o gana ${away}`],['dc12',`Gana ${home} o ${away}`],['dnbh',`Gana ${home} (sin empate)`],['dnba',`Gana ${away} (sin empate)`]].map(([k,ph]) => (
               <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
                 <span style={{ fontSize: 13 }}>{ph}</span>
                 <input type="number" step="0.01" placeholder="1.06" value={odds[k]||''} onChange={e=>setOdds({...odds,[k]:e.target.value})} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
@@ -239,11 +243,11 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
             <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>Marcador</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
-                <span style={{ fontSize: 13 }}>Goles {flag(home)}{home}</span>
+                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>Goles <Flag name={home} />{home}</span>
                 <input type="number" value={liveGh} onChange={e=>setLiveGh(e.target.value)} min="0" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
-                <span style={{ fontSize: 13 }}>Goles {flag(away)}{away}</span>
+                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>Goles <Flag name={away} />{away}</span>
                 <input type="number" value={liveGa} onChange={e=>setLiveGa(e.target.value)} min="0" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} />
               </div>
             </div>
@@ -251,11 +255,11 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
             <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>🟥 Expulsados</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(217,80,80,.18)', borderRadius: 9, padding: '6px 10px' }}>
-                <span style={{ fontSize: 13 }}>{flag(home)}{home}</span>
+                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><Flag name={home} />{home}</span>
                 <input type="number" value={liveRh} onChange={e=>setLiveRh(e.target.value)} min="0" max="5" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} placeholder="0" />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(217,80,80,.18)', borderRadius: 9, padding: '6px 10px' }}>
-                <span style={{ fontSize: 13 }}>{flag(away)}{away}</span>
+                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><Flag name={away} />{away}</span>
                 <input type="number" value={liveRa} onChange={e=>setLiveRa(e.target.value)} min="0" max="5" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} placeholder="0" />
               </div>
             </div>
@@ -284,7 +288,7 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
           {/* xG strip */}
           <div style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.2)', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1rem', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
             {[{name:home,xg:result.p.xgH},{name:away,xg:result.p.xgA}].map((t,i) => (
-              <div key={i}><div style={{fontSize:11,color:'#7a8aaa'}}>{flag(t.name)}{t.name}</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:28,color:'#c9a84c'}}>{t.xg.toFixed(2)}</div><div style={{fontSize:10,color:'#7a8aaa'}}>{live?'goles que le faltan':'goles esperados'}</div></div>
+              <div key={i}><div style={{fontSize:11,color:'#7a8aaa',display:'flex',alignItems:'center',gap:5}}><Flag name={t.name} size={12} />{t.name}</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:28,color:'#c9a84c'}}>{t.xg.toFixed(2)}</div><div style={{fontSize:10,color:'#7a8aaa'}}>{live?'goles que le faltan':'goles esperados'}</div></div>
             ))}
             <div style={{ marginLeft: 'auto', fontSize: 11, color: '#7a8aaa', textAlign: 'right' }}>ELO {result.p.eloH.toFixed(0)} vs {result.p.eloA.toFixed(0)}<br/>{neutral?'Sede neutral':'Con ventaja local'}</div>
           </div>
@@ -294,9 +298,9 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
             <div style={{ background: 'rgba(107,159,212,.07)', border: '1px solid rgba(107,159,212,.2)', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1rem' }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#6b9fd4', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>🔄 Cuando estos dos equipos jugaron antes</div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-                {[{l:`${flag(home)}${home} ganó`, v: result.hd.t1First ? result.hd.data.w1 : result.hd.data.l1},{l:'Empates',v:result.hd.data.d},{l:`${flag(away)}${away} ganó`,v:result.hd.t1First?result.hd.data.l1:result.hd.data.w1},{l:'Total partidos',v:result.hd.data.n}].map((s,i)=>(
+                {[{l:`${home} ganó`, team: home, v: result.hd.t1First ? result.hd.data.w1 : result.hd.data.l1},{l:'Empates',team:null,v:result.hd.data.d},{l:`${away} ganó`,team:away,v:result.hd.t1First?result.hd.data.l1:result.hd.data.w1},{l:'Total partidos',team:null,v:result.hd.data.n}].map((s,i)=>(
                   <div key={i} style={{background:'rgba(107,159,212,.08)',border:'1px solid rgba(107,159,212,.18)',borderRadius:7,padding:'6px 14px',textAlign:'center', minWidth: '90px'}}>
-                    <div style={{fontSize:10,color:'#7a8aaa', marginBottom: 2, whiteSpace: 'nowrap'}}>{s.l}</div>
+                    <div style={{fontSize:10,color:'#7a8aaa', marginBottom: 2, whiteSpace: 'nowrap', display:'flex', alignItems:'center', justifyContent:'center', gap:4}}>{s.team && <Flag name={s.team} size={11} />}{s.l}</div>
                     <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:18,color:'#6b9fd4'}}>{s.v}</div>
                   </div>
                 ))}
@@ -327,7 +331,7 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
                   <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isSelected ? 'rgba(58,174,108,.08)' : 'var(--sur)', border: `1px solid ${isSelected ? 'rgba(58,174,108,.3)' : 'rgba(201,168,76,.12)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer' }}>
                     <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, userOdd, fairOdd)} style={{ width: 16, height: 16, accentColor: '#3aae6c', flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 500 }}>{m.label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</div>
                       <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>Modelo {(m.prob * 100).toFixed(1)}% {uOdd ? `· Tu cuota ${((1 / uOdd) * 100).toFixed(1)}%` : ''}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -356,7 +360,7 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
                         <input type="checkbox" checked={isSelected} onChange={() => toggleSecMarket(m.label + ': ' + m.pick, 0.55, m.fair!)} style={{ width: 16, height: 16, accentColor: '#3aae6c', flexShrink: 0 }} />
                       ) : <div style={{ width: 16, flexShrink: 0 }} />}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500 }}>{m.label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</div>
                         <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>Estimado: {m.est} · referencia ~{m.est - 1}</div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -376,7 +380,7 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 10 }}>
               {[{name:home,m:result.mH,wc:result.wcH,xg:result.p.xgH},{name:away,m:result.mA,wc:result.wcA,xg:result.p.xgA}].map((t,i)=>(
                 <div key={i} style={{background:'var(--sur)',border:'1px solid rgba(201,168,76,.1)',borderRadius:8,padding:'10px 12px'}}>
-                  <div style={{fontWeight:600,marginBottom:6}}>{flag(t.name)}{t.name}</div>
+                  <div style={{fontWeight:600,marginBottom:6,display:'flex',alignItems:'center',gap:6}}><Flag name={t.name} />{t.name}</div>
                   <div style={{fontSize:11,color:'#7a8aaa'}}>Datos: {t.wc&&t.m?'Mundial + histórico':t.wc?'WC real':t.m?'Histórico':'Estimado'}</div>
                   <div style={{fontSize:11,color:'#7a8aaa'}}>Nivel del equipo: <strong style={{color:'#6b9fd4'}}>{t.m?.elo||1500}</strong></div>
                   <div style={{fontSize:11,color:'#7a8aaa'}}>Goles por partido: {t.m?t.m.avgGF.toFixed(2):'—'}</div>
@@ -386,11 +390,11 @@ export default function CalcTab({ onRegister }: { onRegister: (bet: any) => void
               ))}
             </div>
             <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 8, color: '#7a8aaa' }}>
-              <div>El favorito según el nivel histórico es <strong style={{color:'#6b9fd4'}}>{flag(result.eloFav)}{result.eloFav}</strong>.</div>
+              <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>El favorito según el nivel histórico es <strong style={{color:'#6b9fd4',display:'flex',alignItems:'center',gap:5}}><Flag name={result.eloFav} size={13} />{result.eloFav}</strong>.</div>
               <div style={{marginTop:4}}>{result.h2hExpl}.</div>
               {result.live && (result.lv.rh > 0 || result.lv.ra > 0) && (
                 <div style={{color:'#d95050',marginTop:4}}>
-                  🟥 Expulsados: {result.lv.rh > 0 ? `${flag(home)}${home} juega con ${result.lv.rh} jugador${result.lv.rh>1?'es':''} menos` : ''}{result.lv.rh>0&&result.lv.ra>0?' · ':''}{result.lv.ra > 0 ? `${flag(away)}${away} juega con ${result.lv.ra} jugador${result.lv.ra>1?'es':''} menos` : ''}.
+                  🟥 Expulsados: {result.lv.rh > 0 ? `${home} juega con ${result.lv.rh} jugador${result.lv.rh>1?'es':''} menos` : ''}{result.lv.rh>0&&result.lv.ra>0?' · ':''}{result.lv.ra > 0 ? `${away} juega con ${result.lv.ra} jugador${result.lv.ra>1?'es':''} menos` : ''}.
                 </div>
               )}
             </div>

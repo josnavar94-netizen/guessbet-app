@@ -16,6 +16,10 @@ export const LEAGUE_AVG = 1.68;
 
 export const FLAGS={'France':'🇫🇷','Senegal':'🇸🇳','Iraq':'🇮🇶','Norway':'🇳🇴','Argentina':'🇦🇷','Algeria':'🇩🇿','Austria':'🇦🇹','Jordan':'🇯🇴','Germany':'🇩🇪','Croatia':'🇭🇷','Ghana':'🇬🇭','Panama':'🇵🇦','Portugal':'🇵🇹','Zimbabwe':'🇿🇼','Colombia':'🇨🇴','Uzbekistan':'🇺🇿','Mexico':'🇲🇽','South Africa':'🇿🇦','South Korea':'🇰🇷','Czech Republic':'🇨🇿','Canada':'🇨🇦','Bosnia-Herzegovina':'🇧🇦','Qatar':'🇶🇦','Switzerland':'🇨🇭','Brazil':'🇧🇷','Morocco':'🇲🇦','Haiti':'🇭🇹','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','USA':'🇺🇸','Paraguay':'🇵🇾','Australia':'🇦🇺','Turkey':'🇹🇷','Ecuador':'🇪🇨','Curacao':'🇨🇼','Netherlands':'🇳🇱','Japan':'🇯🇵','Sweden':'🇸🇪','Tunisia':'🇹🇳','Belgium':'🇧🇪','Egypt':'🇪🇬','Iran':'🇮🇷','New Zealand':'🇳🇿','Spain':'🇪🇸','Cape Verde':'🇨🇻','Saudi Arabia':'🇸🇦','Uruguay':'🇺🇾',"Cote d'Ivoire":'🇨🇮'};
 
+// Códigos ISO (para banderas como imagen vía flagcdn.com — los emoji de bandera
+// no se renderizan en Windows, que no trae esos glifos de color).
+export const FLAG_CODES: Record<string,string> = {'France':'fr','Senegal':'sn','Iraq':'iq','Norway':'no','Argentina':'ar','Algeria':'dz','Austria':'at','Jordan':'jo','Germany':'de','Croatia':'hr','Ghana':'gh','Panama':'pa','Portugal':'pt','Zimbabwe':'zw','Colombia':'co','Uzbekistan':'uz','Mexico':'mx','South Africa':'za','South Korea':'kr','Czech Republic':'cz','Canada':'ca','Bosnia-Herzegovina':'ba','Qatar':'qa','Switzerland':'ch','Brazil':'br','Morocco':'ma','Haiti':'ht','Scotland':'gb-sct','USA':'us','Paraguay':'py','Australia':'au','Turkey':'tr','Ecuador':'ec','Curacao':'cw','Netherlands':'nl','Japan':'jp','Sweden':'se','Tunisia':'tn','Belgium':'be','Egypt':'eg','Iran':'ir','New Zealand':'nz','Spain':'es','Cape Verde':'cv','Saudi Arabia':'sa','Uruguay':'uy',"Cote d'Ivoire":'ci'};
+
 // ═══ FIXTURES ═══
 
 export const FIXTURES=[

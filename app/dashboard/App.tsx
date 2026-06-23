@@ -2,11 +2,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { modelProbs, bestPick, getH2H, FLAGS, FIXTURES, TOURNAMENTS, ACTIVE_TOURNAMENT } from '@/lib/model';
+import { modelProbs, bestPick, getH2H, FLAG_CODES, FIXTURES, TOURNAMENTS, ACTIVE_TOURNAMENT } from '@/lib/model';
 import CalcTab from './CalcTab';
 import PremiumTab from './PremiumTab';
 
 type Tab = 'home' | 'calc' | 'hist' | 'mybet' | 'premium';
+
+function Flag({ name, size = 16 }: { name: string; size?: number }) {
+  const code = FLAG_CODES[name];
+  if (!code) return null;
+  return <img src={`https://flagcdn.com/h${size <= 16 ? 20 : 40}/${code}.png`} alt="" style={{ height: size, width: 'auto', borderRadius: 2, flexShrink: 0, verticalAlign: 'middle' }} />;
+}
 
 type DbBet = {
   id: number;
@@ -271,9 +277,9 @@ function HistTab() {
         {filtered.map((m, i) => (
           <div key={i} style={{ background:'var(--sur)', border:'1px solid rgba(201,168,76,.1)', borderRadius:11, padding:'12px 15px', marginBottom:8, display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
             <span style={{ fontSize:11, color:'#7a8aaa', minWidth:42 }}>{m.d}</span>
-            <span style={{ flex:1, fontWeight:600, fontSize:13, display:'flex', alignItems:'center', gap:7 }}><span style={{ fontSize:18 }}>{FLAGS[m.h]||'🏳️'}</span>{m.h}</span>
+            <span style={{ flex:1, fontWeight:600, fontSize:13, display:'flex', alignItems:'center', gap:7 }}><Flag name={m.h} />{m.h}</span>
             <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:16, color:'#c9a84c', background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', padding:'3px 12px', borderRadius:7, flexShrink:0 }}>{m.gh} - {m.ga}</span>
-            <span style={{ flex:1, fontWeight:600, fontSize:13, display:'flex', alignItems:'center', gap:7, justifyContent:'flex-end' }}>{m.a}<span style={{ fontSize:18 }}>{FLAGS[m.a]||'🏳️'}</span></span>
+            <span style={{ flex:1, fontWeight:600, fontSize:13, display:'flex', alignItems:'center', gap:7, justifyContent:'flex-end' }}>{m.a}<Flag name={m.a} /></span>
           </div>
         ))}
       </div>
@@ -284,11 +290,11 @@ function HistTab() {
 // ─────────────────────────────────────────────
 // MY BETS TAB
 // ─────────────────────────────────────────────
-function matchFlags(matchName: string) {
+function MatchTitle({ matchName }: { matchName: string }) {
   const parts = matchName.split(' vs ');
-  if (parts.length !== 2) return matchName;
+  if (parts.length !== 2) return <>{matchName}</>;
   const [a, b] = parts;
-  return `${FLAGS[a.trim()] ? FLAGS[a.trim()] + ' ' : ''}${a} vs ${FLAGS[b.trim()] ? FLAGS[b.trim()] + ' ' : ''}${b}`;
+  return <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}><Flag name={a.trim()} />{a} vs <Flag name={b.trim()} />{b}</span>;
 }
 
 function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loading: boolean; updateBet: Function; deleteBet: Function }) {
@@ -436,7 +442,7 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
               <div key={b.id} style={{ background:'var(--sur)', borderLeft:`3px solid ${bc}`, borderRadius:'0 11px 11px 0', border:'1px solid rgba(201,168,76,.1)', padding:'12px 14px', marginBottom:8 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
                   <div>
-                    <div style={{ fontWeight:600, fontSize:14 }}>{matchFlags(b.match_name)}</div>
+                    <div style={{ fontWeight:600, fontSize:14 }}><MatchTitle matchName={b.match_name} /></div>
                     <div style={{ fontSize:11, color:'#7a8aaa', marginTop:2 }}>{b.competition} · {b.bookie}</div>
                   </div>
                   <div style={{ display:'flex', gap:5 }}>
