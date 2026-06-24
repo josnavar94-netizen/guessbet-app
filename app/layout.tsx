@@ -12,8 +12,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://guessbet.vercel.app'),
   title: 'GuessBet · Mundial 2026',
-  description: 'La ventaja que el mercado no quiere que tengas.',
+  description: 'Ingresa las cuotas de tu casa de apuestas y en segundos sabes si conviene apostar — basado en 20 años de datos reales de fútbol.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -23,6 +24,25 @@ export const metadata: Metadata = {
   icons: {
     apple: '/icon-192.png?v=2',
     icon: '/icon-192.png?v=2',
+  },
+  openGraph: {
+    title: 'GuessBet · Mundial 2026',
+    description: 'La ventaja que el mercado no quiere que tengas. Analiza partidos del Mundial 2026 con un modelo entrenado en 20 años de datos.',
+    url: 'https://guessbet.vercel.app',
+    siteName: 'GuessBet',
+    images: ['/icon-512.png'],
+    locale: 'es_CL',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'GuessBet · Mundial 2026',
+    description: 'La ventaja que el mercado no quiere que tengas.',
+    images: ['/icon-512.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
