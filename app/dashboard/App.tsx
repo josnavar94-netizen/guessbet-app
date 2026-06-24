@@ -178,7 +178,6 @@ export default function App({ username, email, plan, avatar }: { username: strin
                 {[
                   { key: 'mybet' as Tab, icon: '🎯', label: 'Mis apuestas' },
                   { key: 'account' as Tab, icon: '👤', label: 'Información personal' },
-                  { key: 'account' as Tab, icon: '💳', label: 'Método de pago' },
                   { key: 'premium' as Tab, icon: '★', label: 'Premium' },
                 ].map((item, i) => (
                   <button key={i} onClick={() => { setTab(item.key); setMenuOpen(false); }} style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', padding: '10px 14px', fontSize: 13, color: '#f0ece0', cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
