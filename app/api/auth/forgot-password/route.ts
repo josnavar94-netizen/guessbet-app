@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { sql } from '@/lib/db';
 import { getClientIp } from '@/lib/ip';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { logError } from '@/lib/logError';
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,14 +34,14 @@ export async function POST(req: NextRequest) {
           html: `<p>Hola ${user.username},</p><p>Recibimos una solicitud para restablecer tu contraseña en GuessBet. Este link expira en 1 hora:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Si no fuiste tú, ignora este correo — tu contraseña no cambiará.</p>`,
         });
       } else {
-        console.error('RESEND_API_KEY no configurada: no se pudo enviar el correo de recuperación.', resetUrl);
+        console.error('[auth/forgot-password] RESEND_API_KEY no configurada: no se pudo enviar el correo de recuperación.', resetUrl);
       }
     }
 
     // Respuesta genérica siempre, para no filtrar qué correos están registrados
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    logError(err, 'auth/forgot-password');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import { createSession } from '@/lib/auth';
 import { sendVerificationEmail } from '@/lib/verification';
 import { getClientIp } from '@/lib/ip';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { logError } from '@/lib/logError';
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,11 +38,11 @@ export async function POST(req: NextRequest) {
     try {
       await sendVerificationEmail(req.nextUrl.origin, user.id, user.email, user.username);
     } catch (err) {
-      console.error('Error enviando email de verificación:', err);
+      logError(err, 'auth/register:send-verification-email');
     }
     return NextResponse.json({ ok: true, user: { id: user.id, username: user.username, email: user.email, plan: user.plan } });
   } catch (err) {
-    console.error(err);
+    logError(err, 'auth/register');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }

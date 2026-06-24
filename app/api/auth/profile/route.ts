@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { sql } from '@/lib/db';
 import { getSession, createSession } from '@/lib/auth';
+import { logError } from '@/lib/logError';
 
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
@@ -55,7 +56,7 @@ export async function PATCH(req: NextRequest) {
     await createSession({ userId: user.id, username: newUsername, email: user.email, plan: user.plan, sv });
     return NextResponse.json({ ok: true, username: newUsername });
   } catch (err) {
-    console.error(err);
+    logError(err, 'auth/profile');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }

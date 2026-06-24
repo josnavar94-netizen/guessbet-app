@@ -4,6 +4,7 @@ import { sql } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import { getClientIp } from '@/lib/ip';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { logError } from '@/lib/logError';
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
     await createSession({ userId: user.id, username: user.username, email: user.email, plan: user.plan, sv });
     return NextResponse.json({ ok: true, user: { id: user.id, username: user.username, email: user.email, plan: user.plan } });
   } catch (err) {
-    console.error(err);
+    logError(err, 'auth/login');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }

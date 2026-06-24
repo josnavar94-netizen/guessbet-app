@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { logError } from '@/lib/logError';
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token');
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.redirect(new URL('/dashboard?verified=ok', req.url));
   } catch (err) {
-    console.error(err);
+    logError(err, 'auth/verify-email');
     return NextResponse.redirect(new URL('/dashboard?verified=error', req.url));
   }
 }

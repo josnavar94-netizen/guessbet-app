@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { sendVerificationEmail } from '@/lib/verification';
+import { logError } from '@/lib/logError';
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
     await sendVerificationEmail(req.nextUrl.origin, session.userId, session.email, session.username);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error(err);
+    logError(err, 'auth/resend-verification');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }

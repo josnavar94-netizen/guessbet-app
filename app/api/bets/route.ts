@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { cookies } from 'next/headers';
 import { sql } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { logError } from '@/lib/logError';
 
 const DEVICE_COOKIE = 'gb_device';
 const DEVICE_MAX_AGE = 60 * 60 * 24 * 365; // 1 año
@@ -77,6 +78,7 @@ export async function POST(req: NextRequest) {
     });
     return res;
   } catch (err) {
+    logError(err, 'bets:POST');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }
