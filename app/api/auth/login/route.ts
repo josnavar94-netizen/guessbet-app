@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { sql } from '@/lib/db';
 import { createSession } from '@/lib/auth';
+import { getClientIp } from '@/lib/ip';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
   try {
+    const allowed = await checkRateLimit(getClientIp(req), 'login', 8, 10);
+    if (!allowed)
+      return NextResponse.json({ error: 'Demasiados intentos. Espera unos minutos y vuelve a intentar.' }, { status: 429 });
+
     const { emailOrUsername, password } = await req.json();
     if (!emailOrUsername || !password)
       return NextResponse.json({ error: 'Completa todos los campos.' }, { status: 400 });

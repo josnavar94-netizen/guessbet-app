@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import { Resend } from 'resend';
 import { sql } from '@/lib/db';
+import { getClientIp } from '@/lib/ip';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
   try {
+    const allowed = await checkRateLimit(getClientIp(req), 'forgot-password', 3, 10);
+    if (!allowed)
+      return NextResponse.json({ error: 'Demasiados intentos. Espera unos minutos y vuelve a intentar.' }, { status: 429 });
+
     const { email } = await req.json();
     if (!email) return NextResponse.json({ error: 'Ingresa tu correo.' }, { status: 400 });
 

@@ -3,9 +3,15 @@ import bcrypt from 'bcryptjs';
 import { sql } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import { sendVerificationEmail } from '@/lib/verification';
+import { getClientIp } from '@/lib/ip';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
   try {
+    const allowed = await checkRateLimit(getClientIp(req), 'register', 8, 10);
+    if (!allowed)
+      return NextResponse.json({ error: 'Demasiados intentos. Espera unos minutos y vuelve a intentar.' }, { status: 429 });
+
     const { email, username, password, acceptedTerms } = await req.json();
     if (!email || !username || !password)
       return NextResponse.json({ error: 'Completa todos los campos.' }, { status: 400 });

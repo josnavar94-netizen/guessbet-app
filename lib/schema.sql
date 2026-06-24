@@ -99,3 +99,12 @@ CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS kickoff_at TIMESTAMP;
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS group_name VARCHAR(20);
 CREATE INDEX IF NOT EXISTS idx_matches_kickoff ON matches(kickoff_at);
+
+-- Migración: rate-limiting por IP en endpoints de autenticación (antifuerza bruta)
+CREATE TABLE IF NOT EXISTS auth_attempts (
+  id SERIAL PRIMARY KEY,
+  ip VARCHAR(45) NOT NULL,
+  endpoint VARCHAR(40) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_auth_attempts_lookup ON auth_attempts(ip, endpoint, created_at);
