@@ -5,8 +5,8 @@ export type FdMatch = {
   utcDate: string;
   status: string;
   stage: string;
-  homeTeam: { name: string };
-  awayTeam: { name: string };
+  homeTeam: { name: string | null };
+  awayTeam: { name: string | null };
   score: { fullTime: { home: number | null; away: number | null } };
 };
 

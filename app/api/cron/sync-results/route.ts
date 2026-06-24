@@ -23,6 +23,10 @@ export async function GET(req: NextRequest) {
     let upserted = 0;
 
     for (const m of matches) {
+      // Partidos de eliminación directa aún sin rival definido (ej. "Ganador del Partido 73")
+      // llegan con homeTeam.name/awayTeam.name en null — se ignoran hasta que se sepa quién juega.
+      if (!m.homeTeam?.name || !m.awayTeam?.name) continue;
+
       await sql`
         INSERT INTO matches (external_id, competition_code, match_date, home_team, away_team, home_goals, away_goals, status, stage)
         VALUES (
