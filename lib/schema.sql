@@ -93,3 +93,9 @@ CREATE TABLE IF NOT EXISTS email_verifications (
   created_at TIMESTAMP DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token);
+
+-- Migración: hora real del partido y grupo/fase, para armar el selector "Elige el partido"
+-- 100% desde la base de datos en vez de un fixture escrito a mano que se queda desactualizado.
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS kickoff_at TIMESTAMP;
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS group_name VARCHAR(20);
+CREATE INDEX IF NOT EXISTS idx_matches_kickoff ON matches(kickoff_at);

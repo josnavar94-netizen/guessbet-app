@@ -28,15 +28,16 @@ export async function GET(req: NextRequest) {
       if (!m.homeTeam?.name || !m.awayTeam?.name) continue;
 
       await sql`
-        INSERT INTO matches (external_id, competition_code, match_date, home_team, away_team, home_goals, away_goals, status, stage)
+        INSERT INTO matches (external_id, competition_code, match_date, kickoff_at, home_team, away_team, home_goals, away_goals, status, stage, group_name)
         VALUES (
-          ${m.id}, ${code}, ${m.utcDate.slice(0, 10)}, ${m.homeTeam.name}, ${m.awayTeam.name},
-          ${m.score.fullTime.home}, ${m.score.fullTime.away}, ${m.status}, ${m.stage}
+          ${m.id}, ${code}, ${m.utcDate.slice(0, 10)}, ${m.utcDate}, ${m.homeTeam.name}, ${m.awayTeam.name},
+          ${m.score.fullTime.home}, ${m.score.fullTime.away}, ${m.status}, ${m.stage}, ${m.group}
         )
         ON CONFLICT (external_id) DO UPDATE SET
           home_goals = EXCLUDED.home_goals,
           away_goals = EXCLUDED.away_goals,
           status = EXCLUDED.status,
+          kickoff_at = EXCLUDED.kickoff_at,
           updated_at = NOW()
       `;
       upserted++;
