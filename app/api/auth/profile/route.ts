@@ -8,7 +8,7 @@ export async function PATCH(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'No autenticado.' }, { status: 401 });
 
   try {
-    const { username, currentPassword, newPassword } = await req.json();
+    const { username, currentPassword, newPassword, avatar } = await req.json();
 
     const userResult = await sql`SELECT * FROM users WHERE id=${session.userId}`;
     const user = userResult.rows[0];
@@ -22,6 +22,16 @@ export async function PATCH(req: NextRequest) {
       if (existing.rows.length > 0)
         return NextResponse.json({ error: 'Ese nombre de usuario ya está en uso.' }, { status: 409 });
       newUsername = username;
+    }
+
+    if (avatar !== undefined) {
+      if (avatar !== null) {
+        if (typeof avatar !== 'string' || !avatar.startsWith('data:image/'))
+          return NextResponse.json({ error: 'Formato de imagen inválido.' }, { status: 400 });
+        if (avatar.length > 500_000)
+          return NextResponse.json({ error: 'La imagen es demasiado grande.' }, { status: 400 });
+      }
+      await sql`UPDATE users SET avatar=${avatar} WHERE id=${user.id}`;
     }
 
     let sv = user.session_version;

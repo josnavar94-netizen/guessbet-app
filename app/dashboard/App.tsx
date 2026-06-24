@@ -9,6 +9,17 @@ import InstallAppSection from '../InstallApp';
 
 type Tab = 'home' | 'calc' | 'hist' | 'mybet' | 'premium' | 'account';
 
+function Avatar({ src, username, size = 32 }: { src?: string | null; username: string; size?: number }) {
+  if (src) {
+    return <img src={src} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />;
+  }
+  return (
+    <span style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.5, fontWeight: 800, color: '#0a0f1e', flexShrink: 0 }}>
+      {username.charAt(0).toUpperCase()}
+    </span>
+  );
+}
+
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
   const code = FLAG_CODES[name];
   if (!code) return null;
@@ -35,7 +46,7 @@ type DbBet = {
   created_at: string;
 };
 
-export default function App({ username, email, plan }: { username: string; email: string; plan: string }) {
+export default function App({ username, email, plan, avatar }: { username: string; email: string; plan: string; avatar?: string | null }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('home');
   const [bets, setBets] = useState<DbBet[]>([]);
@@ -149,16 +160,20 @@ export default function App({ username, email, plan }: { username: string; email
 
           <div ref={menuRef} style={{ position: 'relative', flexShrink: 0 }}>
             <button onClick={() => setMenuOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: menuOpen ? 'rgba(201,168,76,.1)' : 'transparent', border: '1px solid rgba(201,168,76,.18)', borderRadius: 8, padding: '5px 8px', cursor: 'pointer' }}>
-              <span style={{ fontSize: 12, color: '#f0ece0', fontWeight: 600, whiteSpace: 'nowrap' }}>👤 {username}</span>
+              <Avatar src={avatar} username={username} size={20} />
+              <span style={{ fontSize: 12, color: '#f0ece0', fontWeight: 600, whiteSpace: 'nowrap' }}>{username}</span>
               {plan === 'premium' && <span style={{ fontSize: 9, background: 'rgba(201,168,76,.15)', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', padding: '1px 6px', borderRadius: 10, fontWeight: 700 }}>PRO</span>}
               <span style={{ fontSize: 10, color: '#7a8aaa', transform: menuOpen ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>▾</span>
             </button>
 
             {menuOpen && (
               <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 220, maxWidth: '85vw', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.2)', borderRadius: 12, boxShadow: '0 12px 30px rgba(0,0,0,.4)', overflow: 'hidden', zIndex: 200 }}>
-                <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(201,168,76,.12)' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{username}</div>
-                  <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>
+                <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(201,168,76,.12)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Avatar src={avatar} username={username} size={36} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{username}</div>
+                    <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</div>
+                  </div>
                 </div>
                 {[
                   { key: 'mybet' as Tab, icon: '🎯', label: 'Mis apuestas' },
@@ -200,7 +215,7 @@ export default function App({ username, email, plan }: { username: string; email
         {tab === 'hist' && <HistTab />}
         {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={deleteBet} />}
         {tab === 'premium' && <PremiumTab plan={plan} />}
-        {tab === 'account' && <AccountTab username={username} email={email} plan={plan} setTab={setTab} logout={logout} />}
+        {tab === 'account' && <AccountTab username={username} email={email} plan={plan} avatar={avatar} setTab={setTab} logout={logout} />}
       </div>
     </div>
   );
@@ -209,11 +224,79 @@ export default function App({ username, email, plan }: { username: string; email
 // ─────────────────────────────────────────────
 // ACCOUNT TAB
 // ─────────────────────────────────────────────
-function AccountTab({ username, email, plan, setTab, logout }: { username: string; email: string; plan: string; setTab: (t: Tab) => void; logout: () => void }) {
+function AccountTab({ username, email, plan, avatar, setTab, logout }: { username: string; email: string; plan: string; avatar?: string | null; setTab: (t: Tab) => void; logout: () => void }) {
   const router = useRouter();
   const card: React.CSSProperties = { background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1.25rem', marginBottom: '1rem' };
   const rowLabel: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 };
   const fieldStyle: React.CSSProperties = { width: '100%', background: 'var(--sur2)', border: '1px solid rgba(201,168,76,.24)', color: '#f0ece0', fontFamily: "'Outfit',sans-serif", fontSize: 14, padding: '0 12px', height: 40, borderRadius: 9 };
+
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(avatar || null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarMsg, setAvatarMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function resizeImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Archivo de imagen inválido.'));
+        img.onload = () => {
+          const SIZE = 256;
+          const canvas = document.createElement('canvas');
+          canvas.width = SIZE; canvas.height = SIZE;
+          const ctx = canvas.getContext('2d')!;
+          const side = Math.min(img.width, img.height);
+          const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+          ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function onAvatarSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setAvatarMsg({ type: 'err', text: 'Elige un archivo de imagen.' }); return; }
+    setAvatarUploading(true);
+    setAvatarMsg(null);
+    try {
+      const dataUrl = await resizeImage(file);
+      const res = await fetch('/api/auth/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar: dataUrl }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setAvatarPreview(dataUrl);
+        setAvatarMsg({ type: 'ok', text: 'Foto de perfil actualizada.' });
+        router.refresh();
+      } else {
+        setAvatarMsg({ type: 'err', text: data?.error || 'No se pudo subir la imagen.' });
+      }
+    } catch {
+      setAvatarMsg({ type: 'err', text: 'No se pudo procesar la imagen.' });
+    }
+    setAvatarUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  async function removeAvatar() {
+    setAvatarUploading(true);
+    setAvatarMsg(null);
+    const res = await fetch('/api/auth/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatar: null }),
+    });
+    setAvatarUploading(false);
+    if (res.ok) { setAvatarPreview(null); router.refresh(); }
+  }
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameInput, setUsernameInput] = useState(username);
@@ -272,15 +355,35 @@ function AccountTab({ username, email, plan, setTab, logout }: { username: strin
   return (
     <div style={{ maxWidth: 480, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: '1.5rem' }}>
-        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#0a0f1e', flexShrink: 0 }}>
-          {username.charAt(0).toUpperCase()}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <Avatar src={avatarPreview} username={username} size={64} />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={avatarUploading}
+            style={{ position: 'absolute', bottom: -2, right: -2, width: 24, height: 24, borderRadius: '50%', background: '#c9a84c', border: '2px solid var(--bg)', color: '#0a0f1e', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            title="Cambiar foto de perfil"
+          >
+            ✎
+          </button>
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={onAvatarSelected} style={{ display: 'none' }} />
         </div>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
             {username}
             {plan === 'premium' && <span style={{ fontSize: 10, background: 'rgba(201,168,76,.15)', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>PRO</span>}
           </div>
           <div style={{ fontSize: 13, color: '#7a8aaa' }}>{email}</div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+            <button onClick={() => fileInputRef.current?.click()} disabled={avatarUploading} style={{ fontSize: 11, color: '#6b9fd4', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", padding: 0 }}>
+              {avatarUploading ? 'Subiendo...' : 'Cambiar foto'}
+            </button>
+            {avatarPreview && (
+              <button onClick={removeAvatar} disabled={avatarUploading} style={{ fontSize: 11, color: '#d95050', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", padding: 0 }}>
+                Quitar
+              </button>
+            )}
+          </div>
+          {avatarMsg && <div style={{ fontSize: 11, marginTop: 4, color: avatarMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{avatarMsg.text}</div>}
         </div>
       </div>
 
