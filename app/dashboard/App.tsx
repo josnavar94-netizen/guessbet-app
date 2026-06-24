@@ -63,6 +63,7 @@ export default function App({ username, email, plan, avatar, emailVerified }: { 
     const verified = params.get('verified');
     if (verified === 'ok' || verified === 'error') {
       setVerifiedNotice(verified);
+      setTab('account');
       window.history.replaceState({}, '', '/dashboard');
     }
   }, []);
@@ -232,26 +233,26 @@ export default function App({ username, email, plan, avatar, emailVerified }: { 
 
       {/* PAGES */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem' }}>
-        {verifiedNotice && (
-          <div style={{ background: verifiedNotice === 'ok' ? 'rgba(58,174,108,.1)' : 'rgba(217,80,80,.1)', border: `1px solid ${verifiedNotice === 'ok' ? 'rgba(58,174,108,.3)' : 'rgba(217,80,80,.3)'}`, color: verifiedNotice === 'ok' ? '#3aae6c' : '#d95050', borderRadius: 10, padding: '10px 14px', marginBottom: '1.25rem', fontSize: 13 }}>
-            {verifiedNotice === 'ok' ? '✓ Tu correo fue verificado correctamente.' : '✕ El link de verificación no es válido o ya expiró. Pide uno nuevo abajo.'}
-          </div>
-        )}
-        {!emailVerified && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'rgba(201,168,76,.1)', border: '1px solid rgba(201,168,76,.3)', borderRadius: 10, padding: '10px 14px', marginBottom: '1.25rem', fontSize: 13 }}>
-            <span style={{ flex: 1, minWidth: 200 }}>📧 Confirma tu correo ({email}) para asegurar tu cuenta.</span>
-            <button onClick={resendVerification} disabled={resending} style={{ height: 32, padding: '0 12px', background: 'rgba(201,168,76,.15)', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', fontSize: 12, fontWeight: 600, borderRadius: 7, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              {resending ? 'Enviando...' : 'Reenviar correo'}
-            </button>
-            {resendMsg && <span style={{ fontSize: 11, color: resendMsg.type === 'ok' ? '#3aae6c' : '#d95050', width: '100%' }}>{resendMsg.text}</span>}
-          </div>
-        )}
         {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} />}
         {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} />}
         {tab === 'hist' && <HistTab />}
         {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={deleteBet} />}
         {tab === 'premium' && <PremiumTab plan={plan} />}
-        {tab === 'account' && <AccountTab username={username} email={email} plan={plan} avatar={avatar} setTab={setTab} logout={logout} />}
+        {tab === 'account' && (
+          <AccountTab
+            username={username}
+            email={email}
+            plan={plan}
+            avatar={avatar}
+            setTab={setTab}
+            logout={logout}
+            emailVerified={emailVerified}
+            verifiedNotice={verifiedNotice}
+            resendVerification={resendVerification}
+            resending={resending}
+            resendMsg={resendMsg}
+          />
+        )}
       </div>
     </div>
   );
@@ -260,7 +261,10 @@ export default function App({ username, email, plan, avatar, emailVerified }: { 
 // ─────────────────────────────────────────────
 // ACCOUNT TAB
 // ─────────────────────────────────────────────
-function AccountTab({ username, email, plan, avatar, setTab, logout }: { username: string; email: string; plan: string; avatar?: string | null; setTab: (t: Tab) => void; logout: () => void }) {
+function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerified, verifiedNotice, resendVerification, resending, resendMsg }: {
+  username: string; email: string; plan: string; avatar?: string | null; setTab: (t: Tab) => void; logout: () => void;
+  emailVerified: boolean; verifiedNotice: 'ok' | 'error' | null; resendVerification: () => void; resending: boolean; resendMsg: { type: 'ok' | 'err'; text: string } | null;
+}) {
   const router = useRouter();
   const card: React.CSSProperties = { background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1.25rem', marginBottom: '1rem' };
   const rowLabel: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 };
@@ -422,6 +426,21 @@ function AccountTab({ username, email, plan, avatar, setTab, logout }: { usernam
           {avatarMsg && <div style={{ fontSize: 11, marginTop: 4, color: avatarMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{avatarMsg.text}</div>}
         </div>
       </div>
+
+      {verifiedNotice && (
+        <div style={{ background: verifiedNotice === 'ok' ? 'rgba(58,174,108,.1)' : 'rgba(217,80,80,.1)', border: `1px solid ${verifiedNotice === 'ok' ? 'rgba(58,174,108,.3)' : 'rgba(217,80,80,.3)'}`, color: verifiedNotice === 'ok' ? '#3aae6c' : '#d95050', borderRadius: 10, padding: '10px 14px', marginBottom: '1rem', fontSize: 13 }}>
+          {verifiedNotice === 'ok' ? '✓ Tu correo fue verificado correctamente.' : '✕ El link de verificación no es válido o ya expiró. Pide uno nuevo abajo.'}
+        </div>
+      )}
+      {!emailVerified && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'rgba(201,168,76,.1)', border: '1px solid rgba(201,168,76,.3)', borderRadius: 10, padding: '10px 14px', marginBottom: '1rem', fontSize: 13 }}>
+          <span style={{ flex: 1, minWidth: 200 }}>📧 Confirma tu correo ({email}) para asegurar tu cuenta.</span>
+          <button onClick={resendVerification} disabled={resending} style={{ height: 32, padding: '0 12px', background: 'rgba(201,168,76,.15)', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', fontSize: 12, fontWeight: 600, borderRadius: 7, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            {resending ? 'Enviando...' : 'Reenviar correo'}
+          </button>
+          {resendMsg && <span style={{ fontSize: 11, color: resendMsg.type === 'ok' ? '#3aae6c' : '#d95050', width: '100%' }}>{resendMsg.text}</span>}
+        </div>
+      )}
 
       <div style={card}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>👤 Información personal</div>
