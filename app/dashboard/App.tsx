@@ -57,24 +57,38 @@ export default function App({ username, email, plan }: { username: string; email
     };
   }, [menuOpen]);
 
+  // ── Fetch con sesión: si el servidor responde 401 (sesión cerrada en otro dispositivo o expirada), manda al login ──
+  const apiFetch = useCallback(async (url: string, options?: RequestInit) => {
+    const res = await fetch(url, options);
+    if (res.status === 401) {
+      router.push('/login');
+      return null;
+    }
+    return res;
+  }, [router]);
+
   // ── Fetch bets ──
   const fetchBets = useCallback(async () => {
     setLoadingBets(true);
     try {
-      const res = await fetch('/api/bets');
-      const data = await res.json();
-      setBets(data.bets || []);
+      const res = await apiFetch('/api/bets');
+      if (res) {
+        const data = await res.json();
+        setBets(data.bets || []);
+      }
     } catch {}
     setLoadingBets(false);
-  }, []);
+  }, [apiFetch]);
 
   const fetchUsage = useCallback(async () => {
     try {
-      const res = await fetch('/api/bets/usage');
-      const data = await res.json();
-      setUsedToday(!!data.usedToday);
+      const res = await apiFetch('/api/bets/usage');
+      if (res) {
+        const data = await res.json();
+        setUsedToday(!!data.usedToday);
+      }
     } catch {}
-  }, []);
+  }, [apiFetch]);
 
   useEffect(() => { fetchBets(); fetchUsage(); }, [fetchBets, fetchUsage]);
 
@@ -84,11 +98,12 @@ export default function App({ username, email, plan }: { username: string; email
   }
 
   async function saveBet(bet: Omit<DbBet, 'id' | 'result' | 'pl' | 'created_at'>) {
-    const res = await fetch('/api/bets', {
+    const res = await apiFetch('/api/bets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...bet, match_name: bet.match_name, pick_label: bet.pick_label }),
     });
+    if (!res) return;
     if (res.ok) {
       await fetchBets();
       await fetchUsage();
@@ -100,17 +115,19 @@ export default function App({ username, email, plan }: { username: string; email
   }
 
   async function updateBet(id: number, result: 'won' | 'lost') {
-    await fetch(`/api/bets/${id}`, {
+    const res = await apiFetch(`/api/bets/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ result }),
     });
+    if (!res) return;
     await fetchBets();
   }
 
   async function deleteBet(id: number) {
     if (!confirm('¿Eliminar esta apuesta?')) return;
-    await fetch(`/api/bets/${id}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/bets/${id}`, { method: 'DELETE' });
+    if (!res) return;
     await fetchBets();
   }
 
