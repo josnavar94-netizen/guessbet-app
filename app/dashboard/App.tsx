@@ -165,7 +165,7 @@ export default function App({ username, email, plan }: { username: string; email
 
         {/* Fila 2: pestañas — con su propio scroll horizontal */}
         <div className="h-scroll" style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1.25rem', display: 'flex', alignItems: 'center', overflowX: 'auto', borderTop: '1px solid rgba(201,168,76,.08)' }}>
-          {(['home','calc','hist','mybet','premium'] as Tab[]).map((t) => {
+          {(['home','calc','hist','premium'] as Tab[]).map((t) => {
             const labels: Record<Tab,string> = { home: 'Inicio', calc: 'Analizar un partido', hist: 'Resultados pasados', mybet: 'Mis apuestas', premium: 'Premium', account: 'Mi cuenta' };
             return (
               <button key={t} onClick={() => setTab(t)} style={{ background: 'none', border: 'none', borderBottom: tab === t ? '2px solid #c9a84c' : '2px solid transparent', color: tab === t ? '#c9a84c' : t === 'premium' ? '#c9a84c' : '#7a8aaa', fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: t === 'premium' ? 700 : 500, padding: '11px 12px', cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: -1, flexShrink: 0 }}>
