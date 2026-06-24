@@ -11,7 +11,7 @@
   .install-grid { grid-template-columns: 1fr !important; }
 }
 
-.h-scroll { touch-action: pan-x; overscroll-behavior-x: contain; }
+.h-scroll { touch-action: pan-x; overscroll-behavior-x: contain; overflow-y: hidden !important; }
 
 :root {
   --bg: #0a0f1e;
