@@ -70,6 +70,9 @@ export default function RegisterPage() {
             <div className="field">
               <label>Fecha de nacimiento</label>
               <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} required />
+              {birthDate && !isAdult(birthDate) && (
+                <p style={{ fontSize: 12, color: '#d95050', marginTop: 6 }}>Debes ser mayor de 18 años para crear una cuenta en GuessBet.</p>
+              )}
             </div>
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: '#7a8aaa', margin: '14px 0', cursor: 'pointer', lineHeight: 1.5 }}>
               <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} style={{ marginTop: 2, accentColor: '#c9a84c' }} required />
@@ -80,7 +83,7 @@ export default function RegisterPage() {
                 <a href="/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.
               </span>
             </label>
-            <button type="submit" className="btn-primary" disabled={loading || !acceptedTerms}>
+            <button type="submit" className="btn-primary" disabled={loading || !acceptedTerms || (birthDate !== '' && !isAdult(birthDate))}>
               {loading ? 'Creando cuenta...' : 'Crear cuenta gratis'}
             </button>
           </form>
