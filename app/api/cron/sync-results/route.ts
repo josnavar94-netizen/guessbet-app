@@ -4,6 +4,9 @@ import { fetchCompetitionMatches } from '@/lib/footballData';
 import { fetchGithubResults } from '@/lib/githubResults';
 import { crossValidate, Discrepancy } from '@/lib/crossValidate';
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 // código football-data.org -> { filtro de torneo y fecha de inicio en el CSV de GitHub }
 const COMPETITIONS: Record<string, { ghTournament: string; ghFromDate: string }> = {
   WC: { ghTournament: 'FIFA World Cup', ghFromDate: '2026-01-01' },
