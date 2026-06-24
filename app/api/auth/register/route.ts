@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { sql } from '@/lib/db';
 import { createSession } from '@/lib/auth';
+import { sendVerificationEmail } from '@/lib/verification';
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,6 +28,11 @@ export async function POST(req: NextRequest) {
     `;
     const user = result.rows[0];
     await createSession({ userId: user.id, username: user.username, email: user.email, plan: user.plan, sv: 0 });
+    try {
+      await sendVerificationEmail(req.nextUrl.origin, user.id, user.email, user.username);
+    } catch (err) {
+      console.error('Error enviando email de verificación:', err);
+    }
     return NextResponse.json({ ok: true, user: { id: user.id, username: user.username, email: user.email, plan: user.plan } });
   } catch (err) {
     console.error(err);

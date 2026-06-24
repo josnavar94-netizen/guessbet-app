@@ -46,7 +46,7 @@ type DbBet = {
   created_at: string;
 };
 
-export default function App({ username, email, plan, avatar }: { username: string; email: string; plan: string; avatar?: string | null }) {
+export default function App({ username, email, plan, avatar, emailVerified }: { username: string; email: string; plan: string; avatar?: string | null; emailVerified: boolean }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('home');
   const [bets, setBets] = useState<DbBet[]>([]);
@@ -54,6 +54,29 @@ export default function App({ username, email, plan, avatar }: { username: strin
   const [usedToday, setUsedToday] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [resendMsg, setResendMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [resending, setResending] = useState(false);
+  const [verifiedNotice, setVerifiedNotice] = useState<'ok' | 'error' | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const verified = params.get('verified');
+    if (verified === 'ok' || verified === 'error') {
+      setVerifiedNotice(verified);
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, []);
+
+  async function resendVerification() {
+    setResending(true);
+    setResendMsg(null);
+    const res = await fetch('/api/auth/resend-verification', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    setResending(false);
+    setResendMsg(res.ok
+      ? { type: 'ok', text: 'Te enviamos un nuevo correo de verificación.' }
+      : { type: 'err', text: data?.error || 'No se pudo enviar el correo.' });
+  }
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -209,6 +232,20 @@ export default function App({ username, email, plan, avatar }: { username: strin
 
       {/* PAGES */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem' }}>
+        {verifiedNotice && (
+          <div style={{ background: verifiedNotice === 'ok' ? 'rgba(58,174,108,.1)' : 'rgba(217,80,80,.1)', border: `1px solid ${verifiedNotice === 'ok' ? 'rgba(58,174,108,.3)' : 'rgba(217,80,80,.3)'}`, color: verifiedNotice === 'ok' ? '#3aae6c' : '#d95050', borderRadius: 10, padding: '10px 14px', marginBottom: '1.25rem', fontSize: 13 }}>
+            {verifiedNotice === 'ok' ? '✓ Tu correo fue verificado correctamente.' : '✕ El link de verificación no es válido o ya expiró. Pide uno nuevo abajo.'}
+          </div>
+        )}
+        {!emailVerified && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: 'rgba(201,168,76,.1)', border: '1px solid rgba(201,168,76,.3)', borderRadius: 10, padding: '10px 14px', marginBottom: '1.25rem', fontSize: 13 }}>
+            <span style={{ flex: 1, minWidth: 200 }}>📧 Confirma tu correo ({email}) para asegurar tu cuenta.</span>
+            <button onClick={resendVerification} disabled={resending} style={{ height: 32, padding: '0 12px', background: 'rgba(201,168,76,.15)', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', fontSize: 12, fontWeight: 600, borderRadius: 7, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              {resending ? 'Enviando...' : 'Reenviar correo'}
+            </button>
+            {resendMsg && <span style={{ fontSize: 11, color: resendMsg.type === 'ok' ? '#3aae6c' : '#d95050', width: '100%' }}>{resendMsg.text}</span>}
+          </div>
+        )}
         {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} />}
         {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} />}
         {tab === 'hist' && <HistTab />}
