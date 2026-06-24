@@ -210,8 +210,64 @@ export default function App({ username, email, plan }: { username: string; email
 // ACCOUNT TAB
 // ─────────────────────────────────────────────
 function AccountTab({ username, email, plan, setTab, logout }: { username: string; email: string; plan: string; setTab: (t: Tab) => void; logout: () => void }) {
+  const router = useRouter();
   const card: React.CSSProperties = { background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1.25rem', marginBottom: '1rem' };
   const rowLabel: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 };
+  const fieldStyle: React.CSSProperties = { width: '100%', background: 'var(--sur2)', border: '1px solid rgba(201,168,76,.24)', color: '#f0ece0', fontFamily: "'Outfit',sans-serif", fontSize: 14, padding: '0 12px', height: 40, borderRadius: 9 };
+
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameInput, setUsernameInput] = useState(username);
+  const [usernameSaving, setUsernameSaving] = useState(false);
+  const [usernameMsg, setUsernameMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  const [changingPw, setChangingPw] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  async function saveUsername() {
+    if (usernameInput.trim().length < 3) { setUsernameMsg({ type: 'err', text: 'Debe tener al menos 3 caracteres.' }); return; }
+    setUsernameSaving(true);
+    setUsernameMsg(null);
+    const res = await fetch('/api/auth/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: usernameInput.trim() }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setUsernameSaving(false);
+    if (res.ok) {
+      setUsernameMsg({ type: 'ok', text: 'Nombre de usuario actualizado.' });
+      setEditingUsername(false);
+      router.refresh();
+    } else {
+      setUsernameMsg({ type: 'err', text: data?.error || 'No se pudo actualizar.' });
+    }
+  }
+
+  async function savePassword() {
+    if (!currentPassword || !newPassword) { setPwMsg({ type: 'err', text: 'Completa ambos campos.' }); return; }
+    if (newPassword.length < 6) { setPwMsg({ type: 'err', text: 'La nueva contraseña debe tener al menos 6 caracteres.' }); return; }
+    if (newPassword !== confirmPassword) { setPwMsg({ type: 'err', text: 'Las contraseñas no coinciden.' }); return; }
+    setPwSaving(true);
+    setPwMsg(null);
+    const res = await fetch('/api/auth/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setPwSaving(false);
+    if (res.ok) {
+      setPwMsg({ type: 'ok', text: 'Contraseña actualizada. Se cerró sesión en tus otros dispositivos.' });
+      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+      setChangingPw(false);
+    } else {
+      setPwMsg({ type: 'err', text: data?.error || 'No se pudo actualizar.' });
+    }
+  }
 
   return (
     <div style={{ maxWidth: 480, margin: '0 auto' }}>
@@ -230,19 +286,67 @@ function AccountTab({ username, email, plan, setTab, logout }: { username: strin
 
       <div style={card}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>👤 Información personal</div>
-        <div style={{ marginBottom: 12 }}>
+
+        <div style={{ marginBottom: 14 }}>
           <div style={rowLabel}>Nombre de usuario</div>
-          <div style={{ fontSize: 14 }}>{username}</div>
+          {editingUsername ? (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input value={usernameInput} onChange={e => setUsernameInput(e.target.value)} style={fieldStyle} />
+              <button onClick={saveUsername} disabled={usernameSaving} style={{ height: 40, padding: '0 14px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', opacity: usernameSaving ? .6 : 1 }}>
+                {usernameSaving ? '...' : 'Guardar'}
+              </button>
+              <button onClick={() => { setEditingUsername(false); setUsernameInput(username); setUsernameMsg(null); }} style={{ height: 40, padding: '0 12px', background: 'transparent', border: '1px solid rgba(201,168,76,.2)', color: '#7a8aaa', borderRadius: 9, cursor: 'pointer' }}>✕</button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 14 }}>{username}</span>
+              <button onClick={() => setEditingUsername(true)} style={{ fontSize: 12, color: '#6b9fd4', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>Editar</button>
+            </div>
+          )}
+          {usernameMsg && <div style={{ fontSize: 11, marginTop: 6, color: usernameMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{usernameMsg.text}</div>}
         </div>
-        <div style={{ marginBottom: 12 }}>
+
+        <div style={{ marginBottom: 14 }}>
           <div style={rowLabel}>Correo electrónico</div>
           <div style={{ fontSize: 14 }}>{email}</div>
         </div>
+
         <div>
           <div style={rowLabel}>Plan actual</div>
           <div style={{ fontSize: 14, color: plan === 'premium' ? '#c9a84c' : '#f0ece0' }}>{plan === 'premium' ? 'GuessBet PRO' : 'Free'}</div>
         </div>
-        <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 14, lineHeight: 1.6 }}>Próximamente podrás editar tu nombre de usuario y cambiar tu contraseña desde aquí.</div>
+
+        <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 14, marginTop: 14 }}>
+          {changingPw ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div>
+                <div style={rowLabel}>Contraseña actual</div>
+                <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} style={fieldStyle} />
+              </div>
+              <div>
+                <div style={rowLabel}>Nueva contraseña</div>
+                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={fieldStyle} />
+              </div>
+              <div>
+                <div style={rowLabel}>Confirmar nueva contraseña</div>
+                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={fieldStyle} />
+              </div>
+              {pwMsg && <div style={{ fontSize: 11, color: pwMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{pwMsg.text}</div>}
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                <button onClick={savePassword} disabled={pwSaving} style={{ height: 40, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, border: 'none', cursor: 'pointer', opacity: pwSaving ? .6 : 1 }}>
+                  {pwSaving ? 'Guardando...' : 'Cambiar contraseña'}
+                </button>
+                <button onClick={() => { setChangingPw(false); setCurrentPassword(''); setNewPassword(''); setConfirmPassword(''); setPwMsg(null); }} style={{ height: 40, padding: '0 12px', background: 'transparent', border: '1px solid rgba(201,168,76,.2)', color: '#7a8aaa', borderRadius: 9, cursor: 'pointer' }}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setChangingPw(true)} style={{ fontSize: 13, color: '#6b9fd4', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
+              🔒 Cambiar contraseña
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={card}>
