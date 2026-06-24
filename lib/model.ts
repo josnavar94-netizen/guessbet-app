@@ -118,8 +118,9 @@ export function getH2H(t1,t2){
   return null;
 }
 
-export function getXG(team,asAtt,neutral,isHome){
-  const m=MODEL[team],wc=WC_REAL[team];
+export function getXG(team,asAtt,neutral,isHome,wcRealOverride){
+  const wcSource=wcRealOverride||WC_REAL;
+  const m=MODEL[team],wc=wcSource[team];
   if(!m)return asAtt?1.2:1.1;
   let base=asAtt
     ?(!neutral&&isHome&&m.homeGF?m.homeGF:!neutral&&!isHome&&m.awayGF?m.awayGF:m.avgGF)
@@ -128,15 +129,15 @@ export function getXG(team,asAtt,neutral,isHome){
   return Math.max(0.15,base);
 }
 
-export function modelProbs(home,away,neutral){
+export function modelProbs(home,away,neutral,wcRealOverride){
   const mH=MODEL[home]||{avgGF:1.35,avgGA:1.1,elo:1500};
   const mA=MODEL[away]||{avgGF:1.35,avgGA:1.1,elo:1500};
   const eloH=(mH.elo||1500)+(neutral?0:60);
   const eloA=mA.elo||1500;
   const eloExpH=1/(1+Math.pow(10,(eloA-eloH)/400));
   const eloExpA=1-eloExpH;
-  let xgH=Math.max(0.15,(getXG(home,true,neutral,true)*getXG(away,false,neutral,false))/LEAGUE_AVG);
-  let xgA=Math.max(0.15,(getXG(away,true,neutral,false)*getXG(home,false,neutral,true))/LEAGUE_AVG);
+  let xgH=Math.max(0.15,(getXG(home,true,neutral,true,wcRealOverride)*getXG(away,false,neutral,false,wcRealOverride))/LEAGUE_AVG);
+  let xgA=Math.max(0.15,(getXG(away,true,neutral,false,wcRealOverride)*getXG(home,false,neutral,true,wcRealOverride))/LEAGUE_AVG);
   const hd=getH2H(home,away);
   if(hd&&hd.data.n>=3){
     const d=hd.data;
@@ -178,6 +179,24 @@ export const TOURNAMENTS: Record<string,{label:string;eyebrow:string;subtitle:st
     eyebrow: '📊 Lo que ya pasó',
     subtitle: 'Resultados reales del Mundial 2026',
     results: [
+      {d:'23 jun',dateKey:'2026-06-23',h:'Portugal',a:'Uzbekistan',gh:5,ga:0},
+      {d:'23 jun',dateKey:'2026-06-23',h:'England',a:'Ghana',gh:0,ga:0},
+      {d:'22 jun',dateKey:'2026-06-22',h:'France',a:'Iraq',gh:3,ga:0},
+      {d:'22 jun',dateKey:'2026-06-22',h:'Norway',a:'Senegal',gh:3,ga:2},
+      {d:'22 jun',dateKey:'2026-06-22',h:'Argentina',a:'Austria',gh:2,ga:0},
+      {d:'22 jun',dateKey:'2026-06-22',h:'Jordan',a:'Algeria',gh:1,ga:2},
+      {d:'21 jun',dateKey:'2026-06-21',h:'Belgium',a:'Iran',gh:0,ga:0},
+      {d:'21 jun',dateKey:'2026-06-21',h:'New Zealand',a:'Egypt',gh:1,ga:3},
+      {d:'21 jun',dateKey:'2026-06-21',h:'Spain',a:'Saudi Arabia',gh:4,ga:0},
+      {d:'21 jun',dateKey:'2026-06-21',h:'Uruguay',a:'Cape Verde',gh:2,ga:2},
+      {d:'20 jun',dateKey:'2026-06-20',h:'Germany',a:"Cote d'Ivoire",gh:2,ga:1},
+      {d:'20 jun',dateKey:'2026-06-20',h:'Ecuador',a:'Curacao',gh:0,ga:0},
+      {d:'20 jun',dateKey:'2026-06-20',h:'Netherlands',a:'Sweden',gh:5,ga:1},
+      {d:'20 jun',dateKey:'2026-06-20',h:'Tunisia',a:'Japan',gh:0,ga:4},
+      {d:'19 jun',dateKey:'2026-06-19',h:'Scotland',a:'Morocco',gh:0,ga:1},
+      {d:'19 jun',dateKey:'2026-06-19',h:'Brazil',a:'Haiti',gh:3,ga:0},
+      {d:'19 jun',dateKey:'2026-06-19',h:'USA',a:'Australia',gh:2,ga:0},
+      {d:'19 jun',dateKey:'2026-06-19',h:'Turkey',a:'Paraguay',gh:0,ga:1},
       {d:'18 jun',dateKey:'2026-06-18',h:'Mexico',a:'South Korea',gh:1,ga:0},
       {d:'18 jun',dateKey:'2026-06-18',h:'Czech Republic',a:'South Africa',gh:1,ga:1},
       {d:'18 jun',dateKey:'2026-06-18',h:'Switzerland',a:'Bosnia-Herzegovina',gh:4,ga:1},

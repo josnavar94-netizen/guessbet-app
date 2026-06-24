@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { modelProbs, getH2H, MODEL, WC_REAL, FLAG_CODES, FIXTURES } from '@/lib/model';
 
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
@@ -119,6 +119,12 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
   const [stake, setStake] = useState('1');
   const [bookie, setBookie] = useState('Coolbet');
 
+  // WC_REAL en vivo, calculado en el servidor desde la tabla `matches` (fallback al estático si falla)
+  const [wcRealLive, setWcRealLive] = useState<typeof WC_REAL | null>(null);
+  useEffect(() => {
+    fetch('/api/wc-real').then(r => r.json()).then(d => setWcRealLive(d.wcReal)).catch(() => {});
+  }, []);
+
   // Live mode
   const [live, setLive] = useState(false);
   const [liveMin, setLiveMin] = useState('45');
@@ -136,9 +142,10 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
   function toD(v: string) { const n = parseFloat(v); return (!v || isNaN(n) || n < 1.01) ? null : n; }
 
   function calc() {
-    const pFull = modelProbs(home, away, neutral);
+    const wcReal = wcRealLive || WC_REAL;
+    const pFull = modelProbs(home, away, neutral, wcReal);
     const mH = MODEL[home], mA = MODEL[away];
-    const wcH = WC_REAL[home], wcA = WC_REAL[away];
+    const wcH = wcReal[home], wcA = wcReal[away];
     const hd = getH2H(home, away);
     const min = parseInt(liveMin) || 0;
     const gh = parseInt(liveGh) || 0;

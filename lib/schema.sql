@@ -46,3 +46,20 @@ CREATE INDEX IF NOT EXISTS idx_bet_usage_device_date ON bet_usage(device_id, use
 
 -- Migración: sesión única por cuenta (ejecutar una vez en Vercel Storage → Query)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0;
+
+-- Migración: resultados de partidos sincronizados desde football-data.org (agente de datos)
+CREATE TABLE IF NOT EXISTS matches (
+  id SERIAL PRIMARY KEY,
+  external_id INTEGER UNIQUE NOT NULL,
+  competition_code VARCHAR(10) NOT NULL DEFAULT 'WC',
+  match_date DATE NOT NULL,
+  home_team VARCHAR(100) NOT NULL,
+  away_team VARCHAR(100) NOT NULL,
+  home_goals INTEGER,
+  away_goals INTEGER,
+  status VARCHAR(20) NOT NULL,
+  stage VARCHAR(30),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_matches_competition ON matches(competition_code);
+CREATE INDEX IF NOT EXISTS idx_matches_date ON matches(match_date);
