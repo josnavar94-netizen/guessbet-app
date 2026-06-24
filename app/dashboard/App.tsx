@@ -281,6 +281,30 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
   const [avatarMsg, setAvatarMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [supportSubject, setSupportSubject] = useState('');
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supportSending, setSupportSending] = useState(false);
+  const [supportMsg, setSupportMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  async function sendSupportMessage() {
+    if (!supportSubject.trim() || !supportMessage.trim()) { setSupportMsg({ type: 'err', text: 'Completa el asunto y el mensaje.' }); return; }
+    setSupportSending(true);
+    setSupportMsg(null);
+    const res = await fetch('/api/support', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject: supportSubject.trim(), message: supportMessage.trim() }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setSupportSending(false);
+    if (res.ok) {
+      setSupportMsg({ type: 'ok', text: '¡Listo! Te responderemos a tu correo a la brevedad.' });
+      setSupportSubject(''); setSupportMessage('');
+    } else {
+      setSupportMsg({ type: 'err', text: data?.error || 'No se pudo enviar el mensaje.' });
+    }
+  }
+
   function resizeImage(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -532,6 +556,37 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
         )}
       </div>
 
+      <div style={card}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>📜 Legal</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#6b9fd4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            Términos y Condiciones <span style={{ color: '#7a8aaa' }}>↗</span>
+          </a>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#6b9fd4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            Política de Privacidad <span style={{ color: '#7a8aaa' }}>↗</span>
+          </a>
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>💬 Soporte</div>
+        <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 14, lineHeight: 1.5 }}>¿Tienes un problema o una sugerencia? Escríbenos y te respondemos a tu correo.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div>
+            <div style={rowLabel}>Asunto</div>
+            <input value={supportSubject} onChange={e => setSupportSubject(e.target.value)} placeholder="Ej: No me carga la calculadora" style={fieldStyle} />
+          </div>
+          <div>
+            <div style={rowLabel}>Mensaje</div>
+            <textarea value={supportMessage} onChange={e => setSupportMessage(e.target.value)} rows={4} placeholder="Cuéntanos qué pasó..." style={{ ...fieldStyle, height: 'auto', padding: 10, resize: 'vertical' as const, fontFamily: "'Outfit',sans-serif" }} />
+          </div>
+          {supportMsg && <div style={{ fontSize: 11, color: supportMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{supportMsg.text}</div>}
+          <button onClick={sendSupportMessage} disabled={supportSending} style={{ height: 40, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, border: 'none', cursor: 'pointer', opacity: supportSending ? .6 : 1, alignSelf: 'flex-start' }}>
+            {supportSending ? 'Enviando...' : 'Enviar mensaje'}
+          </button>
+        </div>
+      </div>
+
       <button onClick={logout} style={{ width: '100%', height: 44, background: 'transparent', border: '1px solid rgba(217,80,80,.3)', color: '#d95050', fontSize: 13, fontWeight: 600, borderRadius: 9, cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
         Cerrar sesión
       </button>
@@ -554,11 +609,11 @@ function HomeTab({ username, setTab, bets, results: liveResults }: { username: s
   const awayWins = results.filter(m => m.gh < m.ga).length;
   const goalCount: Record<number,number> = {};
   results.forEach(m => { const t = m.gh + m.ga; goalCount[t] = (goalCount[t]||0)+1; });
-  const maxG = Math.max(...Object.keys(goalCount).map(Number));
-  const maxC = Math.max(...Object.values(goalCount));
-  const hwP = Math.round(homeWins/totalMatches*100);
-  const dwP = Math.round(draws/totalMatches*100);
-  const awP = 100-hwP-dwP;
+  const maxG = totalMatches ? Math.max(...Object.keys(goalCount).map(Number)) : 0;
+  const maxC = totalMatches ? Math.max(...Object.values(goalCount)) : 0;
+  const hwP = totalMatches ? Math.round(homeWins/totalMatches*100) : 0;
+  const dwP = totalMatches ? Math.round(draws/totalMatches*100) : 0;
+  const awP = totalMatches ? 100-hwP-dwP : 0;
   const closedBets = bets.filter(b => b.result !== 'open');
   const wonBets = closedBets.filter(b => b.result === 'won');
   const wr = closedBets.length ? Math.round(wonBets.length/closedBets.length*100) : null;
