@@ -1,6 +1,6 @@
 export default function PrivacyPage() {
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '1.5rem 1.25rem 5rem', color: '#f0ece0', lineHeight: 1.7 }}>
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(1.5rem + env(safe-area-inset-top)) 1.25rem 5rem', color: '#f0ece0', lineHeight: 1.7 }}>
       <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#c9a84c', marginBottom: '1.5rem', textDecoration: 'none' }}>← Volver a GuessBet</a>
       <h1 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 8 }}>Política de Privacidad</h1>
       <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: '2rem' }}>Última actualización: 23 de junio de 2026 · Versión 1.0</p>
