@@ -67,3 +67,17 @@ CREATE INDEX IF NOT EXISTS idx_matches_date ON matches(match_date);
 -- Migración: consentimiento legal (Términos y Privacidad) al registrarse
 ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(20);
+
+-- Migración: foto de perfil (guardada como data URL base64, sin necesitar storage externo)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;
+
+-- Migración: recuperación de contraseña por correo
+CREATE TABLE IF NOT EXISTS password_resets (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(64) UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);

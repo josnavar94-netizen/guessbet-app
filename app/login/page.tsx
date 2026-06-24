@@ -47,6 +47,9 @@ export default function LoginPage() {
               <label>Contraseña</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
             </div>
+            <p style={{ textAlign: 'right', marginTop: -8, marginBottom: 14 }}>
+              <a href="/forgot-password" style={{ fontSize: 12 }}>¿Olvidaste tu contraseña?</a>
+            </p>
             <button type="submit" className="btn-primary" disabled={loading}>
               {loading ? 'Ingresando...' : 'Entrar a GuessBet'}
             </button>
