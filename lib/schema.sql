@@ -63,3 +63,7 @@ CREATE TABLE IF NOT EXISTS matches (
 );
 CREATE INDEX IF NOT EXISTS idx_matches_competition ON matches(competition_code);
 CREATE INDEX IF NOT EXISTS idx_matches_date ON matches(match_date);
+
+-- Migración: consentimiento legal (Términos y Privacidad) al registrarse
+ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(20);

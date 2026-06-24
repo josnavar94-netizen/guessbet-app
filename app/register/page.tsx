@@ -7,17 +7,19 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!acceptedTerms) { setError('Debes aceptar los Términos y la Política de Privacidad para continuar.'); return; }
     setError(''); setLoading(true);
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password }),
+        body: JSON.stringify({ email, username, password, acceptedTerms }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); setLoading(false); return; }
@@ -52,7 +54,16 @@ export default function RegisterPage() {
               <label>Contraseña</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="mínimo 6 caracteres" required minLength={6} />
             </div>
-            <button type="submit" className="btn-primary" disabled={loading}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: '#7a8aaa', margin: '14px 0', cursor: 'pointer', lineHeight: 1.5 }}>
+              <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} style={{ marginTop: 2, accentColor: '#c9a84c' }} required />
+              <span>
+                Confirmo que soy mayor de 18 años y acepto los{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a>{' '}
+                y la{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.
+              </span>
+            </label>
+            <button type="submit" className="btn-primary" disabled={loading || !acceptedTerms}>
               {loading ? 'Creando cuenta...' : 'Crear cuenta gratis'}
             </button>
           </form>
