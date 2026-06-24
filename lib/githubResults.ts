@@ -36,7 +36,9 @@ export async function fetchGithubResults(opts: { fromDate: string; tournamentInc
     }));
 }
 
-// Alias de nombres de selección entre el dataset de GitHub y football-data.org
+// Alias de nombres de selección hacia el nombre canónico usado en lib/model.ts
+// (MODEL, FIXTURES, FLAG_CODES). Cubre tanto al dataset de GitHub como a football-data.org,
+// que a veces nombran a la misma selección de forma distinta entre sí y respecto al canónico.
 const TEAM_ALIASES: Record<string, string> = {
   'Czechia': 'Czech Republic',
   'Ivory Coast': "Cote d'Ivoire",
@@ -44,6 +46,8 @@ const TEAM_ALIASES: Record<string, string> = {
   'Bosnia and Herzegovina': 'Bosnia-Herzegovina',
   'Korea Republic': 'South Korea',
   'IR Iran': 'Iran',
+  'United States': 'USA',
+  'Congo DR': 'DR Congo',
 };
 
 export function normalizeTeam(name: string): string {

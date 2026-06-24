@@ -1,4 +1,5 @@
 import { sql } from '@/lib/db';
+import { normalizeTeam } from '@/lib/githubResults';
 
 export type WcRealEntry = { avgGF: number; avgGA: number; pj: number };
 export type WcReal = Record<string, WcRealEntry>;
@@ -23,8 +24,8 @@ export async function computeWcReal(competitionCode = 'WC'): Promise<WcReal> {
 
   for (const m of rows) {
     if (m.home_goals == null || m.away_goals == null) continue;
-    add(m.home_team, m.home_goals, m.away_goals);
-    add(m.away_team, m.away_goals, m.home_goals);
+    add(normalizeTeam(m.home_team), m.home_goals, m.away_goals);
+    add(normalizeTeam(m.away_team), m.away_goals, m.home_goals);
   }
 
   const result: WcReal = {};
