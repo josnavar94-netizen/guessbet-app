@@ -457,8 +457,6 @@ function MatchTitle({ matchName }: { matchName: string }) {
 
 function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loading: boolean; updateBet: Function; deleteBet: Function }) {
   const [filter, setFilter] = useState<'all'|'open'|'won'|'lost'>('all');
-  const [newBet, setNewBet] = useState({ match:'',pick:'',odds:'',stake:'',bookie:'Coolbet',comp:'Mundial 2026',date:'',ev:'' });
-  const [tab, setTab] = useState<'nueva'|'lista'>('lista');
 
   const closed = bets.filter(b => b.result !== 'open');
   const open = bets.filter(b => b.result === 'open');
@@ -493,14 +491,9 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
 
   return (
     <div>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.25rem' }}>
-        <div>
-          <h1 style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:26, marginBottom:4 }}>Mis apuestas</h1>
-          <p style={{ fontSize:13, color:'#7a8aaa' }}>Tu historial personal guardado en tu cuenta</p>
-        </div>
-        <button onClick={() => setTab(tab==='nueva'?'lista':'nueva')} style={{ height:38, padding:'0 14px', background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', color:'#c9a84c', fontFamily:"'Outfit',sans-serif", fontSize:13, fontWeight:600, borderRadius:9, cursor:'pointer' }}>
-          {tab==='nueva'?'← Ver lista':'+ Anotar apuesta'}
-        </button>
+      <div style={{ marginBottom:'1.25rem' }}>
+        <h1 style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:26, marginBottom:4 }}>Mis apuestas</h1>
+        <p style={{ fontSize:13, color:'#7a8aaa' }}>Tu historial personal guardado en tu cuenta</p>
       </div>
 
       {/* Stats */}
@@ -539,58 +532,18 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
         </div>
       )}
 
-      {tab === 'nueva' ? (
-        <div style={{ background:'var(--sur)', border:'1px solid var(--b)', borderRadius:12, padding:'1.25rem' }}>
-          <div style={{ fontWeight:700, marginBottom:16 }}>Anotar nueva apuesta</div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
-            <div style={{ gridColumn:'1/-1' }}>
-              <label style={{ fontSize:11, color:'#7a8aaa', display:'block', marginBottom:4 }}>¿Qué partido?</label>
-              <input value={newBet.match} onChange={e=>setNewBet({...newBet,match:e.target.value})} placeholder="Ej: Argentina vs Francia" style={{ width:'100%', background:'var(--sur2)', border:'1px solid rgba(201,168,76,.24)', color:'#f0ece0', fontFamily:"'Outfit',sans-serif", fontSize:14, padding:'0 12px', height:42, borderRadius:9 }} />
-            </div>
-            <div style={{ gridColumn:'1/-1' }}>
-              <label style={{ fontSize:11, color:'#7a8aaa', display:'block', marginBottom:4 }}>¿Qué apostaste?</label>
-              <input value={newBet.pick} onChange={e=>setNewBet({...newBet,pick:e.target.value})} placeholder="Ej: Gana Argentina" style={{ width:'100%', background:'var(--sur2)', border:'1px solid rgba(201,168,76,.24)', color:'#f0ece0', fontFamily:"'Outfit',sans-serif", fontSize:14, padding:'0 12px', height:42, borderRadius:9 }} />
-            </div>
-            {[{k:'odds',label:'Cuota',ph:'1.42'},{k:'stake',label:'¿Cuánto apostaste?',ph:'10'}].map(f => (
-              <div key={f.k}>
-                <label style={{ fontSize:11, color:'#7a8aaa', display:'block', marginBottom:4 }}>{f.label}</label>
-                <input type="number" step="0.01" value={(newBet as any)[f.k]} onChange={e=>setNewBet({...newBet,[f.k]:e.target.value})} placeholder={f.ph} style={{ width:'100%', background:'var(--sur2)', border:'1px solid rgba(201,168,76,.24)', color:'#f0ece0', fontFamily:"'Outfit',sans-serif", fontSize:14, padding:'0 12px', height:42, borderRadius:9 }} />
-              </div>
-            ))}
-            <div>
-              <label style={{ fontSize:11, color:'#7a8aaa', display:'block', marginBottom:4 }}>Casa de apuestas</label>
-              <select value={newBet.bookie} onChange={e=>setNewBet({...newBet,bookie:e.target.value})} style={{ width:'100%', background:'var(--sur2)', border:'1px solid rgba(201,168,76,.24)', color:'#f0ece0', fontFamily:"'Outfit',sans-serif", fontSize:14, padding:'0 12px', height:42, borderRadius:9 }}>
-                {['Coolbet','Betano','Bet365','Jugabet','1xBet','Otra'].map(b => <option key={b}>{b}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize:11, color:'#7a8aaa', display:'block', marginBottom:4 }}>Fecha</label>
-              <input type="date" value={newBet.date} onChange={e=>setNewBet({...newBet,date:e.target.value})} style={{ width:'100%', background:'var(--sur2)', border:'1px solid rgba(201,168,76,.24)', color:'#f0ece0', fontFamily:"'Outfit',sans-serif", fontSize:14, padding:'0 12px', height:42, borderRadius:9 }} />
-            </div>
-          </div>
-          <button onClick={async()=>{
-            if(!newBet.match||!newBet.pick||!newBet.odds||!newBet.stake){alert('Completa partido, apuesta, cuota y monto.');return;}
-            // This will be handled by parent via API
-            const res = await fetch('/api/bets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({match_name:newBet.match,pick_label:newBet.pick,odds:parseFloat(newBet.odds),stake:parseFloat(newBet.stake),bookie:newBet.bookie,competition:newBet.comp,match_date:newBet.date||null})});
-            if(res.ok){setNewBet({match:'',pick:'',odds:'',stake:'',bookie:'Coolbet',comp:'Mundial 2026',date:'',ev:''});setTab('lista');window.location.reload();}
-          }} style={{ width:'100%', height:46, background:'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color:'#0a0f1e', fontFamily:"'Outfit',sans-serif", fontSize:15, fontWeight:700, border:'none', borderRadius:10, cursor:'pointer' }}>
-            + Guardar apuesta
+      <div style={{ display:'flex', gap:6, marginBottom:'1rem', flexWrap:'wrap' }}>
+        {[{k:'all',l:'Todas'},{k:'open',l:'Esperando'},{k:'won',l:'Ganadas'},{k:'lost',l:'Perdidas'}].map(f => (
+          <button key={f.k} onClick={()=>setFilter(f.k as any)} style={{ height:32, padding:'0 14px', fontSize:12, fontFamily:"'Outfit',sans-serif", background:filter===f.k?'rgba(201,168,76,.15)':'transparent', border:`1px solid ${filter===f.k?'rgba(201,168,76,.4)':'rgba(201,168,76,.15)'}`, color:filter===f.k?'#c9a84c':'#7a8aaa', borderRadius:20, cursor:'pointer', fontWeight:filter===f.k?600:400 }}>
+            {f.l}
           </button>
+        ))}
+      </div>
+      {filtered.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'3rem 1rem', color:'#7a8aaa' }}>
+          {bets.length === 0 ? 'Todavía no has anotado ninguna apuesta. Ve a "Analizar un partido" para registrar la primera.' : 'No hay apuestas con este filtro.'}
         </div>
-      ) : (
-        <>
-          <div style={{ display:'flex', gap:6, marginBottom:'1rem', flexWrap:'wrap' }}>
-            {[{k:'all',l:'Todas'},{k:'open',l:'Esperando'},{k:'won',l:'Ganadas'},{k:'lost',l:'Perdidas'}].map(f => (
-              <button key={f.k} onClick={()=>setFilter(f.k as any)} style={{ height:32, padding:'0 14px', fontSize:12, fontFamily:"'Outfit',sans-serif", background:filter===f.k?'rgba(201,168,76,.15)':'transparent', border:`1px solid ${filter===f.k?'rgba(201,168,76,.4)':'rgba(201,168,76,.15)'}`, color:filter===f.k?'#c9a84c':'#7a8aaa', borderRadius:20, cursor:'pointer', fontWeight:filter===f.k?600:400 }}>
-                {f.l}
-              </button>
-            ))}
-          </div>
-          {filtered.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'3rem 1rem', color:'#7a8aaa' }}>
-              {bets.length === 0 ? 'Todavía no has anotado ninguna apuesta. Usa "+ Anotar apuesta" para empezar.' : 'No hay apuestas con este filtro.'}
-            </div>
-          ) : filtered.map(b => {
+      ) : filtered.map(b => {
             const bc = b.result==='won'?'#3aae6c':b.result==='lost'?'#d95050':'#c9a84c';
             const pl = Number(b.pl);
             const stake = Number(b.stake);
@@ -625,8 +578,6 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
               </div>
             );
           })}
-        </>
-      )}
     </div>
   );
 }
