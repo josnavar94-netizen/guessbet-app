@@ -108,3 +108,6 @@ CREATE TABLE IF NOT EXISTS auth_attempts (
   created_at TIMESTAMP DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_auth_attempts_lookup ON auth_attempts(ip, endpoint, created_at);
+
+-- Migración: fecha de nacimiento, para verificar mayoría de edad real (no solo autodeclarada)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date DATE;

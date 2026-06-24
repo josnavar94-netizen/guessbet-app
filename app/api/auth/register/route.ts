@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
     if (!allowed)
       return NextResponse.json({ error: 'Demasiados intentos. Espera unos minutos y vuelve a intentar.' }, { status: 429 });
 
-    const { email, username, password, acceptedTerms } = await req.json();
-    if (!email || !username || !password)
+    const { email, username, password, birthDate, acceptedTerms } = await req.json();
+    if (!email || !username || !password || !birthDate)
       return NextResponse.json({ error: 'Completa todos los campos.' }, { status: 400 });
     if (password.length < 6)
       return NextResponse.json({ error: 'La contraseña debe tener al menos 6 caracteres.' }, { status: 400 });
@@ -23,14 +23,24 @@ export async function POST(req: NextRequest) {
     if (!acceptedTerms)
       return NextResponse.json({ error: 'Debes aceptar los Términos y la Política de Privacidad.' }, { status: 400 });
 
+    const dob = new Date(birthDate);
+    if (isNaN(dob.getTime()))
+      return NextResponse.json({ error: 'Fecha de nacimiento inválida.' }, { status: 400 });
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const hasNotHadBirthdayThisYear = today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate());
+    if (hasNotHadBirthdayThisYear) age--;
+    if (age < 18)
+      return NextResponse.json({ error: 'Debes ser mayor de 18 años para crear una cuenta en GuessBet.' }, { status: 400 });
+
     const existing = await sql`SELECT id FROM users WHERE email=${email.toLowerCase()} OR username=${username}`;
     if (existing.rows.length > 0)
       return NextResponse.json({ error: 'Ese correo o usuario ya está registrado.' }, { status: 409 });
 
     const hash = await bcrypt.hash(password, 10);
     const result = await sql`
-      INSERT INTO users (email, username, password_hash, terms_accepted_at, terms_version)
-      VALUES (${email.toLowerCase()}, ${username}, ${hash}, NOW(), '1.0')
+      INSERT INTO users (email, username, password_hash, birth_date, terms_accepted_at, terms_version)
+      VALUES (${email.toLowerCase()}, ${username}, ${hash}, ${birthDate}, NOW(), '1.0')
       RETURNING id, email, username, plan
     `;
     const user = result.rows[0];

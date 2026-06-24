@@ -7,19 +7,32 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  function isAdult(dateStr: string): boolean {
+    const dob = new Date(dateStr);
+    if (isNaN(dob.getTime())) return false;
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const hasNotHadBirthdayThisYear = today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate());
+    if (hasNotHadBirthdayThisYear) age--;
+    return age >= 18;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!birthDate) { setError('Ingresa tu fecha de nacimiento.'); return; }
+    if (!isAdult(birthDate)) { setError('Debes ser mayor de 18 años para crear una cuenta en GuessBet.'); return; }
     if (!acceptedTerms) { setError('Debes aceptar los Términos y la Política de Privacidad para continuar.'); return; }
     setError(''); setLoading(true);
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password, acceptedTerms }),
+        body: JSON.stringify({ email, username, password, birthDate, acceptedTerms }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); setLoading(false); return; }
@@ -54,10 +67,14 @@ export default function RegisterPage() {
               <label>Contraseña</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="mínimo 6 caracteres" required minLength={6} />
             </div>
+            <div className="field">
+              <label>Fecha de nacimiento</label>
+              <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} required />
+            </div>
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: '#7a8aaa', margin: '14px 0', cursor: 'pointer', lineHeight: 1.5 }}>
               <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} style={{ marginTop: 2, accentColor: '#c9a84c' }} required />
               <span>
-                Confirmo que soy mayor de 18 años y acepto los{' '}
+                Acepto los{' '}
                 <a href="/terms" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a>{' '}
                 y la{' '}
                 <a href="/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.
