@@ -236,12 +236,12 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 32px 1fr', gap: 8, marginBottom: 10, alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
             {FLAG_CODES[home] && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><Flag name={home} /></span>}
-            <input value={home} onChange={e => setHome(e.target.value)} style={{ ...inp, paddingLeft: FLAG_CODES[home] ? 38 : 12 }} />
+            <input value={home} readOnly style={{ ...inp, paddingLeft: FLAG_CODES[home] ? 38 : 12, cursor: 'default', color: '#f0ece0' }} />
           </div>
           <div style={{ textAlign: 'center', fontSize: 11, color: '#7a8aaa' }}>VS</div>
           <div style={{ position: 'relative' }}>
             {FLAG_CODES[away] && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><Flag name={away} /></span>}
-            <input value={away} onChange={e => setAway(e.target.value)} style={{ ...inp, paddingLeft: FLAG_CODES[away] ? 38 : 12 }} />
+            <input value={away} readOnly style={{ ...inp, paddingLeft: FLAG_CODES[away] ? 38 : 12, cursor: 'default', color: '#f0ece0' }} />
           </div>
         </div>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#7a8aaa', cursor: 'pointer' }}>
