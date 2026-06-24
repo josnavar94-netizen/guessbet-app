@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    logError(err, 'auth/reset-password');
+    await logError(err, 'auth/reset-password');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }

@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     // Respuesta genérica siempre, para no filtrar qué correos están registrados
     return NextResponse.json({ ok: true });
   } catch (err) {
-    logError(err, 'auth/forgot-password');
+    await logError(err, 'auth/forgot-password');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }

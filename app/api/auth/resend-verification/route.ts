@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     await sendVerificationEmail(req.nextUrl.origin, session.userId, session.email, session.username);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    logError(err, 'auth/resend-verification');
+    await logError(err, 'auth/resend-verification');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }

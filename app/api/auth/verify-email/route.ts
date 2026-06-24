@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.redirect(new URL('/dashboard?verified=ok', req.url));
   } catch (err) {
-    logError(err, 'auth/verify-email');
+    await logError(err, 'auth/verify-email');
     return NextResponse.redirect(new URL('/dashboard?verified=error', req.url));
   }
 }

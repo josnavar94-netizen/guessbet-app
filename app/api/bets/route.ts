@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     });
     return res;
   } catch (err) {
-    logError(err, 'bets:POST');
+    await logError(err, 'bets:POST');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }

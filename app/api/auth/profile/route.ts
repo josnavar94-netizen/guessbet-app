@@ -56,7 +56,7 @@ export async function PATCH(req: NextRequest) {
     await createSession({ userId: user.id, username: newUsername, email: user.email, plan: user.plan, sv });
     return NextResponse.json({ ok: true, username: newUsername });
   } catch (err) {
-    logError(err, 'auth/profile');
+    await logError(err, 'auth/profile');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }

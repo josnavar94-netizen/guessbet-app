@@ -38,11 +38,11 @@ export async function POST(req: NextRequest) {
     try {
       await sendVerificationEmail(req.nextUrl.origin, user.id, user.email, user.username);
     } catch (err) {
-      logError(err, 'auth/register:send-verification-email');
+      await logError(err, 'auth/register:send-verification-email');
     }
     return NextResponse.json({ ok: true, user: { id: user.id, username: user.username, email: user.email, plan: user.plan } });
   } catch (err) {
-    logError(err, 'auth/register');
+    await logError(err, 'auth/register');
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }
