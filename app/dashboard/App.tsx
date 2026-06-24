@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { modelProbs, bestPick, getH2H, FLAG_CODES, FIXTURES, TOURNAMENTS, ACTIVE_TOURNAMENT } from '@/lib/model';
+import { FLAG_CODES } from '@/lib/model';
 import CalcTab from './CalcTab';
 import PremiumTab from './PremiumTab';
 import InstallAppSection from '../InstallApp';
@@ -57,6 +57,12 @@ export default function App({ username, email, plan, avatar, emailVerified }: { 
   const [resendMsg, setResendMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [resending, setResending] = useState(false);
   const [verifiedNotice, setVerifiedNotice] = useState<'ok' | 'error' | null>(null);
+
+  // Resultados ya jugados, leídos en vivo de la tabla `matches` en vez del fixture estático
+  const [results, setResults] = useState<{ d: string; dateKey: string; h: string; a: string; gh: number; ga: number }[] | null>(null);
+  useEffect(() => {
+    fetch('/api/results').then(r => r.json()).then(d => setResults(d.results)).catch(() => setResults([]));
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -233,9 +239,9 @@ export default function App({ username, email, plan, avatar, emailVerified }: { 
 
       {/* PAGES */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem' }}>
-        {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} />}
+        {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} results={results} />}
         {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} />}
-        {tab === 'hist' && <HistTab />}
+        {tab === 'hist' && <HistTab results={results} />}
         {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={deleteBet} />}
         {tab === 'premium' && <PremiumTab plan={plan} />}
         {tab === 'account' && (
@@ -536,8 +542,10 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
 // ─────────────────────────────────────────────
 // HOME TAB
 // ─────────────────────────────────────────────
-function HomeTab({ username, setTab, bets }: { username: string; setTab: (t: Tab) => void; bets: DbBet[] }) {
-  const results = TOURNAMENTS[ACTIVE_TOURNAMENT]?.results || [];
+type PastResult = { d: string; dateKey: string; h: string; a: string; gh: number; ga: number };
+
+function HomeTab({ username, setTab, bets, results: liveResults }: { username: string; setTab: (t: Tab) => void; bets: DbBet[]; results: PastResult[] | null }) {
+  const results = liveResults || [];
   const totalMatches = results.length;
   const totalGoals = results.reduce((s, m) => s + m.gh + m.ga, 0);
   const avgGoals = totalMatches ? (totalGoals / totalMatches).toFixed(2) : '0';
@@ -688,9 +696,9 @@ function HomeTab({ username, setTab, bets }: { username: string; setTab: (t: Tab
 // ─────────────────────────────────────────────
 // HIST TAB
 // ─────────────────────────────────────────────
-function HistTab() {
+function HistTab({ results: liveResults }: { results: PastResult[] | null }) {
   const [selectedDate, setSelectedDate] = useState('all');
-  const results = TOURNAMENTS[ACTIVE_TOURNAMENT]?.results || [];
+  const results = liveResults || [];
   const byDate: Record<string,{d:string,count:number}> = {};
   results.forEach(m => { if(!byDate[m.dateKey])byDate[m.dateKey]={d:m.d,count:0}; byDate[m.dateKey].count++; });
   const dateKeys = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
