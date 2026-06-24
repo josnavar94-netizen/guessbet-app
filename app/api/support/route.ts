@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: process.env.RESEND_FROM || 'GuessBet <onboarding@resend.dev>',
       to: process.env.SUPPORT_EMAIL || 'guessbet.admin@gmail.com',
-      replyTo: session.email,
+      reply_to: session.email,
       subject: `[Soporte GuessBet] ${subject}`,
       html: `<p><strong>De:</strong> ${session.username} (${session.email})</p><p><strong>Asunto:</strong> ${subject}</p><p>${String(message).replace(/\n/g, '<br>')}</p>`,
     });
