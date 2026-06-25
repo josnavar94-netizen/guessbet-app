@@ -264,8 +264,21 @@ slides.append(('faq', 5, 5,
     + cta_pill('Pruébala ahora →', CX, H/2 + 280)
 ))
 
+STORY_LABELS = {
+    'que_es': 'QUÉ ES',
+    'la_data': 'LA DATA',
+    'en_vivo': 'EN VIVO',
+    'como_usarla': 'CÓMO USARLA',
+    'premium': 'PREMIUM',
+    'faq': 'FAQ',
+}
+
+def top_label(text):
+    return f'<text x="{CX}" y="220" font-family="{FONT}" font-size="{LABEL_SIZE}" font-weight="{WEIGHT}" fill="{GOLD}" text-anchor="middle" letter-spacing="3">{text}</text>'
+
 for story, idx, total, content in slides:
-    svg = build_svg(content, total, idx - 1)
+    label = top_label(STORY_LABELS[story])
+    svg = build_svg(label + content, total, idx - 1)
     out_path = os.path.join(OUT_BASE, story, f'slide{idx}.png')
     render(svg, out_path)
 
