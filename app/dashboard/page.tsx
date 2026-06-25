@@ -9,15 +9,17 @@ export default async function DashboardPage() {
   let plan = session.plan;
   let avatar: string | null = null;
   let emailVerified = true;
+  let isAdmin = false;
   try {
-    const userResult = await sql`SELECT plan, avatar, email_verified FROM users WHERE id=${session.userId}`;
+    const userResult = await sql`SELECT plan, avatar, email_verified, is_admin FROM users WHERE id=${session.userId}`;
     plan = userResult.rows[0]?.plan ?? session.plan;
     avatar = userResult.rows[0]?.avatar ?? null;
     emailVerified = userResult.rows[0]?.email_verified ?? true;
+    isAdmin = userResult.rows[0]?.is_admin ?? false;
   } catch {
     // Alguna columna todavía no existe (falta correr la migración); seguir con valores por defecto.
     const userResult = await sql`SELECT plan FROM users WHERE id=${session.userId}`;
     plan = userResult.rows[0]?.plan ?? session.plan;
   }
-  return <App username={session.username} email={session.email} plan={plan} avatar={avatar} emailVerified={emailVerified} />;
+  return <App username={session.username} email={session.email} plan={plan} avatar={avatar} emailVerified={emailVerified} isAdmin={isAdmin} />;
 }

@@ -46,7 +46,7 @@ type DbBet = {
   created_at: string;
 };
 
-export default function App({ username, email, plan, avatar, emailVerified }: { username: string; email: string; plan: string; avatar?: string | null; emailVerified: boolean }) {
+export default function App({ username, email, plan, avatar, emailVerified, isAdmin }: { username: string; email: string; plan: string; avatar?: string | null; emailVerified: boolean; isAdmin?: boolean }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('home');
   const [bets, setBets] = useState<DbBet[]>([]);
@@ -169,6 +169,17 @@ export default function App({ username, email, plan, avatar, emailVerified }: { 
     await fetchBets();
   }
 
+  async function deleteBet(id: number) {
+    if (!confirm('¿Eliminar esta apuesta?')) return;
+    const res = await apiFetch(`/api/bets/${id}`, { method: 'DELETE' });
+    if (!res) return;
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      alert(data?.error || 'No se pudo eliminar la apuesta.');
+    }
+    await fetchBets();
+  }
+
   const s = {
     page: { display: 'none' } as React.CSSProperties,
     activePage: { display: 'block' } as React.CSSProperties,
@@ -239,7 +250,7 @@ export default function App({ username, email, plan, avatar, emailVerified }: { 
         {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} results={results} />}
         {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} />}
         {tab === 'hist' && <HistTab results={results} />}
-        {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} />}
+        {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={isAdmin ? deleteBet : undefined} />}
         {tab === 'premium' && <PremiumTab plan={plan} />}
         {tab === 'account' && (
           <AccountTab
@@ -819,7 +830,7 @@ function MatchTitle({ matchName }: { matchName: string }) {
   return <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}><Flag name={a.trim()} />{a} vs <Flag name={b.trim()} />{b}</span>;
 }
 
-function MyBetsTab({ bets, loading, updateBet }: { bets: DbBet[]; loading: boolean; updateBet: Function }) {
+function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loading: boolean; updateBet: Function; deleteBet?: (id: number) => void }) {
   const [filter, setFilter] = useState<'all'|'open'|'won'|'lost'>('all');
 
   const closed = bets.filter(b => b.result !== 'open');
@@ -925,6 +936,7 @@ function MyBetsTab({ bets, loading, updateBet }: { bets: DbBet[]; loading: boole
                       <button onClick={()=>updateBet(b.id,'won')} style={{ height:26, padding:'0 8px', fontSize:11, borderRadius:6, border:'1px solid rgba(58,174,108,.4)', background:'rgba(58,174,108,.1)', color:'#3aae6c', cursor:'pointer' }}>✓ Gané</button>
                       <button onClick={()=>updateBet(b.id,'lost')} style={{ height:26, padding:'0 8px', fontSize:11, borderRadius:6, border:'1px solid rgba(217,80,80,.3)', background:'rgba(217,80,80,.1)', color:'#d95050', cursor:'pointer' }}>✗ Perdí</button>
                     </>}
+                    {deleteBet && <button onClick={()=>deleteBet(b.id)} style={{ height:26, padding:'0 8px', fontSize:11, borderRadius:6, border:'1px solid rgba(201,168,76,.15)', background:'transparent', color:'#7a8aaa', cursor:'pointer' }}>🗑</button>}
                   </div>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap', fontSize:13 }}>

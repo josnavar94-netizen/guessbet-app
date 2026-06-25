@@ -111,3 +111,7 @@ CREATE INDEX IF NOT EXISTS idx_auth_attempts_lookup ON auth_attempts(ip, endpoin
 
 -- Migración: fecha de nacimiento, para verificar mayoría de edad real (no solo autodeclarada)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date DATE;
+
+-- Migración: cuentas admin (las únicas que pueden borrar apuestas). Activar a mano con:
+-- UPDATE users SET is_admin = TRUE WHERE email = 'tu_correo@ejemplo.com';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
