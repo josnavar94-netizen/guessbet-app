@@ -64,6 +64,18 @@ export default function App({ username, email, plan, avatar, emailVerified, isAd
     fetch('/api/results').then(r => r.json()).then(d => setResults(d.results)).catch(() => setResults([]));
   }, []);
 
+  // Hora de la última sincronización con football-data.org, para mostrarle al usuario
+  // una confirmación real (no inventada) de que el cron sigue actualizando la base.
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
+  useEffect(() => {
+    function load() {
+      fetch('/api/sync-status').then(r => r.json()).then(d => setLastSyncAt(d.lastSyncAt)).catch(() => {});
+    }
+    load();
+    const id = setInterval(load, 5 * 60 * 1000); // refresca cada 5 min
+    return () => clearInterval(id);
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const verified = params.get('verified');
@@ -247,7 +259,7 @@ export default function App({ username, email, plan, avatar, emailVerified, isAd
 
       {/* PAGES */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem' }}>
-        {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} results={results} />}
+        {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} results={results} lastSyncAt={lastSyncAt} />}
         {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} />}
         {tab === 'hist' && <HistTab results={results} />}
         {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={isAdmin ? deleteBet : undefined} />}
@@ -632,7 +644,34 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
 // ─────────────────────────────────────────────
 type PastResult = { d: string; dateKey: string; h: string; a: string; gh: number; ga: number };
 
-function HomeTab({ username, setTab, bets, results: liveResults }: { username: string; setTab: (t: Tab) => void; bets: DbBet[]; results: PastResult[] | null }) {
+function relativeTime(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diffMs / 60000);
+  if (min < 1) return 'hace instantes';
+  if (min < 60) return `hace ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `hace ${h} h`;
+  const d = Math.floor(h / 24);
+  return `hace ${d} día${d === 1 ? '' : 's'}`;
+}
+
+function SyncBadge({ lastSyncAt }: { lastSyncAt: string | null }) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 30000); // recalcula el texto cada 30s
+    return () => clearInterval(id);
+  }, []);
+  if (!lastSyncAt) return null;
+  const stale = Date.now() - new Date(lastSyncAt).getTime() > 3 * 60 * 60 * 1000; // sin sync hace +3h
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: stale ? '#d98c5f' : '#7a8aaa', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 20, padding: '4px 12px', marginBottom: 14 }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: stale ? '#d98c5f' : '#4caf6a', flexShrink: 0 }} />
+      Base de datos actualizada {relativeTime(lastSyncAt)}
+    </div>
+  );
+}
+
+function HomeTab({ username, setTab, bets, results: liveResults, lastSyncAt }: { username: string; setTab: (t: Tab) => void; bets: DbBet[]; results: PastResult[] | null; lastSyncAt: string | null }) {
   const results = liveResults || [];
   const totalMatches = results.length;
   const totalGoals = results.reduce((s, m) => s + m.gh + m.ga, 0);
@@ -656,6 +695,7 @@ function HomeTab({ username, setTab, bets, results: liveResults }: { username: s
       {/* Hero */}
       <div style={{ textAlign: 'center', padding: '2rem 1rem 1.5rem' }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', color: '#c9a84c', textTransform: 'uppercase', marginBottom: 14 }}>⚽ Mundial 2026</div>
+        <div><SyncBadge lastSyncAt={lastSyncAt} /></div>
         <h1 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 'clamp(32px,8vw,52px)', lineHeight: 1.08, marginBottom: 16, letterSpacing: '-.03em' }}>
           <span style={{ color: '#f0ece0' }}>La ventaja que el mercado</span><br />
           <span style={{ background: 'linear-gradient(135deg,#e8c96a 0%,#c9a84c 50%,#8a6a1f 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>no quiere que tengas.</span>
