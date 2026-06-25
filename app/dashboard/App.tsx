@@ -276,6 +276,7 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
   const rowLabel: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 };
   const fieldStyle: React.CSSProperties = { width: '100%', background: 'var(--sur2)', border: '1px solid rgba(201,168,76,.24)', color: '#f0ece0', fontFamily: "'Outfit',sans-serif", fontSize: 14, padding: '0 12px', height: 40, borderRadius: 9 };
 
+  const [section, setSection] = useState<'menu' | 'personal' | 'security' | 'payment' | 'support' | 'legal'>('menu');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(avatar || null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -472,124 +473,148 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
         </div>
       )}
 
-      <div style={card}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>👤 Información personal</div>
-
-        <div style={{ marginBottom: 14 }}>
-          <div style={rowLabel}>Nombre de usuario</div>
-          {editingUsername ? (
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input value={usernameInput} onChange={e => setUsernameInput(e.target.value)} style={fieldStyle} />
-              <button onClick={saveUsername} disabled={usernameSaving} style={{ height: 40, padding: '0 14px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', opacity: usernameSaving ? .6 : 1 }}>
-                {usernameSaving ? '...' : 'Guardar'}
-              </button>
-              <button onClick={() => { setEditingUsername(false); setUsernameInput(username); setUsernameMsg(null); }} style={{ height: 40, padding: '0 12px', background: 'transparent', border: '1px solid rgba(201,168,76,.2)', color: '#7a8aaa', borderRadius: 9, cursor: 'pointer' }}>✕</button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 14 }}>{username}</span>
-              <button onClick={() => setEditingUsername(true)} style={{ fontSize: 12, color: '#6b9fd4', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>Editar</button>
-            </div>
-          )}
-          {usernameMsg && <div style={{ fontSize: 11, marginTop: 6, color: usernameMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{usernameMsg.text}</div>}
-        </div>
-
-        <div style={{ marginBottom: 14 }}>
-          <div style={rowLabel}>Correo electrónico</div>
-          <div style={{ fontSize: 14 }}>{email}</div>
-        </div>
-
-        <div>
-          <div style={rowLabel}>Plan actual</div>
-          <div style={{ fontSize: 14, color: plan === 'premium' ? '#c9a84c' : '#f0ece0' }}>{plan === 'premium' ? 'GuessBet PRO' : 'Free'}</div>
-        </div>
-
-        <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 14, marginTop: 14 }}>
-          {changingPw ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div>
-                <div style={rowLabel}>Contraseña actual</div>
-                <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} style={fieldStyle} />
-              </div>
-              <div>
-                <div style={rowLabel}>Nueva contraseña</div>
-                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={fieldStyle} />
-              </div>
-              <div>
-                <div style={rowLabel}>Confirmar nueva contraseña</div>
-                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={fieldStyle} />
-              </div>
-              {pwMsg && <div style={{ fontSize: 11, color: pwMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{pwMsg.text}</div>}
-              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                <button onClick={savePassword} disabled={pwSaving} style={{ height: 40, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, border: 'none', cursor: 'pointer', opacity: pwSaving ? .6 : 1 }}>
-                  {pwSaving ? 'Guardando...' : 'Cambiar contraseña'}
-                </button>
-                <button onClick={() => { setChangingPw(false); setCurrentPassword(''); setNewPassword(''); setConfirmPassword(''); setPwMsg(null); }} style={{ height: 40, padding: '0 12px', background: 'transparent', border: '1px solid rgba(201,168,76,.2)', color: '#7a8aaa', borderRadius: 9, cursor: 'pointer' }}>
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button onClick={() => setChangingPw(true)} style={{ fontSize: 13, color: '#6b9fd4', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
-              🔒 Cambiar contraseña
+      {section === 'menu' && (
+        <div style={card}>
+          {[
+            { key: 'personal' as const, icon: '👤', label: 'Información personal' },
+            { key: 'security' as const, icon: '🔒', label: 'Seguridad y contraseña' },
+            { key: 'payment' as const, icon: '💳', label: 'Método de pago' },
+            { key: 'support' as const, icon: '💬', label: 'Soporte' },
+            { key: 'legal' as const, icon: '📜', label: 'Términos y privacidad' },
+          ].map((item, i) => (
+            <button key={item.key} onClick={() => setSection(item.key)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', borderBottom: i < 4 ? '1px solid rgba(201,168,76,.1)' : 'none', padding: '13px 2px', fontSize: 14, color: '#f0ece0', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", textAlign: 'left' }}>
+              <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+              <span style={{ flex: 1 }}>{item.label}</span>
+              <span style={{ color: '#7a8aaa', fontSize: 14 }}>›</span>
             </button>
-          )}
-        </div>
-      </div>
-
-      <div style={card}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>💳 Método de pago</div>
-        {plan === 'premium' ? (
-          <>
-            <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 12 }}>Tu suscripción PRO está activa.</div>
-            <button onClick={() => alert('Próximamente: gestión de método de pago.')} style={{ height: 40, padding: '0 16px', background: 'transparent', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', fontSize: 13, fontWeight: 600, borderRadius: 9, cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
-              Gestionar suscripción
-            </button>
-          </>
-        ) : (
-          <>
-            <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 12 }}>No tienes un método de pago guardado todavía.</div>
-            <button onClick={() => setTab('premium')} style={{ height: 40, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, cursor: 'pointer', border: 'none', fontFamily: "'Outfit',sans-serif" }}>
-              Ver planes PRO
-            </button>
-          </>
-        )}
-      </div>
-
-      <div style={card}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>📜 Legal</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#6b9fd4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            Términos y Condiciones <span style={{ color: '#7a8aaa' }}>↗</span>
-          </a>
-          <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#6b9fd4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            Política de Privacidad <span style={{ color: '#7a8aaa' }}>↗</span>
-          </a>
-        </div>
-      </div>
-
-      <div style={card}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>💬 Soporte</div>
-        <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 14, lineHeight: 1.5 }}>¿Tienes un problema o una sugerencia? Escríbenos y te respondemos a tu correo.</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div>
-            <div style={rowLabel}>Asunto</div>
-            <input value={supportSubject} onChange={e => setSupportSubject(e.target.value)} placeholder="Ej: No me carga la calculadora" style={fieldStyle} />
-          </div>
-          <div>
-            <div style={rowLabel}>Mensaje</div>
-            <textarea value={supportMessage} onChange={e => setSupportMessage(e.target.value)} rows={4} placeholder="Cuéntanos qué pasó..." style={{ ...fieldStyle, height: 'auto', padding: 10, resize: 'vertical' as const, fontFamily: "'Outfit',sans-serif" }} />
-          </div>
-          {supportMsg && <div style={{ fontSize: 11, color: supportMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{supportMsg.text}</div>}
-          <button onClick={sendSupportMessage} disabled={supportSending} style={{ height: 40, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, border: 'none', cursor: 'pointer', opacity: supportSending ? .6 : 1, alignSelf: 'flex-start' }}>
-            {supportSending ? 'Enviando...' : 'Enviar mensaje'}
+          ))}
+          <button onClick={logout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', padding: '13px 2px', fontSize: 14, color: '#d95050', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", textAlign: 'left' }}>
+            <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0 }}>⎋</span>
+            <span style={{ flex: 1 }}>Cerrar sesión</span>
           </button>
         </div>
-      </div>
+      )}
 
-      <button onClick={logout} style={{ width: '100%', height: 44, background: 'transparent', border: '1px solid rgba(217,80,80,.3)', color: '#d95050', fontSize: 13, fontWeight: 600, borderRadius: 9, cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
-        Cerrar sesión
-      </button>
+      {section !== 'menu' && (
+        <button onClick={() => setSection('menu')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: '#7a8aaa', fontSize: 13, cursor: 'pointer', fontFamily: "'Outfit',sans-serif", marginBottom: '1rem', padding: 0 }}>
+          ← Volver a Mi cuenta
+        </button>
+      )}
+
+      {section === 'personal' && (
+        <div style={card}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>👤 Información personal</div>
+
+          <div style={{ marginBottom: 14 }}>
+            <div style={rowLabel}>Nombre de usuario</div>
+            {editingUsername ? (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input value={usernameInput} onChange={e => setUsernameInput(e.target.value)} style={fieldStyle} />
+                <button onClick={saveUsername} disabled={usernameSaving} style={{ height: 40, padding: '0 14px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', opacity: usernameSaving ? .6 : 1 }}>
+                  {usernameSaving ? '...' : 'Guardar'}
+                </button>
+                <button onClick={() => { setEditingUsername(false); setUsernameInput(username); setUsernameMsg(null); }} style={{ height: 40, padding: '0 12px', background: 'transparent', border: '1px solid rgba(201,168,76,.2)', color: '#7a8aaa', borderRadius: 9, cursor: 'pointer' }}>✕</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 14 }}>{username}</span>
+                <button onClick={() => setEditingUsername(true)} style={{ fontSize: 12, color: '#6b9fd4', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>Editar</button>
+              </div>
+            )}
+            {usernameMsg && <div style={{ fontSize: 11, marginTop: 6, color: usernameMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{usernameMsg.text}</div>}
+          </div>
+
+          <div style={{ marginBottom: 14 }}>
+            <div style={rowLabel}>Correo electrónico</div>
+            <div style={{ fontSize: 14 }}>{email}</div>
+          </div>
+
+          <div>
+            <div style={rowLabel}>Plan actual</div>
+            <div style={{ fontSize: 14, color: plan === 'premium' ? '#c9a84c' : '#f0ece0' }}>{plan === 'premium' ? 'GuessBet PRO' : 'Free'}</div>
+          </div>
+        </div>
+      )}
+
+      {section === 'security' && (
+        <div style={card}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>🔒 Seguridad y contraseña</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div>
+              <div style={rowLabel}>Contraseña actual</div>
+              <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} style={fieldStyle} />
+            </div>
+            <div>
+              <div style={rowLabel}>Nueva contraseña</div>
+              <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={fieldStyle} />
+            </div>
+            <div>
+              <div style={rowLabel}>Confirmar nueva contraseña</div>
+              <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={fieldStyle} />
+            </div>
+            {pwMsg && <div style={{ fontSize: 11, color: pwMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{pwMsg.text}</div>}
+            <button onClick={savePassword} disabled={pwSaving} style={{ height: 40, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, border: 'none', cursor: 'pointer', opacity: pwSaving ? .6 : 1, alignSelf: 'flex-start' }}>
+              {pwSaving ? 'Guardando...' : 'Cambiar contraseña'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {section === 'payment' && (
+        <div style={card}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>💳 Método de pago</div>
+          {plan === 'premium' ? (
+            <>
+              <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 12 }}>Tu suscripción PRO está activa.</div>
+              <button onClick={() => alert('Próximamente: gestión de método de pago.')} style={{ height: 40, padding: '0 16px', background: 'transparent', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', fontSize: 13, fontWeight: 600, borderRadius: 9, cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
+                Gestionar suscripción
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 12 }}>No tienes un método de pago guardado todavía.</div>
+              <button onClick={() => setTab('premium')} style={{ height: 40, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, cursor: 'pointer', border: 'none', fontFamily: "'Outfit',sans-serif" }}>
+                Ver planes PRO
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {section === 'legal' && (
+        <div style={card}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>📜 Legal</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#6b9fd4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              Términos y Condiciones <span style={{ color: '#7a8aaa' }}>↗</span>
+            </a>
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#6b9fd4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              Política de Privacidad <span style={{ color: '#7a8aaa' }}>↗</span>
+            </a>
+          </div>
+        </div>
+      )}
+
+      {section === 'support' && (
+        <div style={card}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>💬 Soporte</div>
+          <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 14, lineHeight: 1.5 }}>¿Tienes un problema o una sugerencia? Escríbenos y te respondemos a tu correo.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div>
+              <div style={rowLabel}>Asunto</div>
+              <input value={supportSubject} onChange={e => setSupportSubject(e.target.value)} placeholder="Ej: No me carga la calculadora" style={fieldStyle} />
+            </div>
+            <div>
+              <div style={rowLabel}>Mensaje</div>
+              <textarea value={supportMessage} onChange={e => setSupportMessage(e.target.value)} rows={4} placeholder="Cuéntanos qué pasó..." style={{ ...fieldStyle, height: 'auto', padding: 10, resize: 'vertical' as const, fontFamily: "'Outfit',sans-serif" }} />
+            </div>
+            {supportMsg && <div style={{ fontSize: 11, color: supportMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{supportMsg.text}</div>}
+            <button onClick={sendSupportMessage} disabled={supportSending} style={{ height: 40, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, border: 'none', cursor: 'pointer', opacity: supportSending ? .6 : 1, alignSelf: 'flex-start' }}>
+              {supportSending ? 'Enviando...' : 'Enviar mensaje'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
