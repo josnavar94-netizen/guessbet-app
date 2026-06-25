@@ -1,0 +1,18 @@
+name: Sync resultados Mundial 2026
+
+on:
+  schedule:
+    # Cada 3 horas. El cron diario de Vercel (00:00) sigue existiendo como respaldo;
+    # este workflow cubre las horas intermedias que el plan Hobby de Vercel no permite.
+    - cron: '0 */3 * * *'
+  workflow_dispatch: {} # permite correrlo manualmente desde la pestaña Actions de GitHub
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar a /api/cron/sync-results
+        run: |
+          curl -sf -w "\nHTTP %{http_code}\n" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://guessbet.vercel.app/api/cron/sync-results
