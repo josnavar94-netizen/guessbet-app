@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { fetchCompetitionMatches } from '@/lib/footballData';
-import { fetchGithubResults } from '@/lib/githubResults';
+import { fetchGithubResults, normalizeTeam } from '@/lib/githubResults';
 import { crossValidate, Discrepancy } from '@/lib/crossValidate';
+import { gradeBet } from '@/lib/gradeBet';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
   }
 
-  const summary: Record<string, { fetched: number; upserted: number; discrepancies: Discrepancy[] }> = {};
+  const summary: Record<string, { fetched: number; upserted: number; settled: number; discrepancies: Discrepancy[] }> = {};
 
   for (const [code, ghConfig] of Object.entries(COMPETITIONS)) {
     const matches = await fetchCompetitionMatches(code);
@@ -46,12 +47,13 @@ export async function GET(req: NextRequest) {
       upserted++;
     }
 
+    const { rows: dbMatches } = await sql`
+      SELECT match_date::text, home_team, away_team, home_goals, away_goals
+      FROM matches WHERE competition_code = ${code} AND status = 'FINISHED'
+    `;
+
     let discrepancies: Discrepancy[] = [];
     try {
-      const { rows: dbMatches } = await sql`
-        SELECT match_date::text, home_team, away_team, home_goals, away_goals
-        FROM matches WHERE competition_code = ${code} AND status = 'FINISHED'
-      `;
       const ghMatches = await fetchGithubResults({ fromDate: ghConfig.ghFromDate, tournamentIncludes: ghConfig.ghTournament });
       discrepancies = crossValidate(dbMatches as any, ghMatches);
       if (discrepancies.length > 0) {
@@ -61,7 +63,26 @@ export async function GET(req: NextRequest) {
       console.error(`[sync-results] ${code}: falló la validación cruzada con GitHub`, err);
     }
 
-    summary[code] = { fetched: matches.length, upserted, discrepancies };
+    // Gradúa automáticamente las apuestas abiertas de partidos ya finalizados.
+    // Solo cubre mercados basados en el marcador final (1X2, over/under 2.5, BTTS, doble oportunidad);
+    // el resto (DNB, corners, tarjetas, tiros) se deja para que el usuario lo marque a mano.
+    let settled = 0;
+    for (const m of dbMatches) {
+      if (m.home_goals == null || m.away_goals == null) continue;
+      const home = normalizeTeam(m.home_team);
+      const away = normalizeTeam(m.away_team);
+      const matchName = `${home} vs ${away}`;
+      const openBets = await sql`SELECT id, pick_label, odds, stake FROM bets WHERE match_name=${matchName} AND result='open'`;
+      for (const bet of openBets.rows) {
+        const grade = gradeBet(bet.pick_label, home, away, m.home_goals, m.away_goals);
+        if (!grade) continue;
+        const pl = grade === 'won' ? (Number(bet.odds) - 1) * Number(bet.stake) : -Number(bet.stake);
+        await sql`UPDATE bets SET result=${grade}, pl=${pl} WHERE id=${bet.id} AND result='open'`;
+        settled++;
+      }
+    }
+
+    summary[code] = { fetched: matches.length, upserted, settled, discrepancies };
   }
 
   return NextResponse.json({ ok: true, summary });

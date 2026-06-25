@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { sql } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { logError } from '@/lib/logError';
+import { normalizeTeam } from '@/lib/githubResults';
 
 const DEVICE_COOKIE = 'gb_device';
 const DEVICE_MAX_AGE = 60 * 60 * 24 * 365; // 1 año
@@ -27,6 +28,24 @@ export async function POST(req: NextRequest) {
     const { match_name, pick_label, odds, stake, ev, bookie, competition, match_date } = await req.json();
     if (!match_name || !pick_label || !odds || !stake)
       return NextResponse.json({ error: 'Faltan campos.' }, { status: 400 });
+
+    if (typeof odds !== 'number' || odds < 1.01 || odds > 1000)
+      return NextResponse.json({ error: 'Cuota fuera de rango válido.' }, { status: 400 });
+    if (typeof stake !== 'number' || stake <= 0)
+      return NextResponse.json({ error: 'Monto de apuesta inválido.' }, { status: 400 });
+
+    const [home, away] = String(match_name).split(' vs ');
+    if (!home || !away)
+      return NextResponse.json({ error: 'Partido inválido.' }, { status: 400 });
+    // Se compara contra los nombres normalizados: football-data.org a veces usa otro nombre oficial
+    // (ej. "Ivory Coast" en vez de "Cote d'Ivoire") y no queremos rechazar un partido real por eso.
+    const allMatches = await sql`SELECT home_team, away_team FROM matches`;
+    const matchFound = allMatches.rows.some(r => {
+      const h = normalizeTeam(r.home_team), a = normalizeTeam(r.away_team);
+      return (h === home && a === away) || (h === away && a === home);
+    });
+    if (!matchFound)
+      return NextResponse.json({ error: 'Ese partido no existe en el Mundial 2026.' }, { status: 400 });
 
     const cookieStore = cookies();
     let deviceId = cookieStore.get(DEVICE_COOKIE)?.value;
