@@ -129,6 +129,31 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
     fetch('/api/wc-real').then(r => r.json()).then(d => setWcRealLive(d.wcReal)).catch(() => {});
   }, []);
 
+  // Cuotas reales de Coolbet (The Odds API) — la única casa con cobertura real hoy.
+  // Betano/Jugabet/Otra siguen siendo siempre manuales.
+  const [coolbetOdds, setCoolbetOdds] = useState<Record<string, any>>({});
+  useEffect(() => {
+    fetch('/api/odds').then(r => r.json()).then(d => {
+      const map: Record<string, any> = {};
+      (d.odds || []).forEach((o: any) => { map[`${o.home_team}|${o.away_team}`] = o; });
+      setCoolbetOdds(map);
+    }).catch(() => {});
+  }, []);
+  const coolbetForMatch = coolbetOdds[`${home}|${away}`];
+  function useCoolbetOdds() {
+    if (!coolbetForMatch) return;
+    setOdds(prev => ({
+      ...prev,
+      ...(coolbetForMatch.home_odds != null && { home: String(coolbetForMatch.home_odds) }),
+      ...(coolbetForMatch.draw_odds != null && { draw: String(coolbetForMatch.draw_odds) }),
+      ...(coolbetForMatch.away_odds != null && { away: String(coolbetForMatch.away_odds) }),
+      ...(coolbetForMatch.over_odds != null && { over: String(coolbetForMatch.over_odds) }),
+      ...(coolbetForMatch.under_odds != null && { under: String(coolbetForMatch.under_odds) }),
+      ...(coolbetForMatch.btts_odds != null && { btts: String(coolbetForMatch.btts_odds) }),
+    }));
+    setBookie('Coolbet');
+  }
+
   // Live mode
   const [live, setLive] = useState(false);
   const [liveMin, setLiveMin] = useState('45');
@@ -262,6 +287,11 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
       <div style={card}>
         <div style={secTitle}>2 — Cuotas de tu casa (opcional)</div>
         <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 12, lineHeight: 1.6 }}>Una "cuota" es el número que multiplica tu dinero si ganas. Ej: cuota 2.00 con $10 apostados = $20 de vuelta. Déjalo vacío si no tienes.</p>
+        {coolbetForMatch && (
+          <button onClick={useCoolbetOdds} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', justifyContent: 'center', height: 38, marginBottom: 14, background: 'rgba(58,174,108,.1)', border: '1px solid rgba(58,174,108,.3)', color: '#3aae6c', fontSize: 12, fontWeight: 600, borderRadius: 9, cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
+            ⚡ Usar cuotas reales de Coolbet
+          </button>
+        )}
         <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>¿Quién gana el partido?</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
           {[['home', `Gana ${home}`, home], ['draw', 'Empatan', null], ['away', `Gana ${away}`, away]].map(([k, ph, team]) => (

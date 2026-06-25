@@ -4,6 +4,7 @@ import { fetchCompetitionMatches } from '@/lib/footballData';
 import { fetchGithubResults, normalizeTeam } from '@/lib/githubResults';
 import { crossValidate, Discrepancy } from '@/lib/crossValidate';
 import { gradeBet } from '@/lib/gradeBet';
+import { fetchCoolbetOdds } from '@/lib/oddsApi';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -85,5 +86,26 @@ export async function GET(req: NextRequest) {
     summary[code] = { fetched: matches.length, upserted, settled, discrepancies };
   }
 
-  return NextResponse.json({ ok: true, summary });
+  // Cuotas reales de Coolbet (The Odds API) — solo si ODDS_API_KEY está configurada; si no, no hace nada.
+  let oddsSynced = 0;
+  try {
+    const odds = await fetchCoolbetOdds();
+    for (const o of odds) {
+      const home = normalizeTeam(o.home);
+      const away = normalizeTeam(o.away);
+      await sql`
+        INSERT INTO match_odds (home_team, away_team, bookmaker, home_odds, draw_odds, away_odds, over_odds, under_odds, btts_odds)
+        VALUES (${home}, ${away}, 'coolbet', ${o.home_odds}, ${o.draw_odds}, ${o.away_odds}, ${o.over_odds}, ${o.under_odds}, ${o.btts_odds})
+        ON CONFLICT (home_team, away_team, bookmaker) DO UPDATE SET
+          home_odds = EXCLUDED.home_odds, draw_odds = EXCLUDED.draw_odds, away_odds = EXCLUDED.away_odds,
+          over_odds = EXCLUDED.over_odds, under_odds = EXCLUDED.under_odds, btts_odds = EXCLUDED.btts_odds,
+          updated_at = NOW()
+      `;
+      oddsSynced++;
+    }
+  } catch (err) {
+    console.error('[sync-results] falló la sincronización de cuotas de Coolbet', err);
+  }
+
+  return NextResponse.json({ ok: true, summary, oddsSynced });
 }

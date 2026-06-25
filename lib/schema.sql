@@ -115,3 +115,19 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date DATE;
 -- Migración: cuentas admin (las únicas que pueden borrar apuestas). Activar a mano con:
 -- UPDATE users SET is_admin = TRUE WHERE email = 'tu_correo@ejemplo.com';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Migración: cuotas reales de Coolbet sincronizadas desde The Odds API
+CREATE TABLE IF NOT EXISTS match_odds (
+  id SERIAL PRIMARY KEY,
+  home_team VARCHAR(100) NOT NULL,
+  away_team VARCHAR(100) NOT NULL,
+  bookmaker VARCHAR(30) NOT NULL DEFAULT 'coolbet',
+  home_odds NUMERIC(6,2),
+  draw_odds NUMERIC(6,2),
+  away_odds NUMERIC(6,2),
+  over_odds NUMERIC(6,2),
+  under_odds NUMERIC(6,2),
+  btts_odds NUMERIC(6,2),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(home_team, away_team, bookmaker)
+);
