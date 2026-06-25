@@ -16,8 +16,8 @@ export async function POST(req: NextRequest) {
     const { email, username, password, birthDate, acceptedTerms } = await req.json();
     if (!email || !username || !password || !birthDate)
       return NextResponse.json({ error: 'Completa todos los campos.' }, { status: 400 });
-    if (password.length < 6)
-      return NextResponse.json({ error: 'La contraseña debe tener al menos 6 caracteres.' }, { status: 400 });
+    if (password.length < 7)
+      return NextResponse.json({ error: 'La contraseña debe tener al menos 7 caracteres.' }, { status: 400 });
     if (username.length < 3)
       return NextResponse.json({ error: 'El nombre de usuario debe tener al menos 3 caracteres.' }, { status: 400 });
     if (!acceptedTerms)

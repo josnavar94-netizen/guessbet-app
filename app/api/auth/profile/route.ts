@@ -43,8 +43,8 @@ export async function PATCH(req: NextRequest) {
       const valid = await bcrypt.compare(currentPassword, user.password_hash);
       if (!valid)
         return NextResponse.json({ error: 'Tu contraseña actual no es correcta.' }, { status: 401 });
-      if (newPassword.length < 6)
-        return NextResponse.json({ error: 'La nueva contraseña debe tener al menos 6 caracteres.' }, { status: 400 });
+      if (newPassword.length < 7)
+        return NextResponse.json({ error: 'La nueva contraseña debe tener al menos 7 caracteres.' }, { status: 400 });
 
       const hash = await bcrypt.hash(newPassword, 10);
       sv = sv + 1; // invalida sesiones en otros dispositivos

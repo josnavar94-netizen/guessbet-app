@@ -65,7 +65,7 @@ export default function RegisterPage() {
             </div>
             <div className="field">
               <label>Contraseña</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="mínimo 6 caracteres" required minLength={6} />
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="mínimo 7 caracteres" required minLength={7} />
             </div>
             <div className="field">
               <label>Fecha de nacimiento</label>

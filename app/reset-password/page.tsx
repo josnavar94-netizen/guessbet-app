@@ -24,7 +24,7 @@ function ResetPasswordForm() {
     e.preventDefault();
     setError('');
     if (!token) { setError('Link inválido. Solicita uno nuevo.'); return; }
-    if (newPassword.length < 6) { setError('La contraseña debe tener al menos 6 caracteres.'); return; }
+    if (newPassword.length < 7) { setError('La contraseña debe tener al menos 7 caracteres.'); return; }
     if (newPassword !== confirmPassword) { setError('Las contraseñas no coinciden.'); return; }
     setLoading(true);
     try {
@@ -61,11 +61,11 @@ function ResetPasswordForm() {
             <form onSubmit={handleSubmit}>
               <div className="field">
                 <label>Nueva contraseña</label>
-                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="mínimo 6 caracteres" required minLength={6} />
+                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="mínimo 7 caracteres" required minLength={7} />
               </div>
               <div className="field">
                 <label>Confirmar nueva contraseña</label>
-                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="repite la contraseña" required minLength={6} />
+                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="repite la contraseña" required minLength={7} />
               </div>
               <button type="submit" className="btn-primary" disabled={loading}>
                 {loading ? 'Guardando...' : 'Restablecer contraseña'}

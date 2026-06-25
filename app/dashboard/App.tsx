@@ -403,7 +403,7 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
 
   async function savePassword() {
     if (!currentPassword || !newPassword) { setPwMsg({ type: 'err', text: 'Completa ambos campos.' }); return; }
-    if (newPassword.length < 6) { setPwMsg({ type: 'err', text: 'La nueva contraseña debe tener al menos 6 caracteres.' }); return; }
+    if (newPassword.length < 7) { setPwMsg({ type: 'err', text: 'La nueva contraseña debe tener al menos 7 caracteres.' }); return; }
     if (newPassword !== confirmPassword) { setPwMsg({ type: 'err', text: 'Las contraseñas no coinciden.' }); return; }
     setPwSaving(true);
     setPwMsg(null);
