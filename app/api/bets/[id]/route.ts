@@ -22,11 +22,3 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: 'Error del servidor.' }, { status: 500 });
   }
 }
-
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
-  const s = await getSession();
-  if (!s) return NextResponse.json({ error: 'No autenticado.' }, { status: 401 });
-  const id = parseInt(params.id);
-  await sql`DELETE FROM bets WHERE id=${id} AND user_id=${s.userId}`;
-  return NextResponse.json({ ok: true });
-}
