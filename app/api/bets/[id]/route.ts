@@ -14,6 +14,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const betRes = await sql`SELECT * FROM bets WHERE id=${id} AND user_id=${s.userId}`;
     const bet = betRes.rows[0];
     if (!bet) return NextResponse.json({ error: 'No encontrada.' }, { status: 404 });
+    if (bet.result !== 'open')
+      return NextResponse.json({ error: 'Esta apuesta ya tiene un resultado registrado y no se puede modificar.' }, { status: 409 });
     const pl = result === 'won' ? (bet.odds - 1) * bet.stake : result === 'lost' ? -bet.stake : 0;
     const updated = await sql`UPDATE bets SET result=${result}, pl=${pl} WHERE id=${id} AND user_id=${s.userId} RETURNING *`;
     return NextResponse.json({ bet: updated.rows[0] });

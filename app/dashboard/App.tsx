@@ -162,6 +162,10 @@ export default function App({ username, email, plan, avatar, emailVerified }: { 
       body: JSON.stringify({ result }),
     });
     if (!res) return;
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      alert(data?.error || 'No se pudo actualizar la apuesta.');
+    }
     await fetchBets();
   }
 
