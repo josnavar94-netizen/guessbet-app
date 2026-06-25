@@ -287,10 +287,15 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
       <div style={card}>
         <div style={secTitle}>2 — Cuotas de tu casa (opcional)</div>
         <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 12, lineHeight: 1.6 }}>Una "cuota" es el número que multiplica tu dinero si ganas. Ej: cuota 2.00 con $10 apostados = $20 de vuelta. Déjalo vacío si no tienes.</p>
-        {coolbetForMatch && (
+        {coolbetForMatch && !live && (
           <button onClick={useCoolbetOdds} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', justifyContent: 'center', height: 38, marginBottom: 14, background: 'rgba(58,174,108,.1)', border: '1px solid rgba(58,174,108,.3)', color: '#3aae6c', fontSize: 12, fontWeight: 600, borderRadius: 9, cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
             ⚡ Usar cuotas reales de Coolbet
           </button>
+        )}
+        {coolbetForMatch && live && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', marginBottom: 14, background: 'rgba(217,80,80,.08)', border: '1px solid rgba(217,80,80,.2)', color: '#7a8aaa', fontSize: 11, borderRadius: 9, padding: '8px 12px', lineHeight: 1.5 }}>
+            ⚠️ La cuota de Coolbet que tenemos es de antes de que empezara el partido — no se actualiza en vivo, así que no la mostramos aquí para no confundirte.
+          </div>
         )}
         <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>¿Quién gana el partido?</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
