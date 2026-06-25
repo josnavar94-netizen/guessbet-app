@@ -18,6 +18,7 @@ export async function fetchCompetitionMatches(competitionCode: string): Promise<
   const res = await fetch(`${BASE_URL}/competitions/${competitionCode}/matches`, {
     headers: { 'X-Auth-Token': apiKey },
     cache: 'no-store',
+    signal: AbortSignal.timeout(15000),
   });
 
   if (!res.ok) {

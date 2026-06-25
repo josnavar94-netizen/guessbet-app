@@ -3,14 +3,14 @@ import { sql } from '@/lib/db';
 import { logError } from '@/lib/logError';
 
 export async function GET(req: NextRequest) {
-  const secret = req.nextUrl.searchParams.get('secret');
-  if (!process.env.BACKUP_SECRET || secret !== process.env.BACKUP_SECRET) {
+  const auth = req.headers.get('authorization');
+  if (!process.env.BACKUP_SECRET || auth !== `Bearer ${process.env.BACKUP_SECRET}`) {
     return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
   }
 
   try {
     const [users, bets, matches] = await Promise.all([
-      sql`SELECT * FROM users ORDER BY id`,
+      sql`SELECT id, email, username, plan, avatar, email_verified, birth_date, terms_accepted_at, terms_version, session_version, created_at FROM users ORDER BY id`,
       sql`SELECT * FROM bets ORDER BY id`,
       sql`SELECT * FROM matches ORDER BY id`,
     ]);

@@ -127,8 +127,8 @@ export function getXG(team,asAtt,neutral,isHome,wcRealOverride){
   const m=MODEL[team],wc=wcSource[team];
   if(!m)return asAtt?1.2:1.1;
   let base=asAtt
-    ?(!neutral&&isHome&&m.homeGF?m.homeGF:!neutral&&!isHome&&m.awayGF?m.awayGF:m.avgGF)
-    :(!neutral&&isHome&&m.homeGA?m.homeGA:!neutral&&!isHome&&m.awayGA?m.awayGA:m.avgGA);
+    ?(!neutral&&isHome&&m.homeGF!=null?m.homeGF:!neutral&&!isHome&&m.awayGF!=null?m.awayGF:m.avgGF)
+    :(!neutral&&isHome&&m.homeGA!=null?m.homeGA:!neutral&&!isHome&&m.awayGA!=null?m.awayGA:m.avgGA);
   if(wc&&wc.pj>0){
     // Con pocos partidos jugados en el torneo, un resultado extremo (ej. 7-1) no debe dominar la cuota:
     // se limita el valor a un rango razonable y se usa una mezcla que exige más partidos para ganar peso real.

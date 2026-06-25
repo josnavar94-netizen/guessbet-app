@@ -9,6 +9,7 @@ export async function checkRateLimit(ip: string | null, endpoint: string, maxAtt
     SELECT COUNT(*)::int AS count FROM auth_attempts
     WHERE ip=${ip} AND endpoint=${endpoint} AND created_at > ${windowStart.toISOString()}
   `;
-  await sql`INSERT INTO auth_attempts (ip, endpoint) VALUES (${ip}, ${endpoint})`;
-  return result.rows[0].count < maxAttempts;
+  const allowed = result.rows[0].count < maxAttempts;
+  if (allowed) await sql`INSERT INTO auth_attempts (ip, endpoint) VALUES (${ip}, ${endpoint})`;
+  return allowed;
 }

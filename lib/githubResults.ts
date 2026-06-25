@@ -15,13 +15,15 @@ function parseCsv(text: string): string[][] {
 }
 
 export async function fetchGithubResults(opts: { fromDate: string; tournamentIncludes?: string }): Promise<GhMatch[]> {
-  const res = await fetch(CSV_URL, { cache: 'no-store' });
+  const res = await fetch(CSV_URL, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`GitHub CSV respondió ${res.status}`);
   const rows = parseCsv(await res.text());
   const [header, ...data] = rows;
   const idx = (name: string) => header.indexOf(name);
   const iDate = idx('date'), iHome = idx('home_team'), iAway = idx('away_team'),
     iHg = idx('home_score'), iAg = idx('away_score'), iTourn = idx('tournament');
+  if ([iDate, iHome, iAway, iHg, iAg, iTourn].includes(-1))
+    throw new Error('El CSV de GitHub cambió de esquema: faltan columnas esperadas.');
 
   return data
     .filter(r => r.length >= header.length && r[iDate] >= opts.fromDate)
