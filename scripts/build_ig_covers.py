@@ -16,6 +16,7 @@ covers = [
     ('como_usarla', 'square-rounded-plus'),
     ('premium', 'star'),
     ('faq', 'help'),
+    ('proximamente', 'clock'),
 ]
 
 icons_dir = r'C:\Users\Isabella\AppData\Local\Temp\icons'
