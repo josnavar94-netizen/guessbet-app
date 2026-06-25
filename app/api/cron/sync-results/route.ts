@@ -4,7 +4,8 @@ import { fetchCompetitionMatches } from '@/lib/footballData';
 import { fetchGithubResults, normalizeTeam } from '@/lib/githubResults';
 import { crossValidate, Discrepancy } from '@/lib/crossValidate';
 import { gradeBet } from '@/lib/gradeBet';
-import { fetchCoolbetOdds } from '@/lib/oddsApi';
+import { fetchOddsApiOdds, FetchedOdds } from '@/lib/oddsApi';
+import { fetchBetanoOdds } from '@/lib/oddsPapi';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -86,25 +87,32 @@ export async function GET(req: NextRequest) {
     summary[code] = { fetched: matches.length, upserted, settled, discrepancies };
   }
 
-  // Cuotas reales de Coolbet (The Odds API) — solo si ODDS_API_KEY está configurada; si no, no hace nada.
+  // Cuotas reales (Coolbet + 1xBet vía The Odds API, Betano vía OddsPapi) — cada fuente solo corre
+  // si su respectiva API key está configurada; si no, no hace nada (no rompe el resto del cron).
   let oddsSynced = 0;
+  const allOdds: FetchedOdds[] = [];
   try {
-    const odds = await fetchCoolbetOdds();
-    for (const o of odds) {
-      const home = normalizeTeam(o.home);
-      const away = normalizeTeam(o.away);
-      await sql`
-        INSERT INTO match_odds (home_team, away_team, bookmaker, home_odds, draw_odds, away_odds, over_odds, under_odds, btts_odds)
-        VALUES (${home}, ${away}, 'coolbet', ${o.home_odds}, ${o.draw_odds}, ${o.away_odds}, ${o.over_odds}, ${o.under_odds}, ${o.btts_odds})
-        ON CONFLICT (home_team, away_team, bookmaker) DO UPDATE SET
-          home_odds = EXCLUDED.home_odds, draw_odds = EXCLUDED.draw_odds, away_odds = EXCLUDED.away_odds,
-          over_odds = EXCLUDED.over_odds, under_odds = EXCLUDED.under_odds, btts_odds = EXCLUDED.btts_odds,
-          updated_at = NOW()
-      `;
-      oddsSynced++;
-    }
+    allOdds.push(...await fetchOddsApiOdds());
   } catch (err) {
-    console.error('[sync-results] falló la sincronización de cuotas de Coolbet', err);
+    console.error('[sync-results] falló la sincronización de cuotas (The Odds API)', err);
+  }
+  try {
+    allOdds.push(...await fetchBetanoOdds());
+  } catch (err) {
+    console.error('[sync-results] falló la sincronización de cuotas de Betano (OddsPapi)', err);
+  }
+  for (const o of allOdds) {
+    const home = normalizeTeam(o.home);
+    const away = normalizeTeam(o.away);
+    await sql`
+      INSERT INTO match_odds (home_team, away_team, bookmaker, home_odds, draw_odds, away_odds, over_odds, under_odds)
+      VALUES (${home}, ${away}, ${o.bookmaker}, ${o.home_odds}, ${o.draw_odds}, ${o.away_odds}, ${o.over_odds}, ${o.under_odds})
+      ON CONFLICT (home_team, away_team, bookmaker) DO UPDATE SET
+        home_odds = EXCLUDED.home_odds, draw_odds = EXCLUDED.draw_odds, away_odds = EXCLUDED.away_odds,
+        over_odds = EXCLUDED.over_odds, under_odds = EXCLUDED.under_odds,
+        updated_at = NOW()
+    `;
+    oddsSynced++;
   }
 
   return NextResponse.json({ ok: true, summary, oddsSynced });
