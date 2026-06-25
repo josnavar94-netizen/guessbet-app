@@ -19,7 +19,8 @@ export async function fetchCoolbetOdds(): Promise<FetchedOdds[]> {
   const apiKey = process.env.ODDS_API_KEY;
   if (!apiKey) return [];
 
-  const url = `https://api.the-odds-api.com/v4/sports/${SPORT_KEY}/odds/?apiKey=${apiKey}&regions=eu&markets=h2h,totals,btts&bookmakers=coolbet&oddsFormat=decimal`;
+  // btts no está disponible en este endpoint/plan (error 422 INVALID_MARKET) — se deja siempre manual.
+  const url = `https://api.the-odds-api.com/v4/sports/${SPORT_KEY}/odds/?apiKey=${apiKey}&regions=eu&markets=h2h,totals&bookmakers=coolbet&oddsFormat=decimal`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) {
     console.error(`[oddsApi] The Odds API respondió ${res.status}: ${await res.text().catch(() => '')}`);
@@ -51,11 +52,6 @@ export async function fetchCoolbetOdds(): Promise<FetchedOdds[]> {
         if (o.point === 2.5 && o.name === 'Over') out.over_odds = o.price;
         if (o.point === 2.5 && o.name === 'Under') out.under_odds = o.price;
       }
-    }
-    const btts = coolbet.markets?.find((m: any) => m.key === 'btts');
-    if (btts) {
-      const yes = btts.outcomes?.find((o: any) => o.name === 'Yes');
-      if (yes) out.btts_odds = yes.price;
     }
     return out;
   });
