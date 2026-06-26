@@ -5,7 +5,7 @@ const MP_API = 'https://api.mercadopago.com';
 
 export const PLAN_PRICES = {
   monthly: { amount: 4990, title: 'GuessBet PRO — Mensual', months: 1 },
-  annual: { amount: 19990, title: 'GuessBet PRO — Plan Completo (1 año)', months: 12 },
+  annual: { amount: 29990, title: 'GuessBet PRO — Plan Completo (1 año)', months: 12 },
 } as const;
 
 export type PlanType = keyof typeof PLAN_PRICES;

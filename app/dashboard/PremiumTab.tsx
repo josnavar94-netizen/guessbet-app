@@ -89,9 +89,9 @@ export default function PremiumTab({ plan }: { plan: string }) {
               <div style={{ position: 'absolute', top: -9, left: 14, background: '#c9a84c', color: '#0a0f1e', fontSize: 9, fontWeight: 700, padding: '2px 9px', borderRadius: 8 }}>MÁS POPULAR</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
                 <span style={{ fontSize: 13, fontWeight: 600 }}>Plan Completo</span>
-                <span style={{ fontFamily: "'Outfit',sans-serif", fontSize: 20, fontWeight: 700, color: '#c9a84c' }}>$19.990<span style={{ fontSize: 10, color: '#7a8aaa', fontWeight: 400 }}>/año</span></span>
+                <span style={{ fontFamily: "'Outfit',sans-serif", fontSize: 20, fontWeight: 700, color: '#c9a84c' }}>$29.990<span style={{ fontSize: 10, color: '#7a8aaa', fontWeight: 400 }}>/año</span></span>
               </div>
-              <div style={{ fontSize: 11, color: '#3aae6c', marginTop: 4 }}>Equivale a $1.665/mes · ahorras 67%</div>
+              <div style={{ fontSize: 11, color: '#3aae6c', marginTop: 4 }}>Equivale a $2.499/mes · ahorras 50%</div>
             </button>
           </div>
 
