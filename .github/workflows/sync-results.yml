@@ -2,11 +2,11 @@ name: Sync resultados Mundial 2026
 
 on:
   schedule:
-    # Cada hora. El cron diario de Vercel (00:00) sigue existiendo como respaldo;
+    # Cada 2 horas. El cron diario de Vercel (00:00) sigue existiendo como respaldo;
     # este workflow cubre las horas intermedias que el plan Hobby de Vercel no permite.
     # Nota: GitHub no garantiza el minuto exacto en horas de carga alta, puede llegar
     # con unos minutos de retraso — suficiente para detectar partidos recién terminados.
-    - cron: '0 * * * *'
+    - cron: '0 */2 * * *'
   workflow_dispatch: {} # permite correrlo manualmente desde la pestaña Actions de GitHub
 
 jobs:
