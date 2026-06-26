@@ -642,7 +642,11 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
 // ─────────────────────────────────────────────
 // HOME TAB
 // ─────────────────────────────────────────────
-type PastResult = { d: string; dateKey: string; h: string; a: string; gh: number; ga: number };
+type PastResult = { kickoffAt: string; h: string; a: string; gh: number; ga: number };
+
+// Sin "timeZone" explícito: usa la zona horaria del dispositivo del cliente.
+const histDayFmt = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
+const histKeyFmt = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }); // en-CA -> YYYY-MM-DD
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -826,7 +830,12 @@ function HomeTab({ username, setTab, bets, results: liveResults, lastSyncAt }: {
 // ─────────────────────────────────────────────
 function HistTab({ results: liveResults }: { results: PastResult[] | null }) {
   const [selectedDate, setSelectedDate] = useState('all');
-  const results = liveResults || [];
+  // d/dateKey se calculan acá (en el navegador) a partir del instante UTC, para que cada
+  // usuario vea el partido agrupado en el día que correspondía en su propia hora local.
+  const results = (liveResults || []).map(m => {
+    const at = new Date(m.kickoffAt);
+    return { ...m, d: histDayFmt.format(at), dateKey: histKeyFmt.format(at) };
+  });
   const byDate: Record<string,{d:string,count:number}> = {};
   results.forEach(m => { if(!byDate[m.dateKey])byDate[m.dateKey]={d:m.d,count:0}; byDate[m.dateKey].count++; });
   const dateKeys = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
