@@ -300,13 +300,18 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
         <div style={secTitle}>2 — Cuotas de tu casa (opcional)</div>
         <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 12, lineHeight: 1.6 }}>Una "cuota" es el número que multiplica tu dinero si ganas. Ej: cuota 2.00 con $10 apostados = $20 de vuelta. Déjalo vacío si no tienes.</p>
         {availableRealOdds.length > 0 && !live && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
             {availableRealOdds.map(({ label, data }) => (
               <button key={label} onClick={() => useRealOdds(label, data)} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', justifyContent: 'center', height: 38, background: 'rgba(58,174,108,.1)', border: '1px solid rgba(58,174,108,.3)', color: '#3aae6c', fontSize: 12, fontWeight: 600, borderRadius: 9, cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>
                 ⚡ Usar cuotas reales de {label}
               </button>
             ))}
           </div>
+        )}
+        {availableRealOdds.length > 0 && !live && (
+          <p style={{ fontSize: 11, color: '#7a8aaa', marginBottom: 14, lineHeight: 1.5 }}>
+            ⓘ Estas son cuotas <strong>referenciales</strong>, obtenidas vía API desde {availableRealOdds.map(r => r.label).join('/')} y pueden no coincidir al segundo con la cuota en vivo de su página. Si vas a apostar en otra casa (o quieres la cuota exacta del momento), ingrésala manualmente abajo.
+          </p>
         )}
         {availableRealOdds.length > 0 && live && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', marginBottom: 14, background: 'rgba(217,80,80,.08)', border: '1px solid rgba(217,80,80,.2)', color: '#7a8aaa', fontSize: 11, borderRadius: 9, padding: '8px 12px', lineHeight: 1.5 }}>
