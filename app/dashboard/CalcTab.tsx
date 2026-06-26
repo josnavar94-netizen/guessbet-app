@@ -85,8 +85,10 @@ export default function CalcTab({ onRegister, locked, onUpgrade }: { onRegister:
 
 type LiveFixture = { h: string; a: string; t: string; group: string; kickoffAt: string | null; live: { minute: number | null; homeGoals: number; awayGoals: number } | null };
 
-const dayFmt = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', timeZone: 'America/Mexico_City' });
-const timeFmt = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Mexico_City' });
+// Sin "timeZone" explícito: Intl usa la zona horaria del dispositivo del cliente automáticamente,
+// para que cada usuario vea la hora del partido convertida a su propia hora local.
+const dayFmt = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
+const timeFmt = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit', hour12: false });
 
 function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
   // Próximos partidos leídos en vivo desde /api/fixtures (tabla `matches`), no de un
