@@ -83,7 +83,7 @@ export default function CalcTab({ onRegister, locked, onUpgrade }: { onRegister:
   return <CalcTabUnlocked onRegister={onRegister} />;
 }
 
-type LiveFixture = { h: string; a: string; t: string; group: string; kickoffAt: string | null };
+type LiveFixture = { h: string; a: string; t: string; group: string; kickoffAt: string | null; live: { minute: number | null; homeGoals: number; awayGoals: number } | null };
 
 const dayFmt = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', timeZone: 'America/Mexico_City' });
 const timeFmt = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Mexico_City' });
@@ -101,10 +101,11 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
         t: f.kickoffAt ? timeFmt.format(new Date(f.kickoffAt)) : '--:--',
         group: f.kickoffAt ? dayFmt.format(new Date(f.kickoffAt)) : 'Fecha por confirmar',
         kickoffAt: f.kickoffAt,
+        live: f.live,
       }));
       setUpcoming(list);
       setFixturesLoaded(true);
-      if (list[0]) { setHome(prev => prev || list[0].h); setAway(prev => prev || list[0].a); }
+      if (list[0]) onFixtureChange(list[0]);
     }).catch(() => setFixturesLoaded(true));
   }, []);
   const upcomingByDay: { day: string; items: { m: LiveFixture; idx: number }[] }[] = [];
@@ -173,7 +174,17 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
   function onFixtureChange(m: any) {
     setHome(m.h); setAway(m.a);
     setOdds({}); setResult(null); setSelected([]); setCustomLine(null);
-    setLive(false); setLiveMin('45'); setLiveGh('0'); setLiveGa('0'); setLiveRh('0'); setLiveRa('0');
+    // Si el partido ya está jugándose (datos de API-Football sincronizados hace menos de 30 min),
+    // se activa "En vivo" solo y se prellenan minuto/marcador. Expulsados siguen siendo manuales.
+    if (m.live) {
+      setLive(true);
+      setLiveMin(String(m.live.minute ?? 45));
+      setLiveGh(String(m.live.homeGoals ?? 0));
+      setLiveGa(String(m.live.awayGoals ?? 0));
+    } else {
+      setLive(false); setLiveMin('45'); setLiveGh('0'); setLiveGa('0');
+    }
+    setLiveRh('0'); setLiveRa('0');
   }
 
   function toD(v: string) { const n = parseFloat(v); return (!v || isNaN(n) || n < 1.01) ? null : n; }
@@ -363,6 +374,9 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
           <input type="checkbox" checked={live} onChange={e => setLive(e.target.checked)} style={{ accentColor: '#d95050', width: 16, height: 16 }} />
           <span style={{ color: live ? '#d95050' : '#7a8aaa', fontWeight: live ? 600 : 400 }}>Sí, el partido se está jugando ahora mismo</span>
         </label>
+        {live && upcoming.find(u => u.h === home && u.a === away)?.live && (
+          <p style={{ fontSize: 11, color: '#3aae6c', marginTop: 6 }}>⚡ Minuto y marcador detectados automáticamente — puedes ajustarlos si no coinciden. Expulsados siempre se ingresan a mano.</p>
+        )}
         {live && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(217,80,80,.2)', borderRadius: 9, padding: '8px 10px', marginBottom: 10 }}>

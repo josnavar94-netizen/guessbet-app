@@ -1,0 +1,18 @@
+name: Sync marcador en vivo Mundial 2026
+
+on:
+  schedule:
+    # Cada 15 minutos. GitHub no garantiza el minuto exacto en horas de carga alta
+    # (puede atrasarse 10-15 min) — no es "al segundo", pero es lo que da el plan gratis.
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {} # permite correrlo manualmente desde la pestaña Actions de GitHub
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar a /api/cron/sync-live
+        run: |
+          curl -sf -w "\nHTTP %{http_code}\n" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://guessbet.vercel.app/api/cron/sync-live

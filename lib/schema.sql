@@ -147,3 +147,10 @@ CREATE TABLE IF NOT EXISTS payments (
   created_at TIMESTAMP DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
+
+-- Migración: estado en vivo (minuto y marcador) vía API-Football, plan gratis (100 req/día).
+-- No incluye tarjetas rojas (costaría otra llamada por partido); esas siguen siendo manuales.
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS live_minute INTEGER;
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS live_home_goals INTEGER;
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS live_away_goals INTEGER;
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS live_updated_at TIMESTAMP;
