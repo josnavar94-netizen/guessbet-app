@@ -59,7 +59,7 @@ export default function App({ username, email, plan, avatar, emailVerified, isAd
   const [verifiedNotice, setVerifiedNotice] = useState<'ok' | 'error' | null>(null);
 
   // Resultados ya jugados, leídos en vivo de la tabla `matches` en vez del fixture estático
-  const [results, setResults] = useState<{ d: string; dateKey: string; h: string; a: string; gh: number; ga: number }[] | null>(null);
+  const [results, setResults] = useState<PastResult[] | null>(null);
   useEffect(() => {
     fetch('/api/results').then(r => r.json()).then(d => setResults(d.results)).catch(() => setResults([]));
   }, []);
