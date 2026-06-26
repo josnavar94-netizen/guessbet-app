@@ -16,14 +16,14 @@ async function findWorldCupTournamentId(apiKey: string): Promise<string | null> 
   }
   const data = await res.json();
   const list = Array.isArray(data) ? data : data.tournaments || [];
+  // Diagnóstico temporal: la estructura real del objeto torneo de OddsPapi no está confirmada
+  // (podría no ser "name"), así que se loguea tal cual viene para ver los campos reales.
+  console.error('[oddsPapi] respuesta cruda de /tournaments (primeros 3):', JSON.stringify(list.slice(0, 3)));
+  console.error('[oddsPapi] total de torneos recibidos:', list.length);
+
   const match = list.find((t: any) =>
     typeof t.name === 'string' && /world cup/i.test(t.name) && /2026|fifa/i.test(t.name)
   );
-  if (!match) {
-    // Diagnóstico temporal: para ver los nombres reales que usa OddsPapi y ajustar el filtro.
-    const candidates = list.filter((t: any) => typeof t.name === 'string' && /world/i.test(t.name)).map((t: any) => t.name);
-    console.error('[oddsPapi] Torneos con "world" en el nombre:', JSON.stringify(candidates));
-  }
   return match?.id ?? null;
 }
 
