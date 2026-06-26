@@ -184,11 +184,18 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
 
   // Live mode
   const [live, setLive] = useState(false);
-  const [liveMin, setLiveMin] = useState('45');
-  const [liveGh, setLiveGh] = useState('0');
-  const [liveGa, setLiveGa] = useState('0');
+  const [liveMin, setLiveMin] = useState('');
+  const [liveGh, setLiveGh] = useState('');
+  const [liveGa, setLiveGa] = useState('');
   const [liveRh, setLiveRh] = useState('0');
   const [liveRa, setLiveRa] = useState('0');
+  // Minuto/marcador detectados automáticamente desde API-Football (se pintan verde, igual que las cuotas reales).
+  const [liveAutoFilled, setLiveAutoFilled] = useState(false);
+
+  function setLiveField(setter: (v: string) => void, v: string) {
+    setter(v);
+    setLiveAutoFilled(false);
+  }
 
   function onFixtureChange(m: any) {
     setHome(m.h); setAway(m.a);
@@ -197,13 +204,20 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
     // se activa "En vivo" solo y se prellenan minuto/marcador. Expulsados siguen siendo manuales.
     if (m.live) {
       setLive(true);
-      setLiveMin(String(m.live.minute ?? 45));
+      setLiveMin(String(m.live.minute ?? ''));
       setLiveGh(String(m.live.homeGoals ?? 0));
       setLiveGa(String(m.live.awayGoals ?? 0));
+      setLiveAutoFilled(true);
     } else {
-      setLive(false); setLiveMin('45'); setLiveGh('0'); setLiveGa('0');
+      setLive(false); setLiveMin(''); setLiveGh(''); setLiveGa('');
+      setLiveAutoFilled(false);
     }
     setLiveRh('0'); setLiveRa('0');
+  }
+  function liveFieldColor(v: string) {
+    if (liveAutoFilled) return '#3aae6c';
+    if (v) return '#f0ece0';
+    return '#7a8aaa';
   }
 
   function toD(v: string) { const n = parseFloat(v); return (!v || isNaN(n) || n < 1.01) ? null : n; }
@@ -400,18 +414,18 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(217,80,80,.2)', borderRadius: 9, padding: '8px 10px', marginBottom: 10 }}>
               <span style={{ fontSize: 13 }}>Minuto actual</span>
-              <input type="number" value={liveMin} onChange={e=>setLiveMin(e.target.value)} min="1" max="120" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} />
+              <input type="number" value={liveMin} onChange={e=>setLiveField(setLiveMin, e.target.value)} min="1" max="120" placeholder="–" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none', color: liveFieldColor(liveMin), fontWeight: liveAutoFilled ? 700 : 400 }} />
             </div>
 
             <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>Marcador</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
                 <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>Goles <Flag name={home} />{home}</span>
-                <input type="number" value={liveGh} onChange={e=>setLiveGh(e.target.value)} min="0" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} />
+                <input type="number" value={liveGh} onChange={e=>setLiveField(setLiveGh, e.target.value)} min="0" placeholder="–" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none', color: liveFieldColor(liveGh), fontWeight: liveAutoFilled ? 700 : 400 }} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
                 <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>Goles <Flag name={away} />{away}</span>
-                <input type="number" value={liveGa} onChange={e=>setLiveGa(e.target.value)} min="0" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} />
+                <input type="number" value={liveGa} onChange={e=>setLiveField(setLiveGa, e.target.value)} min="0" placeholder="–" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none', color: liveFieldColor(liveGa), fontWeight: liveAutoFilled ? 700 : 400 }} />
               </div>
             </div>
 
