@@ -3,6 +3,7 @@ import { sql } from '@/lib/db';
 import { fetchFixturesByDate, fetchLineups } from '@/lib/apiFootball';
 import { normalizeTeam } from '@/lib/githubResults';
 import { logError } from '@/lib/logError';
+import { sendPushToAll } from '@/lib/webPush';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -52,6 +53,14 @@ export async function GET(req: NextRequest) {
           `;
         }
         saved++;
+      }
+
+      // Esta es la primera vez que se guarda la alineación de este partido (el filtro de arriba
+      // ya descarta los que ya se habían procesado) — corresponde avisar ahora, una sola vez.
+      try {
+        await sendPushToAll(`${home} vs ${away}`, '¡Alineaciones confirmadas! Revisa las cuotas confirmadas');
+      } catch (err) {
+        await logError(err, 'cron/sync-lineups:push');
       }
     }
 

@@ -296,7 +296,50 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
   const rowLabel: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 };
   const fieldStyle: React.CSSProperties = { width: '100%', background: 'var(--sur2)', border: '1px solid rgba(201,168,76,.24)', color: '#f0ece0', fontFamily: "'Outfit',sans-serif", fontSize: 14, padding: '0 12px', height: 40, borderRadius: 9 };
 
-  const [section, setSection] = useState<'menu' | 'personal' | 'security' | 'payment' | 'support' | 'legal'>('menu');
+  const [section, setSection] = useState<'menu' | 'personal' | 'security' | 'payment' | 'support' | 'legal' | 'notifications'>('menu');
+  const [pushStatus, setPushStatus] = useState<'idle' | 'loading' | 'on' | 'error' | 'unsupported' | 'denied'>('idle');
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setPushStatus('unsupported');
+      return;
+    }
+    navigator.serviceWorker.register('/sw.js').then(reg =>
+      reg.pushManager.getSubscription().then(sub => { if (sub) setPushStatus('on'); })
+    ).catch(() => {});
+  }, []);
+
+  function urlBase64ToUint8Array(base64: string) {
+    const padding = '='.repeat((4 - base64.length % 4) % 4);
+    const base64safe = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64safe);
+    return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+  }
+
+  async function activatePush() {
+    setPushStatus('loading');
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') { setPushStatus('denied'); return; }
+
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidKey) { setPushStatus('error'); return; }
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      });
+      const subJson = sub.toJSON();
+      const res = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
+      });
+      setPushStatus(res.ok ? 'on' : 'error');
+    } catch {
+      setPushStatus('error');
+    }
+  }
   const [avatarPreview, setAvatarPreview] = useState<string | null>(avatar || null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -501,8 +544,9 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
             { key: 'payment' as const, icon: '💳', label: 'Método de pago' },
             { key: 'support' as const, icon: '💬', label: 'Soporte' },
             { key: 'legal' as const, icon: '📜', label: 'Términos y privacidad' },
+            { key: 'notifications' as const, icon: '🔔', label: 'Notificaciones' },
           ].map((item, i) => (
-            <button key={item.key} onClick={() => setSection(item.key)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', borderBottom: i < 4 ? '1px solid rgba(201,168,76,.1)' : 'none', padding: '13px 2px', fontSize: 14, color: '#f0ece0', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", textAlign: 'left' }}>
+            <button key={item.key} onClick={() => setSection(item.key)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', borderBottom: i < 5 ? '1px solid rgba(201,168,76,.1)' : 'none', padding: '13px 2px', fontSize: 14, color: '#f0ece0', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", textAlign: 'left' }}>
               <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
               <span style={{ flex: 1 }}>{item.label}</span>
               <span style={{ color: '#7a8aaa', fontSize: 14 }}>›</span>
@@ -612,6 +656,30 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
               Política de Privacidad <span style={{ color: '#7a8aaa' }}>↗</span>
             </a>
           </div>
+        </div>
+      )}
+
+      {section === 'notifications' && (
+        <div style={card}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>🔔 Notificaciones</div>
+          <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 14, lineHeight: 1.5 }}>Te avisamos a tu celular en cuanto se confirme la alineación titular de un partido del Mundial — es el momento justo para revisar las cuotas antes de apostar.</p>
+          {pushStatus === 'unsupported' && (
+            <div style={{ fontSize: 12, color: '#7a8aaa' }}>Tu navegador no soporta notificaciones push (probá desde la app instalada en tu celular).</div>
+          )}
+          {pushStatus === 'denied' && (
+            <div style={{ fontSize: 12, color: '#d95050' }}>Bloqueaste los permisos de notificación. Habilítalos desde la configuración de tu navegador/celular para esta app.</div>
+          )}
+          {pushStatus === 'on' && (
+            <div style={{ fontSize: 13, color: '#3aae6c', fontWeight: 600 }}>✓ Notificaciones activadas en este dispositivo.</div>
+          )}
+          {(pushStatus === 'idle' || pushStatus === 'loading' || pushStatus === 'error') && (
+            <>
+              <button onClick={activatePush} disabled={pushStatus === 'loading'} style={{ width: '100%', height: 44, background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontFamily: "'Outfit',sans-serif", fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 9, cursor: 'pointer', opacity: pushStatus === 'loading' ? .6 : 1 }}>
+                {pushStatus === 'loading' ? 'Activando...' : 'Activar notificaciones'}
+              </button>
+              {pushStatus === 'error' && <div style={{ fontSize: 12, color: '#d95050', marginTop: 8 }}>No se pudo activar. Intenta de nuevo.</div>}
+            </>
+          )}
         </div>
       )}
 
