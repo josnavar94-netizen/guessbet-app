@@ -16,15 +16,13 @@ async function findWorldCupTournamentId(apiKey: string): Promise<string | null> 
   }
   const data = await res.json();
   const list = Array.isArray(data) ? data : data.tournaments || [];
-  // Diagnóstico temporal: la estructura real del objeto torneo de OddsPapi no está confirmada
-  // (podría no ser "name"), así que se loguea tal cual viene para ver los campos reales.
-  console.error('[oddsPapi] respuesta cruda de /tournaments (primeros 3):', JSON.stringify(list.slice(0, 3)));
-  console.error('[oddsPapi] total de torneos recibidos:', list.length);
 
-  const match = list.find((t: any) =>
-    typeof t.name === 'string' && /world cup/i.test(t.name) && /2026|fifa/i.test(t.name)
-  );
-  return match?.id ?? null;
+  // Los torneos de OddsPapi son evergreen (ej. "UEFA Euro", sin año en el nombre), así que el
+  // Mundial probablemente se llame solo "FIFA World Cup" o "World Cup" — sin calificatorias.
+  const candidates = list.filter((t: any) => typeof t.tournamentName === 'string' && /world cup/i.test(t.tournamentName));
+  const match = candidates.find((t: any) => !/qualif/i.test(t.tournamentName)) ?? candidates[0];
+  if (!match) console.error('[oddsPapi] Ningún torneo coincide con "world cup". Candidatos vistos:', JSON.stringify(list.map((t: any) => t.tournamentName)));
+  return match?.tournamentId ?? null;
 }
 
 export async function fetchBetanoOdds(): Promise<FetchedOdds[]> {
@@ -45,11 +43,15 @@ export async function fetchBetanoOdds(): Promise<FetchedOdds[]> {
   }
 
   const events = await res.json();
-  const list = Array.isArray(events) ? events : events.events || [];
+  const list = Array.isArray(events) ? events : events.events || events.fixtures || [];
+  // Diagnóstico temporal: confirmar el formato real una vez que haya datos, igual que con /tournaments.
+  console.error('[oddsPapi] respuesta cruda de /odds-by-tournaments (primer evento):', JSON.stringify(list[0] ?? null));
 
   return list.map((ev: any) => {
+    const homeName = ev.home_team ?? ev.homeTeam ?? ev.homeTeamName;
+    const awayName = ev.away_team ?? ev.awayTeam ?? ev.awayTeamName;
     const out: FetchedOdds = {
-      bookmaker: 'betano', home: ev.home_team ?? ev.homeTeam, away: ev.away_team ?? ev.awayTeam,
+      bookmaker: 'betano', home: homeName, away: awayName,
       home_odds: null, draw_odds: null, away_odds: null, over_odds: null, under_odds: null,
     };
     const markets = ev.markets || ev.odds || [];
