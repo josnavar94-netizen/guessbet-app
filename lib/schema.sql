@@ -154,3 +154,16 @@ ALTER TABLE matches ADD COLUMN IF NOT EXISTS live_minute INTEGER;
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS live_home_goals INTEGER;
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS live_away_goals INTEGER;
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS live_updated_at TIMESTAMP;
+
+-- Migración: alineaciones titulares (vía API-Football, ~30-40 min antes del partido).
+-- Se usa para comparar contra el partido anterior del mismo equipo en este Mundial y detectar rotación.
+CREATE TABLE IF NOT EXISTS lineups (
+  id SERIAL PRIMARY KEY,
+  team VARCHAR(100) NOT NULL,
+  kickoff_at TIMESTAMP NOT NULL,
+  player_name VARCHAR(100) NOT NULL,
+  position VARCHAR(10),
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(team, kickoff_at, player_name)
+);
+CREATE INDEX IF NOT EXISTS idx_lineups_team_kickoff ON lineups(team, kickoff_at);

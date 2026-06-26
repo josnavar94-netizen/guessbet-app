@@ -1,4 +1,4 @@
-name: Sync marcador en vivo Mundial 2026
+name: Sync marcador en vivo y alineaciones Mundial 2026
 
 on:
   schedule:
@@ -16,3 +16,8 @@ jobs:
           curl -sf -w "\nHTTP %{http_code}\n" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             https://guessbet.vercel.app/api/cron/sync-live
+      - name: Llamar a /api/cron/sync-lineups
+        run: |
+          curl -sf -w "\nHTTP %{http_code}\n" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://guessbet.vercel.app/api/cron/sync-lineups
