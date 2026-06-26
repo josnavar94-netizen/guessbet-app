@@ -6,8 +6,10 @@
 
 import { FetchedOdds } from '@/lib/oddsApi';
 
+const SOCCER_SPORT_ID = 1; // asumido a partir del ejemplo de error de la propia API ("ex.: 1"); ajustar si no es fútbol
+
 async function findWorldCupTournamentId(apiKey: string): Promise<string | null> {
-  const res = await fetch(`https://api.oddspapi.io/v4/tournaments?apiKey=${apiKey}`, { cache: 'no-store' });
+  const res = await fetch(`https://api.oddspapi.io/v4/tournaments?apiKey=${apiKey}&sportId=${SOCCER_SPORT_ID}`, { cache: 'no-store' });
   if (!res.ok) {
     console.error(`[oddsPapi] /tournaments respondió ${res.status}: ${await res.text().catch(() => '')}`);
     return null;
