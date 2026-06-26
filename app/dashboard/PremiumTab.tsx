@@ -11,7 +11,31 @@ const benefits = [
 
 export default function PremiumTab({ plan }: { plan: string }) {
   const [selected, setSelected] = useState<'monthly' | 'annual'>('annual');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const isPremium = plan === 'premium';
+
+  async function handleSubscribe() {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/payments/create-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planType: selected }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.initPoint) {
+        setError(data.error || 'No se pudo iniciar el pago.');
+        setLoading(false);
+        return;
+      }
+      window.location.href = data.initPoint;
+    } catch {
+      setError('Error de conexión. Intenta de nuevo.');
+      setLoading(false);
+    }
+  }
 
   return (
     <div style={{ maxWidth: 480, margin: '0 auto' }}>
@@ -71,13 +95,15 @@ export default function PremiumTab({ plan }: { plan: string }) {
             </button>
           </div>
 
+          {error && <div style={{ background: 'rgba(217,80,80,.1)', border: '1px solid rgba(217,80,80,.3)', color: '#d95050', fontSize: 12, borderRadius: 9, padding: '10px 12px', marginBottom: 10 }}>{error}</div>}
           <button
-            onClick={() => alert('Próximamente: pasarela de pago. Esta pantalla es solo el diseño.')}
-            style={{ width: '100%', height: 48, background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontFamily: "'Outfit',sans-serif", fontSize: 15, fontWeight: 700, border: 'none', borderRadius: 10, cursor: 'pointer' }}
+            onClick={handleSubscribe}
+            disabled={loading}
+            style={{ width: '100%', height: 48, background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontFamily: "'Outfit',sans-serif", fontSize: 15, fontWeight: 700, border: 'none', borderRadius: 10, cursor: 'pointer', opacity: loading ? .6 : 1 }}
           >
-            Hazte PRO ahora →
+            {loading ? 'Redirigiendo a Mercado Pago...' : 'Hazte PRO ahora →'}
           </button>
-          <div style={{ textAlign: 'center', fontSize: 11, color: '#7a8aaa', marginTop: 10 }}>Pago seguro · sin compromiso de permanencia</div>
+          <div style={{ textAlign: 'center', fontSize: 11, color: '#7a8aaa', marginTop: 10 }}>Pago seguro vía Mercado Pago · sin compromiso de permanencia</div>
         </>
       )}
     </div>

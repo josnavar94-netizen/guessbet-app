@@ -11,6 +11,8 @@ export default async function DashboardPage() {
   let emailVerified = true;
   let isAdmin = false;
   try {
+    // Si el plan Premium ya venció (pago único, sin renovación automática), vuelve a Free.
+    await sql`UPDATE users SET plan='free' WHERE id=${session.userId} AND plan='premium' AND plan_expires_at < NOW()`;
     const userResult = await sql`SELECT plan, avatar, email_verified, is_admin FROM users WHERE id=${session.userId}`;
     plan = userResult.rows[0]?.plan ?? session.plan;
     avatar = userResult.rows[0]?.avatar ?? null;

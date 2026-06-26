@@ -134,3 +134,16 @@ CREATE TABLE IF NOT EXISTS match_odds (
 
 -- Migración: línea de goles real que ofrece la casa (no siempre es 2.5)
 ALTER TABLE match_odds ADD COLUMN IF NOT EXISTS total_line NUMERIC(4,1);
+
+-- Migración: pagos de Premium via Mercado Pago
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP;
+CREATE TABLE IF NOT EXISTS payments (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  plan_type VARCHAR(20) NOT NULL,
+  amount NUMERIC(10,2) NOT NULL,
+  mp_payment_id VARCHAR(50) UNIQUE,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
