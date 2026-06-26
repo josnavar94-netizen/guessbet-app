@@ -131,3 +131,6 @@ CREATE TABLE IF NOT EXISTS match_odds (
   updated_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(home_team, away_team, bookmaker)
 );
+
+-- Migración: línea de goles real que ofrece la casa (no siempre es 2.5)
+ALTER TABLE match_odds ADD COLUMN IF NOT EXISTS total_line NUMERIC(4,1);

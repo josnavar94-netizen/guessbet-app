@@ -11,6 +11,7 @@ export type FetchedOdds = {
   away_odds: number | null;
   over_odds: number | null;
   under_odds: number | null;
+  total_line: number | null; // la línea de goles real que ofrece la casa (no siempre es 2.5)
 };
 
 const SPORT_KEY = 'soccer_fifa_world_cup';
@@ -37,7 +38,7 @@ export async function fetchOddsApiOdds(): Promise<FetchedOdds[]> {
       if (!BOOKMAKERS.includes(bk.key)) continue;
       const row: FetchedOdds = {
         bookmaker: bk.key, home: ev.home_team, away: ev.away_team,
-        home_odds: null, draw_odds: null, away_odds: null, over_odds: null, under_odds: null,
+        home_odds: null, draw_odds: null, away_odds: null, over_odds: null, under_odds: null, total_line: null,
       };
       const h2h = bk.markets?.find((m: any) => m.key === 'h2h');
       if (h2h) {
@@ -47,11 +48,16 @@ export async function fetchOddsApiOdds(): Promise<FetchedOdds[]> {
           else if (o.name === 'Draw') row.draw_odds = o.price;
         }
       }
+      // Se toma la línea de goles que la casa realmente ofrece (no siempre es 2.5 —
+      // bookmakers ajustan la línea principal según cuán parejo está el partido).
       const totals = bk.markets?.find((m: any) => m.key === 'totals');
       if (totals) {
-        for (const o of totals.outcomes || []) {
-          if (o.point === 2.5 && o.name === 'Over') row.over_odds = o.price;
-          if (o.point === 2.5 && o.name === 'Under') row.under_odds = o.price;
+        const overOutcome = (totals.outcomes || []).find((o: any) => o.name === 'Over');
+        const underOutcome = (totals.outcomes || []).find((o: any) => o.name === 'Under' && o.point === overOutcome?.point);
+        if (overOutcome) {
+          row.total_line = overOutcome.point;
+          row.over_odds = overOutcome.price;
+          row.under_odds = underOutcome?.price ?? null;
         }
       }
       out.push(row);

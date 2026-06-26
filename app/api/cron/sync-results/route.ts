@@ -105,11 +105,11 @@ export async function GET(req: NextRequest) {
     const home = normalizeTeam(o.home);
     const away = normalizeTeam(o.away);
     await sql`
-      INSERT INTO match_odds (home_team, away_team, bookmaker, home_odds, draw_odds, away_odds, over_odds, under_odds)
-      VALUES (${home}, ${away}, ${o.bookmaker}, ${o.home_odds}, ${o.draw_odds}, ${o.away_odds}, ${o.over_odds}, ${o.under_odds})
+      INSERT INTO match_odds (home_team, away_team, bookmaker, home_odds, draw_odds, away_odds, over_odds, under_odds, total_line)
+      VALUES (${home}, ${away}, ${o.bookmaker}, ${o.home_odds}, ${o.draw_odds}, ${o.away_odds}, ${o.over_odds}, ${o.under_odds}, ${o.total_line})
       ON CONFLICT (home_team, away_team, bookmaker) DO UPDATE SET
         home_odds = EXCLUDED.home_odds, draw_odds = EXCLUDED.draw_odds, away_odds = EXCLUDED.away_odds,
-        over_odds = EXCLUDED.over_odds, under_odds = EXCLUDED.under_odds,
+        over_odds = EXCLUDED.over_odds, under_odds = EXCLUDED.under_odds, total_line = EXCLUDED.total_line,
         updated_at = NOW()
     `;
     oddsSynced++;

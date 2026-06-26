@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { modelProbs, getH2H, MODEL, WC_REAL, FLAG_CODES } from '@/lib/model';
+import { modelProbs, getH2H, MODEL, WC_REAL, FLAG_CODES, overProb } from '@/lib/model';
 
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
   const code = FLAG_CODES[name];
@@ -144,14 +144,20 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
   const availableRealOdds = Object.entries(BOOKMAKER_KEY)
     .map(([label, key]) => ({ label, data: realOdds[`${key}|${home}|${away}`] }))
     .filter(r => r.data);
+  // Línea de goles distinta a 2.5 (ej. 3.0), cuando la casa elegida no ofrece la de 2.5.
+  const [customLine, setCustomLine] = useState<number | null>(null);
   function useRealOdds(label: string, data: any) {
+    const isLine25 = data.total_line == null || Number(data.total_line) === 2.5;
+    setCustomLine(isLine25 ? null : Number(data.total_line));
     setOdds(prev => ({
       ...prev,
       ...(data.home_odds != null && { home: String(data.home_odds) }),
       ...(data.draw_odds != null && { draw: String(data.draw_odds) }),
       ...(data.away_odds != null && { away: String(data.away_odds) }),
-      ...(data.over_odds != null && { over: String(data.over_odds) }),
-      ...(data.under_odds != null && { under: String(data.under_odds) }),
+      ...(isLine25 && data.over_odds != null && { over: String(data.over_odds) }),
+      ...(isLine25 && data.under_odds != null && { under: String(data.under_odds) }),
+      ...(!isLine25 && data.over_odds != null && { overCustom: String(data.over_odds) }),
+      ...(!isLine25 && data.under_odds != null && { underCustom: String(data.under_odds) }),
     }));
     setBookie(label);
   }
@@ -166,7 +172,7 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
 
   function onFixtureChange(m: any) {
     setHome(m.h); setAway(m.a);
-    setOdds({}); setResult(null); setSelected([]);
+    setOdds({}); setResult(null); setSelected([]); setCustomLine(null);
     setLive(false); setLiveMin('45'); setLiveGh('0'); setLiveGa('0'); setLiveRh('0'); setLiveRa('0');
   }
 
@@ -235,6 +241,10 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
     { label: `Gana ${home} o gana ${away}`, prob: result.dcHomeAway, oddKey: 'dc12' },
     { label: `Gana ${home} (sin contar empate)`, prob: result.dnbHome, oddKey: 'dnbh', team: home },
     { label: `Gana ${away} (sin contar empate)`, prob: result.dnbAway, oddKey: 'dnba', team: away },
+    ...(customLine != null ? [
+      { label: `Más de ${customLine} goles`, prob: overProb(result.p.xgH, result.p.xgA, customLine), oddKey: 'overCustom' },
+      { label: `Menos de ${customLine} goles`, prob: 1 - overProb(result.p.xgH, result.p.xgA, customLine), oddKey: 'underCustom' },
+    ] : []),
   ] : [];
 
   const secMkts = result ? [
@@ -317,6 +327,12 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
           {[['over', 'Más de 2.5 goles'], ['under', 'Menos de 2.5 goles'], ['btts', 'Ambos anotan']].map(([k, ph]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
               <span style={{ fontSize: 13 }}>{ph}</span>
+              <input type="number" step="0.01" placeholder="1.90" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
+            </div>
+          ))}
+          {customLine != null && [['overCustom', `Más de ${customLine} goles`], ['underCustom', `Menos de ${customLine} goles`]].map(([k, ph]) => (
+            <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
+              <span style={{ fontSize: 13 }}>{ph} <span style={{ color: '#7a8aaa', fontSize: 10 }}>(línea real de la casa)</span></span>
               <input type="number" step="0.01" placeholder="1.90" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
             </div>
           ))}

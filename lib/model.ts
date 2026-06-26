@@ -139,6 +139,17 @@ export function getXG(team,asAtt,neutral,isHome,wcRealOverride){
   return Math.max(0.15,base);
 }
 
+// Probabilidad de que el total de goles supere una línea cualquiera (no solo 2.5) — para cuando
+// la casa de apuestas (ej. Coolbet) ofrece una línea distinta según cuán parejo está el partido.
+export function overProb(xgH,xgA,line){
+  const poi=(l,k)=>{let p=Math.exp(-l);for(let i=0;i<k;i++)p*=l/(i+1);return p;};
+  let pO=0;
+  for(let i=0;i<=10;i++)for(let j=0;j<=10;j++){
+    if(i+j>line) pO+=poi(xgH,i)*poi(xgA,j);
+  }
+  return pO;
+}
+
 export function modelProbs(home,away,neutral,wcRealOverride){
   const mH=MODEL[home]||{avgGF:1.35,avgGA:1.1,elo:1500};
   const mA=MODEL[away]||{avgGF:1.35,avgGA:1.1,elo:1500};
