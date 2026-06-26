@@ -147,11 +147,12 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
     .filter(r => r.data);
   // Línea de goles distinta a 2.5 (ej. 3.0), cuando la casa elegida no ofrece la de 2.5.
   const [customLine, setCustomLine] = useState<number | null>(null);
+  // Qué campos de cuota vienen de una casa real (se pintan distinto a lo tipeado a mano).
+  const [autoFilledKeys, setAutoFilledKeys] = useState<Set<string>>(new Set());
   function useRealOdds(label: string, data: any) {
     const isLine25 = data.total_line == null || Number(data.total_line) === 2.5;
     setCustomLine(isLine25 ? null : Number(data.total_line));
-    setOdds(prev => ({
-      ...prev,
+    const filled: Record<string, string> = {
       ...(data.home_odds != null && { home: String(data.home_odds) }),
       ...(data.draw_odds != null && { draw: String(data.draw_odds) }),
       ...(data.away_odds != null && { away: String(data.away_odds) }),
@@ -159,8 +160,26 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
       ...(isLine25 && data.under_odds != null && { under: String(data.under_odds) }),
       ...(!isLine25 && data.over_odds != null && { overCustom: String(data.over_odds) }),
       ...(!isLine25 && data.under_odds != null && { underCustom: String(data.under_odds) }),
-    }));
+    };
+    setOdds(prev => ({ ...prev, ...filled }));
+    setAutoFilledKeys(new Set(Object.keys(filled)));
     setBookie(label);
+  }
+
+  // Cambia una cuota a mano: deja de marcarse como "de la casa" y se pinta como manual.
+  function setOddsField(k: string, v: string) {
+    setOdds(prev => ({ ...prev, [k]: v }));
+    setAutoFilledKeys(prev => {
+      if (!prev.has(k)) return prev;
+      const next = new Set(prev);
+      next.delete(k);
+      return next;
+    });
+  }
+  function oddsInputColor(k: string) {
+    if (autoFilledKeys.has(k)) return '#3aae6c';
+    if (odds[k]) return '#f0ece0';
+    return '#7a8aaa';
   }
 
   // Live mode
@@ -173,7 +192,7 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
 
   function onFixtureChange(m: any) {
     setHome(m.h); setAway(m.a);
-    setOdds({}); setResult(null); setSelected([]); setCustomLine(null);
+    setOdds({}); setResult(null); setSelected([]); setCustomLine(null); setAutoFilledKeys(new Set());
     // Si el partido ya está jugándose (datos de API-Football sincronizados hace menos de 30 min),
     // se activa "En vivo" solo y se prellenan minuto/marcador. Expulsados siguen siendo manuales.
     if (m.live) {
@@ -334,7 +353,7 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
           {[['home', `Gana ${home}`, home], ['draw', 'Empatan', null], ['away', `Gana ${away}`, away]].map(([k, ph, team]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
               <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>{team && <Flag name={team} />}{ph}</span>
-              <input type="number" step="0.01" placeholder="1.85" value={odds[k as string] || ''} onChange={e => setOdds({ ...odds, [k as string]: e.target.value })} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
+              <input type="number" step="0.01" placeholder="–" value={odds[k as string] || ''} onChange={e => setOddsField(k as string, e.target.value)} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none', color: oddsInputColor(k as string), fontWeight: autoFilledKeys.has(k as string) ? 700 : 400 }} />
             </div>
           ))}
         </div>
@@ -343,13 +362,13 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
           {[['over', 'Más de 2.5 goles'], ['under', 'Menos de 2.5 goles'], ['btts', 'Ambos anotan']].map(([k, ph]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
               <span style={{ fontSize: 13 }}>{ph}</span>
-              <input type="number" step="0.01" placeholder="1.90" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
+              <input type="number" step="0.01" placeholder="–" value={odds[k] || ''} onChange={e => setOddsField(k, e.target.value)} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none', color: oddsInputColor(k), fontWeight: autoFilledKeys.has(k) ? 700 : 400 }} />
             </div>
           ))}
           {customLine != null && [['overCustom', `Más de ${customLine} goles`], ['underCustom', `Menos de ${customLine} goles`]].map(([k, ph]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
               <span style={{ fontSize: 13 }}>{ph} <span style={{ color: '#7a8aaa', fontSize: 10 }}>(línea real de la casa)</span></span>
-              <input type="number" step="0.01" placeholder="1.90" value={odds[k] || ''} onChange={e => setOdds({ ...odds, [k]: e.target.value })} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
+              <input type="number" step="0.01" placeholder="–" value={odds[k] || ''} onChange={e => setOddsField(k, e.target.value)} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none', color: oddsInputColor(k), fontWeight: autoFilledKeys.has(k) ? 700 : 400 }} />
             </div>
           ))}
         </div>
@@ -360,7 +379,7 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
             {[['bttsno','NO ambos anotan'],['dc1x',`Gana ${home} o empatan`],['dcx2',`Empatan o gana ${away}`],['dc12',`Gana ${home} o ${away}`],['dnbh',`Gana ${home} (sin empate)`],['dnba',`Gana ${away} (sin empate)`]].map(([k,ph]) => (
               <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
                 <span style={{ fontSize: 13 }}>{ph}</span>
-                <input type="number" step="0.01" placeholder="1.06" value={odds[k]||''} onChange={e=>setOdds({...odds,[k]:e.target.value})} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none' }} />
+                <input type="number" step="0.01" placeholder="–" value={odds[k]||''} onChange={e=>setOddsField(k, e.target.value)} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none', color: oddsInputColor(k) }} />
               </div>
             ))}
           </div>
