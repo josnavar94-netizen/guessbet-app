@@ -54,18 +54,18 @@ export default function RegisterPage() {
         <div className="auth-card">
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>Crear cuenta</h2>
           {error && <div className="error-box">{error}</div>}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} autoComplete="on">
             <div className="field">
               <label>Correo electrónico</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@correo.com" required />
+              <input type="email" name="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@correo.com" required />
             </div>
             <div className="field">
               <label>Nombre de usuario</label>
-              <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="mínimo 3 caracteres" required minLength={3} />
+              <input type="text" name="username" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} placeholder="mínimo 3 caracteres" required minLength={3} />
             </div>
             <div className="field">
               <label>Contraseña</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="mínimo 7 caracteres" required minLength={7} />
+              <input type="password" name="new-password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="mínimo 7 caracteres" required minLength={7} />
             </div>
             <div className="field">
               <label>Fecha de nacimiento</label>

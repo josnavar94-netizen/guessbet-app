@@ -38,14 +38,14 @@ export default function LoginPage() {
         <div className="auth-card">
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>Iniciar sesión</h2>
           {error && <div className="error-box">{error}</div>}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} autoComplete="on">
             <div className="field">
               <label>Correo o usuario</label>
-              <input type="text" value={emailOrUsername} onChange={e => setEmailOrUsername(e.target.value)} placeholder="tu@correo.com" required />
+              <input type="text" name="username" autoComplete="username" value={emailOrUsername} onChange={e => setEmailOrUsername(e.target.value)} placeholder="tu@correo.com" required />
             </div>
             <div className="field">
               <label>Contraseña</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+              <input type="password" name="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
             </div>
             <p style={{ textAlign: 'right', marginTop: -8, marginBottom: 14 }}>
               <a href="/forgot-password" style={{ fontSize: 12 }}>¿Olvidaste tu contraseña?</a>
