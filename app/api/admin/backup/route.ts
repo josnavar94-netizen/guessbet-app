@@ -9,10 +9,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [users, bets, matches] = await Promise.all([
+    const [users, bets, matches, pushSubscriptions] = await Promise.all([
       sql`SELECT id, email, username, plan, avatar, email_verified, birth_date, terms_accepted_at, terms_version, session_version, created_at FROM users ORDER BY id`,
       sql`SELECT * FROM bets ORDER BY id`,
       sql`SELECT * FROM matches ORDER BY id`,
+      sql`SELECT id, user_id, endpoint, created_at FROM push_subscriptions ORDER BY id`,
     ]);
 
     const backup = {
@@ -20,6 +21,7 @@ export async function GET(req: NextRequest) {
       users: users.rows,
       bets: bets.rows,
       matches: matches.rows,
+      push_subscriptions: pushSubscriptions.rows,
     };
 
     const filename = `guessbet-backup-${new Date().toISOString().slice(0, 10)}.json`;
