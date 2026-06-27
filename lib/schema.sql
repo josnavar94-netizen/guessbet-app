@@ -178,3 +178,9 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   created_at TIMESTAMP DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id);
+
+-- Migración: caché del ID de cada selección en API-Football, para no resolverlo cada vez (gasta cuota)
+CREATE TABLE IF NOT EXISTS team_refs (
+  team VARCHAR(100) PRIMARY KEY,
+  api_football_id INTEGER NOT NULL
+);

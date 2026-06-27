@@ -1,0 +1,19 @@
+name: Backfill historial de alineaciones (amistosos/eliminatorias)
+
+on:
+  schedule:
+    # Una vez al día. Esto consume varias decenas de requests de la cuota gratis de API-Football
+    # (100/día), así que NO se corre cada 15 min como los otros crons — se reparte la carga inicial
+    # a lo largo de varios días, priorizando los equipos que juegan antes.
+    - cron: '0 10 * * *'
+  workflow_dispatch: {} # permite correrlo manualmente desde la pestaña Actions de GitHub
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar a /api/cron/backfill-lineups
+        run: |
+          curl -sf -w "\nHTTP %{http_code}\n" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://guessbet.vercel.app/api/cron/backfill-lineups

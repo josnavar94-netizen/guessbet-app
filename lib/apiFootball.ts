@@ -78,3 +78,40 @@ export async function fetchLineups(fixtureId: number): Promise<FixtureLineup[]> 
     starters: (t.startXI || []).map((p: any) => p.player?.name).filter(Boolean),
   }));
 }
+
+// Resuelve el ID interno de una selección en API-Football (se cachea en la tabla `team_refs`
+// para no gastar cuota resolviéndolo de nuevo cada vez).
+export async function resolveTeamId(name: string): Promise<number | null> {
+  const apiKey = process.env.API_FOOTBALL_KEY;
+  if (!apiKey) return null;
+
+  const res = await fetch(`https://v3.football.api-sports.io/teams?name=${encodeURIComponent(name)}`, {
+    headers: { 'x-apisports-key': apiKey },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    console.error(`[apiFootball] /teams respondió ${res.status}: ${await res.text().catch(() => '')}`);
+    return null;
+  }
+  const data = await res.json();
+  return data.response?.[0]?.team?.id ?? null;
+}
+
+export type PastFixture = { id: number; dateISO: string };
+
+export async function fetchTeamLastFixtures(teamId: number, last = 12): Promise<PastFixture[]> {
+  const apiKey = process.env.API_FOOTBALL_KEY;
+  if (!apiKey) return [];
+
+  const res = await fetch(`https://v3.football.api-sports.io/fixtures?team=${teamId}&last=${last}`, {
+    headers: { 'x-apisports-key': apiKey },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    console.error(`[apiFootball] /fixtures?team respondió ${res.status}: ${await res.text().catch(() => '')}`);
+    return [];
+  }
+  const data = await res.json();
+  const list = data.response || [];
+  return list.map((f: any) => ({ id: f.fixture?.id, dateISO: f.fixture?.date })).filter((f: any) => f.id && f.dateISO);
+}
