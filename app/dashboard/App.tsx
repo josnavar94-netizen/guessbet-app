@@ -58,6 +58,57 @@ export default function App({ username, email, plan, avatar, emailVerified, isAd
   const [resending, setResending] = useState(false);
   const [verifiedNotice, setVerifiedNotice] = useState<'ok' | 'error' | null>(null);
 
+  // Notificaciones push: se pide el permiso solo, apenas se entra al dashboard, en vez de
+  // esperar a que el usuario vaya a buscarlo a Mi cuenta. El navegador igual va a mostrar
+  // su propio cuadro de "Permitir/Bloquear" — eso ningún sitio puede saltárselo.
+  const [pushStatus, setPushStatus] = useState<'idle' | 'loading' | 'on' | 'error' | 'unsupported' | 'denied'>('idle');
+  function urlBase64ToUint8Array(base64: string) {
+    const padding = '='.repeat((4 - base64.length % 4) % 4);
+    const base64safe = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64safe);
+    return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+  }
+  async function activatePush() {
+    setPushStatus('loading');
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') { setPushStatus('denied'); return; }
+
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidKey) { setPushStatus('error'); return; }
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      });
+      const subJson = sub.toJSON();
+      const res = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
+      });
+      setPushStatus(res.ok ? 'on' : 'error');
+    } catch {
+      setPushStatus('error');
+    }
+  }
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setPushStatus('unsupported');
+      return;
+    }
+    navigator.serviceWorker.register('/sw.js').then(reg =>
+      reg.pushManager.getSubscription().then(sub => {
+        if (sub) { setPushStatus('on'); return; }
+        // Todavía no se decidió nada en este navegador (ni "permitir" ni "bloquear") —
+        // se pide automáticamente, una sola vez, sin esperar a que el usuario lo busque.
+        if (typeof Notification !== 'undefined' && Notification.permission === 'default') activatePush();
+        else if (typeof Notification !== 'undefined' && Notification.permission === 'denied') setPushStatus('denied');
+      })
+    ).catch(() => {});
+  }, []);
+
   // Resultados ya jugados, leídos en vivo de la tabla `matches` en vez del fixture estático
   const [results, setResults] = useState<PastResult[] | null>(null);
   useEffect(() => {
@@ -277,6 +328,8 @@ export default function App({ username, email, plan, avatar, emailVerified, isAd
             resendVerification={resendVerification}
             resending={resending}
             resendMsg={resendMsg}
+            pushStatus={pushStatus}
+            activatePush={activatePush}
           />
         )}
       </div>
@@ -287,9 +340,10 @@ export default function App({ username, email, plan, avatar, emailVerified, isAd
 // ─────────────────────────────────────────────
 // ACCOUNT TAB
 // ─────────────────────────────────────────────
-function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerified, verifiedNotice, resendVerification, resending, resendMsg }: {
+function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerified, verifiedNotice, resendVerification, resending, resendMsg, pushStatus, activatePush }: {
   username: string; email: string; plan: string; avatar?: string | null; setTab: (t: Tab) => void; logout: () => void;
   emailVerified: boolean; verifiedNotice: 'ok' | 'error' | null; resendVerification: () => void; resending: boolean; resendMsg: { type: 'ok' | 'err'; text: string } | null;
+  pushStatus: 'idle' | 'loading' | 'on' | 'error' | 'unsupported' | 'denied'; activatePush: () => void;
 }) {
   const router = useRouter();
   const card: React.CSSProperties = { background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1.25rem', marginBottom: '1rem' };
@@ -297,49 +351,6 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
   const fieldStyle: React.CSSProperties = { width: '100%', background: 'var(--sur2)', border: '1px solid rgba(201,168,76,.24)', color: '#f0ece0', fontFamily: "'Outfit',sans-serif", fontSize: 14, padding: '0 12px', height: 40, borderRadius: 9 };
 
   const [section, setSection] = useState<'menu' | 'personal' | 'security' | 'payment' | 'support' | 'legal' | 'notifications'>('menu');
-  const [pushStatus, setPushStatus] = useState<'idle' | 'loading' | 'on' | 'error' | 'unsupported' | 'denied'>('idle');
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-      setPushStatus('unsupported');
-      return;
-    }
-    navigator.serviceWorker.register('/sw.js').then(reg =>
-      reg.pushManager.getSubscription().then(sub => { if (sub) setPushStatus('on'); })
-    ).catch(() => {});
-  }, []);
-
-  function urlBase64ToUint8Array(base64: string) {
-    const padding = '='.repeat((4 - base64.length % 4) % 4);
-    const base64safe = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const raw = atob(base64safe);
-    return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
-  }
-
-  async function activatePush() {
-    setPushStatus('loading');
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') { setPushStatus('denied'); return; }
-
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!vapidKey) { setPushStatus('error'); return; }
-
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey),
-      });
-      const subJson = sub.toJSON();
-      const res = await fetch('/api/push/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
-      });
-      setPushStatus(res.ok ? 'on' : 'error');
-    } catch {
-      setPushStatus('error');
-    }
-  }
   const [avatarPreview, setAvatarPreview] = useState<string | null>(avatar || null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
