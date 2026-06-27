@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       WHERE competition_code = 'WC' AND status != 'FINISHED' AND kickoff_at IS NOT NULL
       ORDER BY kickoff_at ASC
     `;
-    const nextKickoffByTeam = new Map<string, string>();
+    const nextKickoffByTeam = new Map<string, Date | string>();
     for (const m of upcomingMatches) {
       for (const raw of [m.home_team, m.away_team]) {
         const team = normalizeTeam(raw);
@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const teamsByPriority = [...nextKickoffByTeam.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    // kickoff_at viene como objeto Date desde Postgres, no como string — comparar por tiempo, no con localeCompare.
+    const teamsByPriority = [...nextKickoffByTeam.entries()].sort((a, b) => new Date(a[1]).getTime() - new Date(b[1]).getTime());
 
     const processed: string[] = [];
     for (const [team] of teamsByPriority) {
