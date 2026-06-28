@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { modelProbs, getH2H, MODEL, WC_REAL, FLAG_CODES, overProb } from '@/lib/model';
+import LeagueSelector from './LeagueSelector';
 
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
   const code = FLAG_CODES[name];
@@ -65,7 +66,7 @@ const label12: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', display: 
 const card: React.CSSProperties = { background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1.25rem', marginBottom: '1rem' };
 const secTitle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#7a8aaa', textTransform: 'uppercase' as const, letterSpacing: '.08em', marginBottom: 12 };
 
-export default function CalcTab({ onRegister, locked, onUpgrade }: { onRegister: (bet: any) => void; locked?: boolean; onUpgrade?: () => void }) {
+export default function CalcTab({ onRegister, locked, onUpgrade, league, setLeague }: { onRegister: (bet: any) => void; locked?: boolean; onUpgrade?: () => void; league: string; setLeague: (id: string) => void }) {
   if (locked) {
     return (
       <div style={{ maxWidth: 480, margin: '3rem auto', textAlign: 'center' }}>
@@ -80,60 +81,18 @@ export default function CalcTab({ onRegister, locked, onUpgrade }: { onRegister:
       </div>
     );
   }
-  return <CalcTabUnlocked onRegister={onRegister} />;
+  return <CalcTabUnlocked onRegister={onRegister} league={league} setLeague={setLeague} />;
 }
 
 type LiveFixture = { h: string; a: string; t: string; group: string; kickoffAt: string | null; live: { minute: number | null; homeGoals: number; awayGoals: number } | null };
 
-// Ligas a futuro: por ahora solo el Mundial tiene datos/modelo cargados, el resto se muestra
-// como "Próximamente" para que el usuario vea hacia dónde va creciendo la app sin prometer algo que no funciona.
-const LEAGUES = [
-  { id: 'wc', name: 'Mundial 2026', flag: '🌎', available: true },
-  { id: 'pl', name: 'Premier League', flag: '🏴', available: false },
-  { id: 'seriea', name: 'Serie A', flag: '🇮🇹', available: false },
-  { id: 'laliga', name: 'La Liga', flag: '🇪🇸', available: false },
-  { id: 'bundesliga', name: 'Bundesliga', flag: '🇩🇪', available: false },
-  { id: 'ligue1', name: 'Ligue 1', flag: '🇫🇷', available: false },
-  { id: 'chile', name: 'Fútbol Chileno', flag: '🇨🇱', available: false },
-];
-
-function LeagueSelector({ league, setLeague }: { league: string; setLeague: (id: string) => void }) {
-  return (
-    <div style={card}>
-      <div style={secTitle}>Liga</div>
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-        {LEAGUES.map(l => (
-          <button
-            key={l.id}
-            disabled={!l.available}
-            onClick={() => l.available && setLeague(l.id)}
-            title={l.available ? l.name : `${l.name} — Próximamente`}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-              minWidth: 96, flexShrink: 0, padding: '10px 12px', borderRadius: 10,
-              border: league === l.id ? '1px solid #c9a84c' : '1px solid rgba(201,168,76,.15)',
-              background: league === l.id ? 'rgba(201,168,76,.12)' : 'var(--sur2)',
-              cursor: l.available ? 'pointer' : 'not-allowed',
-              opacity: l.available ? 1 : 0.45,
-              fontFamily: "'Outfit',sans-serif",
-            }}
-          >
-            <span style={{ fontSize: 20 }}>{l.flag}</span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: league === l.id ? '#c9a84c' : '#f0ece0', textAlign: 'center', lineHeight: 1.2 }}>{l.name}</span>
-            {!l.available && <span style={{ fontSize: 9, color: '#7a8aaa', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '.04em' }}>Próximamente</span>}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // Sin "timeZone" explícito: Intl usa la zona horaria del dispositivo del cliente automáticamente,
 // para que cada usuario vea la hora del partido convertida a su propia hora local.
 const dayFmt = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
 const timeFmt = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
+function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: any) => void; league: string; setLeague: (id: string) => void }) {
   // Próximos partidos leídos en vivo desde /api/fixtures (tabla `matches`), no de un
   // fixture escrito a mano: así nunca muestra partidos ya jugados ni se queda corto
   // cuando avanza el torneo a la siguiente jornada o a eliminatorias.
@@ -159,7 +118,6 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
     if (last && last.day === m.group) last.items.push({ m, idx });
     else upcomingByDay.push({ day: m.group, items: [{ m, idx }] });
   });
-  const [league, setLeague] = useState('wc');
   const [home, setHome] = useState('');
   const [away, setAway] = useState('');
   const [neutral, setNeutral] = useState(true);

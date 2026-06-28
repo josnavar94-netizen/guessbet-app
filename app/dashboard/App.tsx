@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FLAG_CODES } from '@/lib/model';
+import { LEAGUES } from '@/lib/leagues';
 import CalcTab from './CalcTab';
 import PremiumTab from './PremiumTab';
+import LeagueSelector from './LeagueSelector';
 import InstallAppSection from '../InstallApp';
 
 type Tab = 'home' | 'calc' | 'hist' | 'mybet' | 'premium' | 'account';
@@ -49,6 +51,7 @@ type DbBet = {
 export default function App({ username, email, plan, avatar, emailVerified, isAdmin }: { username: string; email: string; plan: string; avatar?: string | null; emailVerified: boolean; isAdmin?: boolean }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('home');
+  const [league, setLeague] = useState('wc');
   const [bets, setBets] = useState<DbBet[]>([]);
   const [loadingBets, setLoadingBets] = useState(true);
   const [usedToday, setUsedToday] = useState(false);
@@ -310,9 +313,9 @@ export default function App({ username, email, plan, avatar, emailVerified, isAd
 
       {/* PAGES */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem' }}>
-        {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} results={results} lastSyncAt={lastSyncAt} />}
-        {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} />}
-        {tab === 'hist' && <HistTab results={results} />}
+        {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} results={results} lastSyncAt={lastSyncAt} league={league} setLeague={setLeague} />}
+        {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} league={league} setLeague={setLeague} />}
+        {tab === 'hist' && <HistTab results={results} league={league} setLeague={setLeague} />}
         {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={isAdmin ? deleteBet : undefined} />}
         {tab === 'premium' && <PremiumTab plan={plan} />}
         {tab === 'account' && (
@@ -754,8 +757,9 @@ function SyncBadge({ lastSyncAt }: { lastSyncAt: string | null }) {
   );
 }
 
-function HomeTab({ username, setTab, bets, results: liveResults, lastSyncAt }: { username: string; setTab: (t: Tab) => void; bets: DbBet[]; results: PastResult[] | null; lastSyncAt: string | null }) {
+function HomeTab({ username, setTab, bets, results: liveResults, lastSyncAt, league, setLeague }: { username: string; setTab: (t: Tab) => void; bets: DbBet[]; results: PastResult[] | null; lastSyncAt: string | null; league: string; setLeague: (id: string) => void }) {
   const results = liveResults || [];
+  const leagueName = LEAGUES.find(l => l.id === league)?.name || 'Mundial 2026';
   const totalMatches = results.length;
   const totalGoals = results.reduce((s, m) => s + m.gh + m.ga, 0);
   const avgGoals = totalMatches ? (totalGoals / totalMatches).toFixed(2) : '0';
@@ -775,9 +779,11 @@ function HomeTab({ username, setTab, bets, results: liveResults, lastSyncAt }: {
 
   return (
     <div style={{ maxWidth: 700, margin: '0 auto' }}>
+      <LeagueSelector league={league} setLeague={setLeague} />
+
       {/* Hero */}
       <div style={{ textAlign: 'center', padding: '2rem 1rem 1.5rem' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', color: '#c9a84c', textTransform: 'uppercase', marginBottom: 14 }}>⚽ Mundial 2026</div>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.14em', color: '#c9a84c', textTransform: 'uppercase', marginBottom: 14 }}>⚽ {leagueName}</div>
         <div><SyncBadge lastSyncAt={lastSyncAt} /></div>
         <h1 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 'clamp(32px,8vw,52px)', lineHeight: 1.08, marginBottom: 16, letterSpacing: '-.03em' }}>
           <span style={{ color: '#f0ece0' }}>La ventaja que el mercado</span><br />
@@ -801,7 +807,7 @@ function HomeTab({ username, setTab, bets, results: liveResults, lastSyncAt }: {
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: '#c9a84c', textTransform: 'uppercase', textAlign: 'center', marginBottom: '1.25rem' }}>Qué hace GuessBet</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
           {[
-            { icon: '📊', title: 'Calcula la probabilidad real', desc: 'Modelo entrenado con más de 14.000 partidos de los últimos 20 años, ajustado con los resultados reales del Mundial 2026' },
+            { icon: '📊', title: 'Calcula la probabilidad real', desc: `Modelo entrenado con más de 14.000 partidos de los últimos 20 años, ajustado con los resultados reales de ${leagueName}` },
             { icon: '⚖️', title: 'Compara contra tu cuota', desc: 'Comparamos esa probabilidad contra la cuota de tu casa de apuestas y te decimos si hay una ventaja real o no' },
             { icon: '📈', title: 'Registra tu rendimiento', desc: 'Guarda cada apuesta que haces y mide tu ROI, aciertos y racha real con el tiempo' },
           ].map((s, i) => (
@@ -819,7 +825,7 @@ function HomeTab({ username, setTab, bets, results: liveResults, lastSyncAt }: {
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: '#c9a84c', textTransform: 'uppercase', textAlign: 'center', marginBottom: '1.25rem' }}>Cómo se usa</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
           {[
-            { icon: '⚽', n: '1', title: 'Elige el partido', desc: 'Selecciona cualquier partido próximo del Mundial 2026, agrupados por fecha' },
+            { icon: '⚽', n: '1', title: 'Elige el partido', desc: `Selecciona cualquier partido próximo de ${leagueName}, agrupados por fecha` },
             { icon: '💰', n: '2', title: 'Copia la cuota', desc: 'Escribe el número que te ofrece tu casa de apuestas para cada mercado' },
             { icon: '✅', n: '3', title: 'Decide con datos', desc: 'Te mostramos en qué apuestas el modelo cree que tienes ventaja' },
           ].map((s, i) => (
@@ -835,7 +841,7 @@ function HomeTab({ username, setTab, bets, results: liveResults, lastSyncAt }: {
 
       {/* Gráficos */}
       <div style={{ margin: '2rem 0' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: '#c9a84c', textTransform: 'uppercase', textAlign: 'center', marginBottom: '1.2rem' }}>El Mundial en números</div>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: '#c9a84c', textTransform: 'uppercase', textAlign: 'center', marginBottom: '1.2rem' }}>{leagueName} en números</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {/* Goles por partido */}
           <div style={{ background: 'var(--sur)', border: '1px solid var(--b)', borderRadius: 12, padding: '1rem' }}>
@@ -907,7 +913,8 @@ function HomeTab({ username, setTab, bets, results: liveResults, lastSyncAt }: {
 // ─────────────────────────────────────────────
 // HIST TAB
 // ─────────────────────────────────────────────
-function HistTab({ results: liveResults }: { results: PastResult[] | null }) {
+function HistTab({ results: liveResults, league, setLeague }: { results: PastResult[] | null; league: string; setLeague: (id: string) => void }) {
+  const leagueName = LEAGUES.find(l => l.id === league)?.name || 'Mundial 2026';
   const [selectedDate, setSelectedDate] = useState('all');
   // d/dateKey se calculan acá (en el navegador) a partir del instante UTC, para que cada
   // usuario vea el partido agrupado en el día que correspondía en su propia hora local.
@@ -924,7 +931,8 @@ function HistTab({ results: liveResults }: { results: PastResult[] | null }) {
   return (
     <div>
       <h1 style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:26, marginBottom:4 }}>Partidos ya jugados</h1>
-      <p style={{ fontSize:13, color:'#7a8aaa', marginBottom:'1.5rem' }}>Resultados reales del Mundial 2026</p>
+      <p style={{ fontSize:13, color:'#7a8aaa', marginBottom:'1.5rem' }}>Resultados reales de {leagueName}</p>
+      <LeagueSelector league={league} setLeague={setLeague} />
       <div className="h-scroll" style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:8, marginBottom:'1.25rem', scrollbarWidth:'none' }}>
         {[{key:'all',day:'Todo',month:`${results.length} partidos`,count:0},...dateKeys.map(k=>({key:k,day:k.split('-')[2],month:months[k.split('-')[1]]||'',count:byDate[k].count}))].map(chip => (
           <button key={chip.key} onClick={() => setSelectedDate(chip.key)} style={{ flexShrink:0, background:selectedDate===chip.key?'rgba(201,168,76,.15)':'var(--sur)', border:`1px solid ${selectedDate===chip.key?'rgba(201,168,76,.4)':'rgba(201,168,76,.15)'}`, borderRadius:11, padding:'8px 14px', cursor:'pointer', textAlign:'center', minWidth:60 }}>
