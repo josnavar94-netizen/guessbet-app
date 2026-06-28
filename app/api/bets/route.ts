@@ -67,7 +67,19 @@ export async function POST(req: NextRequest) {
             WHERE device_id=${deviceId} AND used_date = CURRENT_DATE
           `
         : null;
-      if (userUsage.rows[0].count >= 1 || (deviceUsage && deviceUsage.rows[0].count >= 1)) {
+      // La cookie de dispositivo no sirve si cambian de navegador o usan modo incógnito;
+      // la IP es el control que sí cruza esos casos (a costa de falsos positivos en redes compartidas).
+      const ipUsage = ip
+        ? await sql`
+            SELECT COUNT(*)::int AS count FROM bet_usage
+            WHERE ip=${ip} AND used_date = CURRENT_DATE
+          `
+        : null;
+      if (
+        userUsage.rows[0].count >= 1 ||
+        (deviceUsage && deviceUsage.rows[0].count >= 1) ||
+        (ipUsage && ipUsage.rows[0].count >= 1)
+      ) {
         return NextResponse.json(
           { error: 'Tu plan Free permite 1 apuesta por día. Hazte PRO para apostar sin límites.' },
           { status: 403 }
