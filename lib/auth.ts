@@ -35,10 +35,12 @@ export async function getSession(): Promise<Session | null> {
   try {
     const { payload } = await jwtVerify(token, getKey());
     const session = payload as unknown as Session;
-    const result = await sql`SELECT session_version FROM users WHERE id=${session.userId}`;
+    const result = await sql`SELECT session_version, plan FROM users WHERE id=${session.userId}`;
     const currentVersion = result.rows[0]?.session_version ?? 0;
     if (session.sv !== currentVersion) return null; // sesión cerrada por inicio en otro dispositivo
-    return session;
+    // El plan se relee siempre desde la base de datos, no del JWT: con sesiones de 30 días,
+    // si el usuario paga Premium a mitad de sesión el token viejo seguiría diciendo "free".
+    return { ...session, plan: result.rows[0]?.plan ?? session.plan };
   } catch {
     return null;
   }
