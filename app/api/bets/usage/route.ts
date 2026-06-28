@@ -23,18 +23,18 @@ export async function GET(req: NextRequest) {
 
   const userUsage = await sql`
     SELECT COUNT(*)::int AS count FROM bet_usage
-    WHERE user_id=${s.userId} AND used_date = CURRENT_DATE
+    WHERE user_id=${s.userId} AND used_date = (NOW() AT TIME ZONE 'America/Santiago')::date
   `;
   const deviceUsage = deviceId
     ? await sql`
         SELECT COUNT(*)::int AS count FROM bet_usage
-        WHERE device_id=${deviceId} AND used_date = CURRENT_DATE
+        WHERE device_id=${deviceId} AND used_date = (NOW() AT TIME ZONE 'America/Santiago')::date
       `
     : null;
   const ipUsage = ip
     ? await sql`
         SELECT COUNT(*)::int AS count FROM bet_usage
-        WHERE ip=${ip} AND used_date = CURRENT_DATE
+        WHERE ip=${ip} AND used_date = (NOW() AT TIME ZONE 'America/Santiago')::date
       `
     : null;
 

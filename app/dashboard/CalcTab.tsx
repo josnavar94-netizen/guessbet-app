@@ -140,10 +140,14 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
   const [lineupChanges, setLineupChanges] = useState<{ home: TeamLineupChanges | null; away: TeamLineupChanges | null } | null>(null);
   useEffect(() => {
     if (!home || !away) return;
+    // Si el usuario cambia de partido antes de que vuelva la respuesta, esa respuesta vieja no
+    // debe pisar el estado del partido nuevo (race condition al cambiar de fixture rápido).
+    let cancelled = false;
     const kickoffAt = upcoming.find(u => u.h === home && u.a === away)?.kickoffAt;
     const qs = new URLSearchParams({ home, away, ...(kickoffAt ? { kickoffAt } : {}) });
     fetch(`/api/lineup-changes?${qs.toString()}`)
-      .then(r => r.json()).then(d => setLineupChanges(d)).catch(() => setLineupChanges(null));
+      .then(r => r.json()).then(d => { if (!cancelled) setLineupChanges(d); }).catch(() => { if (!cancelled) setLineupChanges(null); });
+    return () => { cancelled = true; };
   }, [home, away, upcoming]);
 
   // Historial real entre los dos equipos (todo el historial: amistosos, eliminatorias, etc.),
@@ -152,8 +156,10 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
   const [realH2H, setRealH2H] = useState<{ n: number; w1: number; d: number; l1: number; avgGF1: number; avgGA1: number } | null>(null);
   useEffect(() => {
     if (!home || !away) { setRealH2H(null); return; }
+    let cancelled = false;
     fetch(`/api/h2h?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`)
-      .then(r => r.json()).then(d => setRealH2H(d.error ? null : d)).catch(() => setRealH2H(null));
+      .then(r => r.json()).then(d => { if (!cancelled) setRealH2H(d.error ? null : d); }).catch(() => { if (!cancelled) setRealH2H(null); });
+    return () => { cancelled = true; };
   }, [home, away]);
 
   // Cuotas reales por casa (Coolbet/1xBet vía The Odds API, Betano vía OddsPapi).

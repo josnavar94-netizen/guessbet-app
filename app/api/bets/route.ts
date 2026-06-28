@@ -57,14 +57,16 @@ export async function POST(req: NextRequest) {
     const plan = userResult.rows[0]?.plan ?? 'free';
 
     if (plan !== 'premium') {
+      // "Hoy" se calcula en hora de Chile, no UTC: si no, el límite diario se reinicia a las
+      // 20-21h hora local en vez de medianoche, confundiendo a los usuarios.
       const userUsage = await sql`
         SELECT COUNT(*)::int AS count FROM bet_usage
-        WHERE user_id=${s.userId} AND used_date = CURRENT_DATE
+        WHERE user_id=${s.userId} AND used_date = (NOW() AT TIME ZONE 'America/Santiago')::date
       `;
       const deviceUsage = !isNewDevice
         ? await sql`
             SELECT COUNT(*)::int AS count FROM bet_usage
-            WHERE device_id=${deviceId} AND used_date = CURRENT_DATE
+            WHERE device_id=${deviceId} AND used_date = (NOW() AT TIME ZONE 'America/Santiago')::date
           `
         : null;
       // La cookie de dispositivo no sirve si cambian de navegador o usan modo incógnito;
@@ -72,7 +74,7 @@ export async function POST(req: NextRequest) {
       const ipUsage = ip
         ? await sql`
             SELECT COUNT(*)::int AS count FROM bet_usage
-            WHERE ip=${ip} AND used_date = CURRENT_DATE
+            WHERE ip=${ip} AND used_date = (NOW() AT TIME ZONE 'America/Santiago')::date
           `
         : null;
       if (
@@ -96,7 +98,10 @@ export async function POST(req: NextRequest) {
     `;
 
     if (plan !== 'premium') {
-      await sql`INSERT INTO bet_usage (user_id, device_id, ip) VALUES (${s.userId}, ${deviceId}, ${ip})`;
+      await sql`
+        INSERT INTO bet_usage (user_id, device_id, ip, used_date)
+        VALUES (${s.userId}, ${deviceId}, ${ip}, (NOW() AT TIME ZONE 'America/Santiago')::date)
+      `;
     }
 
     const res = NextResponse.json({ bet: result.rows[0] });
