@@ -814,7 +814,7 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
           <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>🔔 Notificaciones</div>
           <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 14, lineHeight: 1.5 }}>Te avisamos a tu celular en cuanto se confirme la alineación titular de un partido del Mundial — es el momento justo para revisar las cuotas antes de apostar.</p>
           {pushStatus === 'unsupported' && (
-            <div style={{ fontSize: 12, color: '#7a8aaa' }}>Tu navegador no soporta notificaciones push (probá desde la app instalada en tu celular).</div>
+            <div style={{ fontSize: 12, color: '#7a8aaa' }}>Tu navegador no soporta notificaciones push (prueba desde la app instalada en tu celular).</div>
           )}
           {pushStatus === 'denied' && (
             <div style={{ fontSize: 12, color: '#d95050' }}>Bloqueaste los permisos de notificación. Habilítalos desde la configuración de tu navegador/celular para esta app.</div>
