@@ -85,6 +85,49 @@ export default function CalcTab({ onRegister, locked, onUpgrade }: { onRegister:
 
 type LiveFixture = { h: string; a: string; t: string; group: string; kickoffAt: string | null; live: { minute: number | null; homeGoals: number; awayGoals: number } | null };
 
+// Ligas a futuro: por ahora solo el Mundial tiene datos/modelo cargados, el resto se muestra
+// como "Próximamente" para que el usuario vea hacia dónde va creciendo la app sin prometer algo que no funciona.
+const LEAGUES = [
+  { id: 'wc', name: 'Mundial 2026', flag: '🌎', available: true },
+  { id: 'pl', name: 'Premier League', flag: '🏴', available: false },
+  { id: 'seriea', name: 'Serie A', flag: '🇮🇹', available: false },
+  { id: 'laliga', name: 'La Liga', flag: '🇪🇸', available: false },
+  { id: 'bundesliga', name: 'Bundesliga', flag: '🇩🇪', available: false },
+  { id: 'ligue1', name: 'Ligue 1', flag: '🇫🇷', available: false },
+  { id: 'chile', name: 'Fútbol Chileno', flag: '🇨🇱', available: false },
+];
+
+function LeagueSelector({ league, setLeague }: { league: string; setLeague: (id: string) => void }) {
+  return (
+    <div style={card}>
+      <div style={secTitle}>Liga</div>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+        {LEAGUES.map(l => (
+          <button
+            key={l.id}
+            disabled={!l.available}
+            onClick={() => l.available && setLeague(l.id)}
+            title={l.available ? l.name : `${l.name} — Próximamente`}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+              minWidth: 96, flexShrink: 0, padding: '10px 12px', borderRadius: 10,
+              border: league === l.id ? '1px solid #c9a84c' : '1px solid rgba(201,168,76,.15)',
+              background: league === l.id ? 'rgba(201,168,76,.12)' : 'var(--sur2)',
+              cursor: l.available ? 'pointer' : 'not-allowed',
+              opacity: l.available ? 1 : 0.45,
+              fontFamily: "'Outfit',sans-serif",
+            }}
+          >
+            <span style={{ fontSize: 20 }}>{l.flag}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: league === l.id ? '#c9a84c' : '#f0ece0', textAlign: 'center', lineHeight: 1.2 }}>{l.name}</span>
+            {!l.available && <span style={{ fontSize: 9, color: '#7a8aaa', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '.04em' }}>Próximamente</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Sin "timeZone" explícito: Intl usa la zona horaria del dispositivo del cliente automáticamente,
 // para que cada usuario vea la hora del partido convertida a su propia hora local.
 const dayFmt = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
@@ -116,6 +159,7 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
     if (last && last.day === m.group) last.items.push({ m, idx });
     else upcomingByDay.push({ day: m.group, items: [{ m, idx }] });
   });
+  const [league, setLeague] = useState('wc');
   const [home, setHome] = useState('');
   const [away, setAway] = useState('');
   const [neutral, setNeutral] = useState(true);
@@ -329,6 +373,8 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
     <div style={{ maxWidth: 780 }}>
       <h1 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 26, marginBottom: 6 }}>¿Conviene apostar a este partido?</h1>
       <p style={{ fontSize: 13, color: '#7a8aaa', marginBottom: '1.5rem' }}>Ingresa las cuotas de tu casa y te decimos si hay ventaja.</p>
+
+      <LeagueSelector league={league} setLeague={setLeague} />
 
       {/* PASO 1 — PARTIDO */}
       <div style={card}>
