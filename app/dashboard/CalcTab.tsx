@@ -687,6 +687,19 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
                   </div>
                 ))}
               </div>
+              <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 8, marginTop: 10, color: '#7a8aaa' }}>
+                {(() => {
+                  const homeOut = lineupChanges?.home?.out.length ?? 0;
+                  const awayOut = lineupChanges?.away?.out.length ?? 0;
+                  if (!lineupChanges?.home && !lineupChanges?.away) return null;
+                  if (homeOut === 0 && awayOut === 0) return <span>Ninguno de los dos equipos rotó su 11 titular respecto a su partido anterior — el análisis de arriba no necesita ajuste por este motivo.</span>;
+                  const parts: string[] = [];
+                  if (lineupChanges?.home && homeOut > 0) parts.push(`${home} rotó ${homeOut} titular${homeOut > 1 ? 'es' : ''}`);
+                  if (lineupChanges?.away && awayOut > 0) parts.push(`${away} rotó ${awayOut} titular${awayOut > 1 ? 'es' : ''}`);
+                  const mainTeam = homeOut >= awayOut ? home : away;
+                  return <span>{parts.join(' y ')} respecto a su partido anterior. Esto no está reflejado en el cálculo del modelo (que se basa en estadísticas acumuladas, no en quién juega hoy) — si son jugadores clave los que salen, el rendimiento real de {mainTeam} podría ser distinto a lo que muestra arriba.</span>;
+                })()}
+              </div>
             </div>
           )}
 
