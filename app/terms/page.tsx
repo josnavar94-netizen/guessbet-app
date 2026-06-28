@@ -3,7 +3,7 @@ export default function TermsPage() {
     <div style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(1.5rem + env(safe-area-inset-top)) 1.25rem 5rem', color: '#f0ece0', lineHeight: 1.7 }}>
       <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#c9a84c', marginBottom: '1.5rem', textDecoration: 'none' }}>← Volver a GuessBet</a>
       <h1 style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 28, marginBottom: 8 }}>Términos y Condiciones</h1>
-      <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: '2rem' }}>Última actualización: 23 de junio de 2026 · Versión 1.0</p>
+      <p style={{ fontSize: 12, color: '#7a8aaa', marginBottom: '2rem' }}>Última actualización: 28 de junio de 2026 · Versión 1.1</p>
 
       <p style={{ marginBottom: 16, fontSize: 13, color: '#7a8aaa' }}>
         Este documento es un borrador general y no constituye asesoría legal. Antes de operar GuessBet comercialmente, hazlo revisar por un abogado, especialmente en lo relativo a regulación de juego/apuestas en tu jurisdicción.
@@ -26,7 +26,14 @@ export default function TermsPage() {
 
       <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: '2rem', marginBottom: 8 }}>4. Juego responsable</h2>
       <p style={{ marginBottom: 16, fontSize: 14 }}>
-        Si sientes que las apuestas están afectando tu vida personal, financiera o emocional, te recomendamos buscar ayuda profesional o líneas de apoyo para juego responsable disponibles en tu país.
+        GuessBet está pensado como una herramienta de análisis para apostadores informados y disciplinados, no para incentivar el juego frecuente o compulsivo. Por eso ponemos a tu disposición, en Mi cuenta → Juego controlado:
+      </p>
+      <ul style={{ marginBottom: 16, fontSize: 14, paddingLeft: 20 }}>
+        <li style={{ marginBottom: 8 }}>Un <strong>límite semanal de apuestas autoimpuesto</strong>, que se aplica a tu cuenta sin importar tu plan. Puedes bajarlo cuando quieras de forma inmediata; subirlo o quitarlo demora 24 horas en activarse, intencionalmente, para que una decisión impulsiva en medio de una mala racha no lo levante al instante.</li>
+        <li>Una <strong>autoevaluación breve</strong> (cuestionario BBGS, usado en estudios clínicos) para que puedas notar tú mismo señales de alerta. No almacenamos ni vemos tus respuestas.</li>
+      </ul>
+      <p style={{ marginBottom: 16, fontSize: 14 }}>
+        Si sientes que las apuestas están afectando tu vida personal, financiera o emocional, te recomendamos usar estas herramientas y, sobre todo, buscar ayuda profesional o líneas de apoyo para juego responsable disponibles en tu país.
       </p>
 
       <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: '2rem', marginBottom: 8 }}>5. Cuenta y uso aceptable</h2>
