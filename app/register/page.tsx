@@ -1,6 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import LegalModal from '../LegalModal';
+import TermsContent from '../terms/Content';
+import PrivacyContent from '../privacy/Content';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -11,6 +14,7 @@ export default function RegisterPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [openedTerms, setOpenedTerms] = useState(false);
   const [openedPrivacy, setOpenedPrivacy] = useState(false);
+  const [modal, setModal] = useState<'terms' | 'privacy' | null>(null);
   const canAccept = openedTerms && openedPrivacy;
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -81,11 +85,11 @@ export default function RegisterPage() {
               Antes de continuar, abre y lee estos dos documentos:
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-              <a
-                href="/terms" target="_blank" rel="noopener noreferrer" onClick={() => setOpenedTerms(true)}
+              <button
+                type="button" onClick={() => setModal('terms')}
                 style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none',
-                  padding: '10px 14px', borderRadius: 9, fontSize: 13, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', width: '100%',
+                  padding: '10px 14px', borderRadius: 9, fontSize: 13, fontWeight: 700, fontFamily: "'Outfit',sans-serif", cursor: 'pointer',
                   background: openedTerms ? 'rgba(58,174,108,.12)' : 'rgba(201,168,76,.14)',
                   border: `1px solid ${openedTerms ? 'rgba(58,174,108,.4)' : 'rgba(201,168,76,.4)'}`,
                   color: openedTerms ? '#3aae6c' : '#c9a84c',
@@ -93,12 +97,12 @@ export default function RegisterPage() {
               >
                 <span>📄 Términos y Condiciones</span>
                 <span>{openedTerms ? '✓ Leído' : 'Abrir →'}</span>
-              </a>
-              <a
-                href="/privacy" target="_blank" rel="noopener noreferrer" onClick={() => setOpenedPrivacy(true)}
+              </button>
+              <button
+                type="button" onClick={() => setModal('privacy')}
                 style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none',
-                  padding: '10px 14px', borderRadius: 9, fontSize: 13, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', width: '100%',
+                  padding: '10px 14px', borderRadius: 9, fontSize: 13, fontWeight: 700, fontFamily: "'Outfit',sans-serif", cursor: 'pointer',
                   background: openedPrivacy ? 'rgba(58,174,108,.12)' : 'rgba(201,168,76,.14)',
                   border: `1px solid ${openedPrivacy ? 'rgba(58,174,108,.4)' : 'rgba(201,168,76,.4)'}`,
                   color: openedPrivacy ? '#3aae6c' : '#c9a84c',
@@ -106,7 +110,7 @@ export default function RegisterPage() {
               >
                 <span>📄 Política de Privacidad</span>
                 <span>{openedPrivacy ? '✓ Leído' : 'Abrir →'}</span>
-              </a>
+              </button>
             </div>
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: canAccept ? '#7a8aaa' : '#4a5468', margin: '0 0 14px', cursor: canAccept ? 'pointer' : 'not-allowed', lineHeight: 1.5 }}>
               <input
@@ -128,6 +132,16 @@ export default function RegisterPage() {
           ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
         </p>
       </div>
+      {modal === 'terms' && (
+        <LegalModal title="Términos y Condiciones" onClose={(read) => { if (read) setOpenedTerms(true); setModal(null); }}>
+          <TermsContent />
+        </LegalModal>
+      )}
+      {modal === 'privacy' && (
+        <LegalModal title="Política de Privacidad" onClose={(read) => { if (read) setOpenedPrivacy(true); setModal(null); }}>
+          <PrivacyContent />
+        </LegalModal>
+      )}
     </div>
   );
 }
