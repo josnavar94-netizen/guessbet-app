@@ -53,8 +53,25 @@ export async function POST(req: NextRequest) {
     if (!deviceId) deviceId = randomUUID();
     const ip = getClientIp(req);
 
-    const userResult = await sql`SELECT plan FROM users WHERE id=${s.userId}`;
+    const userResult = await sql`SELECT plan, weekly_bet_limit FROM users WHERE id=${s.userId}`;
     const plan = userResult.rows[0]?.plan ?? 'free';
+    const weeklyLimit: number | null = userResult.rows[0]?.weekly_bet_limit ?? null;
+
+    // Límite semanal autoimpuesto por el propio usuario (juego controlado): se respeta para
+    // TODOS los planes, incluido Premium, porque lo elige el usuario, no el plan que paga.
+    if (weeklyLimit !== null) {
+      const weekUsage = await sql`
+        SELECT COUNT(*)::int AS count FROM bets
+        WHERE user_id=${s.userId}
+          AND created_at >= ((date_trunc('week', NOW() AT TIME ZONE 'America/Santiago')) AT TIME ZONE 'America/Santiago')
+      `;
+      if (weekUsage.rows[0].count >= weeklyLimit) {
+        return NextResponse.json(
+          { error: `Alcanzaste el límite de ${weeklyLimit} apuesta${weeklyLimit === 1 ? '' : 's'} por semana que tú mismo definiste en Mi cuenta → Juego controlado.` },
+          { status: 403 }
+        );
+      }
+    }
 
     if (plan !== 'premium') {
       // "Hoy" se calcula en hora de Chile, no UTC: si no, el límite diario se reinicia a las

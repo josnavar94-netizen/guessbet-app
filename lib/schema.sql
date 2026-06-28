@@ -184,3 +184,10 @@ CREATE TABLE IF NOT EXISTS team_refs (
   team VARCHAR(100) PRIMARY KEY,
   api_football_id INTEGER NOT NULL
 );
+
+-- Migración: límite semanal de apuestas autoimpuesto por el propio usuario (juego controlado), aplica a todos
+-- los planes incluido Premium. Bajarlo o desactivarlo NO aplica de inmediato (24h de "enfriamiento") a propósito:
+-- así una decisión impulsiva en medio de una mala racha no puede levantar el límite al instante.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_bet_limit INTEGER;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_bet_limit_pending INTEGER;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_bet_limit_pending_at TIMESTAMP;

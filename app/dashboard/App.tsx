@@ -353,7 +353,7 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
   const rowLabel: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 };
   const fieldStyle: React.CSSProperties = { width: '100%', background: 'var(--sur2)', border: '1px solid rgba(201,168,76,.24)', color: '#f0ece0', fontFamily: "'Outfit',sans-serif", fontSize: 14, padding: '0 12px', height: 40, borderRadius: 9 };
 
-  const [section, setSection] = useState<'menu' | 'personal' | 'security' | 'payment' | 'support' | 'legal' | 'notifications'>('menu');
+  const [section, setSection] = useState<'menu' | 'personal' | 'security' | 'payment' | 'support' | 'legal' | 'notifications' | 'limits'>('menu');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(avatar || null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -363,6 +363,65 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
   const [supportMessage, setSupportMessage] = useState('');
   const [supportSending, setSupportSending] = useState(false);
   const [supportMsg, setSupportMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  // Juego controlado: límite semanal de apuestas que el propio usuario se impone.
+  const [weeklyLimit, setWeeklyLimit] = useState<number | null>(null);
+  const [pendingLimit, setPendingLimit] = useState<number | null>(null);
+  const [pendingAt, setPendingAt] = useState<string | null>(null);
+  const [limitInput, setLimitInput] = useState('');
+  const [limitSaving, setLimitSaving] = useState(false);
+  const [limitMsg, setLimitMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [bbgsAnswers, setBbgsAnswers] = useState<(boolean | null)[]>([null, null, null, null]);
+  const [bbgsShowResult, setBbgsShowResult] = useState(false);
+
+  useEffect(() => {
+    if (section !== 'limits') return;
+    fetch('/api/auth/limits').then(r => r.json()).then(d => {
+      setWeeklyLimit(d.weeklyLimit);
+      setPendingLimit(d.pendingLimit);
+      setPendingAt(d.pendingAt);
+      setLimitInput(d.weeklyLimit != null ? String(d.weeklyLimit) : '');
+    }).catch(() => {});
+  }, [section]);
+
+  async function saveWeeklyLimit() {
+    const value = limitInput.trim() === '' ? null : parseInt(limitInput, 10);
+    if (value !== null && (isNaN(value) || value < 1 || value > 100)) {
+      setLimitMsg({ type: 'err', text: 'Ingresa un número entre 1 y 100, o déjalo vacío para no tener límite.' });
+      return;
+    }
+    setLimitSaving(true);
+    setLimitMsg(null);
+    const res = await fetch('/api/auth/limits', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weeklyLimit: value }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setLimitSaving(false);
+    if (res.ok) {
+      setWeeklyLimit(data.weeklyLimit);
+      setPendingLimit(data.pendingLimit);
+      setPendingAt(data.pendingAt);
+      setLimitMsg({
+        type: 'ok',
+        text: data.pendingAt
+          ? `Guardado. Como es menos restrictivo que tu límite actual, se activará en 24 horas (${new Date(data.pendingAt).toLocaleString('es-CL')}) — así no lo cambias de golpe en medio de una mala racha.`
+          : 'Límite actualizado.',
+      });
+    } else {
+      setLimitMsg({ type: 'err', text: data?.error || 'No se pudo guardar.' });
+    }
+  }
+
+  const BBGS_QUESTIONS = [
+    'Durante el último año, ¿te has sentido inquieto, irritable o ansioso cuando tratas de reducir o dejar de apostar?',
+    'Durante el último año, ¿has intentado ocultar a tu familia o amigos cuánto apuestas?',
+    'Durante el último año, ¿has tenido problemas de dinero por apostar que te hayan obligado a pedir ayuda económica a otros?',
+    'Durante el último año, ¿has apostado más dinero del que en realidad podías permitirte perder?',
+  ];
+  const bbgsComplete = bbgsAnswers.every(a => a !== null);
+  const bbgsRiskCount = bbgsAnswers.filter(a => a === true).length;
 
   async function sendSupportMessage() {
     if (!supportSubject.trim() || !supportMessage.trim()) { setSupportMsg({ type: 'err', text: 'Completa el asunto y el mensaje.' }); return; }
@@ -557,10 +616,11 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
             { key: 'security' as const, icon: '🔒', label: 'Seguridad y contraseña' },
             { key: 'payment' as const, icon: '💳', label: 'Método de pago' },
             { key: 'support' as const, icon: '💬', label: 'Soporte' },
+            { key: 'limits' as const, icon: '🎯', label: 'Juego controlado' },
             { key: 'legal' as const, icon: '📜', label: 'Términos y privacidad' },
             { key: 'notifications' as const, icon: '🔔', label: 'Notificaciones' },
-          ].map((item, i) => (
-            <button key={item.key} onClick={() => setSection(item.key)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', borderBottom: i < 5 ? '1px solid rgba(201,168,76,.1)' : 'none', padding: '13px 2px', fontSize: 14, color: '#f0ece0', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", textAlign: 'left' }}>
+          ].map((item, i, arr) => (
+            <button key={item.key} onClick={() => setSection(item.key)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', borderBottom: i < arr.length - 1 ? '1px solid rgba(201,168,76,.1)' : 'none', padding: '13px 2px', fontSize: 14, color: '#f0ece0', cursor: 'pointer', fontFamily: "'Outfit',sans-serif", textAlign: 'left' }}>
               <span style={{ fontSize: 16, width: 20, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
               <span style={{ flex: 1 }}>{item.label}</span>
               <span style={{ color: '#7a8aaa', fontSize: 14 }}>›</span>
@@ -657,6 +717,82 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
             </>
           )}
         </div>
+      )}
+
+      {section === 'limits' && (
+        <>
+          <div style={card}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>🎯 Límite semanal de apuestas</div>
+            <p style={{ fontSize: 12, color: '#7a8aaa', lineHeight: 1.6, marginBottom: 14 }}>
+              Define cuántas apuestas como máximo quieres registrar por semana (lunes a domingo). Se aplica a tu cuenta sin importar tu plan — incluso si eres PRO. Bajarlo es inmediato; subirlo o quitarlo demora 24 horas en activarse, a propósito.
+            </p>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+              <input
+                type="number" min="1" max="100" placeholder="Sin límite"
+                value={limitInput} onChange={e => setLimitInput(e.target.value)}
+                style={{ ...fieldStyle, width: 140 }}
+              />
+              <button onClick={saveWeeklyLimit} disabled={limitSaving} style={{ height: 40, padding: '0 16px', background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontSize: 13, fontWeight: 700, borderRadius: 9, border: 'none', cursor: 'pointer', opacity: limitSaving ? .6 : 1 }}>
+                {limitSaving ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+            {weeklyLimit != null && (
+              <div style={{ fontSize: 12, color: '#7a8aaa', marginBottom: 6 }}>Límite activo: <strong style={{ color: '#f0ece0' }}>{weeklyLimit} apuesta{weeklyLimit === 1 ? '' : 's'}/semana</strong></div>
+            )}
+            {pendingAt && (
+              <div style={{ fontSize: 12, color: '#c9a84c', marginBottom: 6 }}>
+                Cambio pendiente a {pendingLimit == null ? 'sin límite' : `${pendingLimit}/semana`} — se activa el {new Date(pendingAt).toLocaleString('es-CL')}.
+              </div>
+            )}
+            {limitMsg && <div style={{ fontSize: 12, marginTop: 6, color: limitMsg.type === 'ok' ? '#3aae6c' : '#d95050' }}>{limitMsg.text}</div>}
+          </div>
+
+          <div style={card}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>🩺 Autoevaluación rápida</div>
+            <p style={{ fontSize: 12, color: '#7a8aaa', lineHeight: 1.6, marginBottom: 14 }}>
+              Cuestionario breve (BBGS, usado en estudios clínicos) para que tú mismo notes señales de alerta. No se guarda ni se envía a ningún lado — solo es para ti.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {BBGS_QUESTIONS.map((q, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 13, marginBottom: 6 }}>{q}</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(opt => (
+                      <button
+                        key={String(opt.v)}
+                        onClick={() => { setBbgsAnswers(prev => prev.map((a, j) => j === i ? opt.v : a)); setBbgsShowResult(false); }}
+                        style={{
+                          padding: '6px 16px', fontSize: 12, borderRadius: 8, cursor: 'pointer', fontFamily: "'Outfit',sans-serif",
+                          border: bbgsAnswers[i] === opt.v ? '1px solid #c9a84c' : '1px solid rgba(201,168,76,.18)',
+                          background: bbgsAnswers[i] === opt.v ? 'rgba(201,168,76,.15)' : 'var(--sur2)',
+                          color: bbgsAnswers[i] === opt.v ? '#c9a84c' : '#f0ece0',
+                        }}
+                      >{opt.l}</button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setBbgsShowResult(true)}
+              disabled={!bbgsComplete}
+              style={{ marginTop: 14, height: 38, padding: '0 16px', background: 'transparent', border: '1px solid rgba(201,168,76,.3)', color: '#c9a84c', fontSize: 13, fontWeight: 600, borderRadius: 9, cursor: bbgsComplete ? 'pointer' : 'not-allowed', opacity: bbgsComplete ? 1 : .4, fontFamily: "'Outfit',sans-serif" }}
+            >
+              Ver resultado
+            </button>
+            {bbgsShowResult && (
+              bbgsRiskCount > 0 ? (
+                <div style={{ marginTop: 12, background: 'rgba(217,80,80,.1)', border: '1px solid rgba(217,80,80,.3)', borderRadius: 9, padding: '12px 14px', fontSize: 12, color: '#f0ece0', lineHeight: 1.6 }}>
+                  Respondiste "Sí" en {bbgsRiskCount} de 4 preguntas. Eso no es un diagnóstico, pero sí una señal real de alerta. Te recomendamos hablar con un profesional o una línea de ayuda especializada en juego. Mientras tanto, considera bajar tu límite semanal arriba.
+                </div>
+              ) : (
+                <div style={{ marginTop: 12, background: 'rgba(58,174,108,.1)', border: '1px solid rgba(58,174,108,.3)', borderRadius: 9, padding: '12px 14px', fontSize: 12, color: '#f0ece0', lineHeight: 1.6 }}>
+                  No marcaste ninguna señal de alerta de las que mide este cuestionario. Aun así, revisar esto de tanto en tanto es una buena práctica si apuestas con regularidad.
+                </div>
+              )
+            )}
+          </div>
+        </>
       )}
 
       {section === 'legal' && (
