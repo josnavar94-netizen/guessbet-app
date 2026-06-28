@@ -134,12 +134,15 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
 
   // Cambios de alineación titular vs. el partido anterior de cada equipo en este Mundial
   // (solo si ya hay alineación confirmada del partido elegido, ~30-40 min antes del kickoff).
-  const [lineupChanges, setLineupChanges] = useState<{ home: { out: string[]; in: string[] } | null; away: { out: string[]; in: string[] } | null } | null>(null);
+  type TeamLineupChanges = { status: 'no_lineup' } | { status: 'no_previous' } | { status: 'ok'; out: string[]; in: string[] };
+  const [lineupChanges, setLineupChanges] = useState<{ home: TeamLineupChanges | null; away: TeamLineupChanges | null } | null>(null);
   useEffect(() => {
     if (!home || !away) return;
-    fetch(`/api/lineup-changes?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`)
+    const kickoffAt = upcoming.find(u => u.h === home && u.a === away)?.kickoffAt;
+    const qs = new URLSearchParams({ home, away, ...(kickoffAt ? { kickoffAt } : {}) });
+    fetch(`/api/lineup-changes?${qs.toString()}`)
       .then(r => r.json()).then(d => setLineupChanges(d)).catch(() => setLineupChanges(null));
-  }, [home, away]);
+  }, [home, away, upcoming]);
 
   // Cuotas reales por casa (Coolbet/1xBet vía The Odds API, Betano vía OddsPapi).
   // Jugabet/Bet365/Otra no tienen cobertura en ninguna API revisada y siguen siempre manuales.
@@ -667,41 +670,52 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
           </div>
 
           {/* Cambios de alineación */}
-          {(lineupChanges?.home || lineupChanges?.away) && (
-            <div style={{ background: 'var(--sur2)', border: '1px solid rgba(217,80,80,.2)', borderRadius: 10, padding: '14px 16px', marginBottom: '1rem', fontSize: 12, lineHeight: 1.8 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#d95050', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 10 }}>🔄 Cambios de alineación vs. su partido anterior</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                {[{ name: home, c: lineupChanges?.home }, { name: away, c: lineupChanges?.away }].map((t, i) => (
-                  <div key={i} style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.1)', borderRadius: 8, padding: '10px 12px' }}>
-                    <div style={{ fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><Flag name={t.name} />{t.name}</div>
-                    {!t.c ? (
-                      <div style={{ fontSize: 11, color: '#7a8aaa' }}>Sin alineación previa registrada este Mundial — no hay con qué comparar.</div>
-                    ) : t.c.out.length === 0 ? (
-                      <div style={{ fontSize: 11, color: '#3aae6c' }}>Mismo 11 titular que la vez anterior.</div>
-                    ) : (
-                      <>
-                        <div style={{ fontSize: 11, color: '#d95050', marginBottom: 4 }}>Salen ({t.c.out.length}): {t.c.out.join(', ')}</div>
-                        <div style={{ fontSize: 11, color: '#3aae6c' }}>Entran ({t.c.in.length}): {t.c.in.join(', ')}</div>
-                      </>
-                    )}
-                  </div>
-                ))}
+          {lineupChanges && (() => {
+            const bothNoLineup = lineupChanges.home?.status === 'no_lineup' && lineupChanges.away?.status === 'no_lineup';
+            const homeOut = lineupChanges.home?.status === 'ok' ? lineupChanges.home.out.length : 0;
+            const awayOut = lineupChanges.away?.status === 'ok' ? lineupChanges.away.out.length : 0;
+            return (
+              <div style={{ background: 'var(--sur2)', border: '1px solid rgba(217,80,80,.2)', borderRadius: 10, padding: '14px 16px', marginBottom: '1rem', fontSize: 12, lineHeight: 1.8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#d95050', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 10 }}>🔄 Alineaciones titulares</div>
+                {bothNoLineup ? (
+                  <div style={{ color: '#7a8aaa' }}>Las alineaciones aún no han sido confirmadas. Suelen publicarse ~30-40 min antes del partido.</div>
+                ) : (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      {[{ name: home, c: lineupChanges.home }, { name: away, c: lineupChanges.away }].map((t, i) => (
+                        <div key={i} style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.1)', borderRadius: 8, padding: '10px 12px' }}>
+                          <div style={{ fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><Flag name={t.name} />{t.name}</div>
+                          {!t.c || t.c.status === 'no_lineup' ? (
+                            <div style={{ fontSize: 11, color: '#7a8aaa' }}>Alineación todavía no confirmada.</div>
+                          ) : t.c.status === 'no_previous' ? (
+                            <div style={{ fontSize: 11, color: '#7a8aaa' }}>Confirmada, pero es su primer partido registrado este Mundial — no hay con qué comparar.</div>
+                          ) : t.c.out.length === 0 ? (
+                            <div style={{ fontSize: 11, color: '#3aae6c' }}>Confirmada. Mismo 11 titular que la vez anterior.</div>
+                          ) : (
+                            <>
+                              <div style={{ fontSize: 11, color: '#d95050', marginBottom: 4 }}>Salen ({t.c.out.length}): {t.c.out.join(', ')}</div>
+                              <div style={{ fontSize: 11, color: '#3aae6c' }}>Entran ({t.c.in.length}): {t.c.in.join(', ')}</div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 8, marginTop: 10, color: '#7a8aaa' }}>
+                      {homeOut === 0 && awayOut === 0 ? (
+                        <span>Ningún equipo con alineación confirmada rotó su 11 titular respecto a su partido anterior — el análisis de arriba no necesita ajuste por este motivo.</span>
+                      ) : (() => {
+                        const parts: string[] = [];
+                        if (homeOut > 0) parts.push(`${home} rotó ${homeOut} titular${homeOut > 1 ? 'es' : ''}`);
+                        if (awayOut > 0) parts.push(`${away} rotó ${awayOut} titular${awayOut > 1 ? 'es' : ''}`);
+                        const mainTeam = homeOut >= awayOut ? home : away;
+                        return <span>{parts.join(' y ')} respecto a su partido anterior. Esto no está reflejado en el cálculo del modelo (que se basa en estadísticas acumuladas, no en quién juega hoy) — si son jugadores clave los que salen, el rendimiento real de {mainTeam} podría ser distinto a lo que muestra arriba.</span>;
+                      })()}
+                    </div>
+                  </>
+                )}
               </div>
-              <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 8, marginTop: 10, color: '#7a8aaa' }}>
-                {(() => {
-                  const homeOut = lineupChanges?.home?.out.length ?? 0;
-                  const awayOut = lineupChanges?.away?.out.length ?? 0;
-                  if (!lineupChanges?.home && !lineupChanges?.away) return null;
-                  if (homeOut === 0 && awayOut === 0) return <span>Ninguno de los dos equipos rotó su 11 titular respecto a su partido anterior — el análisis de arriba no necesita ajuste por este motivo.</span>;
-                  const parts: string[] = [];
-                  if (lineupChanges?.home && homeOut > 0) parts.push(`${home} rotó ${homeOut} titular${homeOut > 1 ? 'es' : ''}`);
-                  if (lineupChanges?.away && awayOut > 0) parts.push(`${away} rotó ${awayOut} titular${awayOut > 1 ? 'es' : ''}`);
-                  const mainTeam = homeOut >= awayOut ? home : away;
-                  return <span>{parts.join(' y ')} respecto a su partido anterior. Esto no está reflejado en el cálculo del modelo (que se basa en estadísticas acumuladas, no en quién juega hoy) — si son jugadores clave los que salen, el rendimiento real de {mainTeam} podría ser distinto a lo que muestra arriba.</span>;
-                })()}
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Bet Builder */}
           {selected.length > 0 && (
