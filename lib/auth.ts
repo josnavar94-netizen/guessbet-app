@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { sql } from '@/lib/db';
 
 const COOKIE = 'gb_session';
-const DURATION = 60 * 15; // 15 minutos; el middleware la renueva mientras haya actividad (cierre por inactividad)
+const DURATION = 60 * 60 * 24 * 30; // 30 días; la sesión se mantiene hasta que el usuario cierre sesión manualmente
 
 function getKey() {
   if (!process.env.JWT_SECRET && process.env.VERCEL_ENV === 'production') {
