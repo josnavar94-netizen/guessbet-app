@@ -9,6 +9,9 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [openedTerms, setOpenedTerms] = useState(false);
+  const [openedPrivacy, setOpenedPrivacy] = useState(false);
+  const canAccept = openedTerms && openedPrivacy;
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -74,16 +77,29 @@ export default function RegisterPage() {
                 <p style={{ fontSize: 12, color: '#d95050', marginTop: 6 }}>Debes ser mayor de 18 años para crear una cuenta en GuessBet.</p>
               )}
             </div>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: '#7a8aaa', margin: '14px 0', cursor: 'pointer', lineHeight: 1.5 }}>
-              <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} style={{ marginTop: 2, accentColor: '#c9a84c' }} required />
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: canAccept ? '#7a8aaa' : '#4a5468', margin: '14px 0', cursor: canAccept ? 'pointer' : 'not-allowed', lineHeight: 1.5 }}>
+              <input
+                type="checkbox" checked={acceptedTerms} disabled={!canAccept}
+                onChange={e => setAcceptedTerms(e.target.checked)}
+                style={{ marginTop: 2, accentColor: '#c9a84c' }} required
+              />
               <span>
                 Acepto los{' '}
-                <a href="/terms" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a>{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={() => setOpenedTerms(true)} style={{ color: openedTerms ? '#3aae6c' : undefined }}>
+                  Términos y Condiciones{openedTerms && ' ✓'}
+                </a>{' '}
                 y la{' '}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={() => setOpenedPrivacy(true)} style={{ color: openedPrivacy ? '#3aae6c' : undefined }}>
+                  Política de Privacidad{openedPrivacy && ' ✓'}
+                </a>.
               </span>
             </label>
-            <button type="submit" className="btn-primary" disabled={loading || !acceptedTerms || (birthDate !== '' && !isAdult(birthDate))}>
+            {!canAccept && (
+              <p style={{ fontSize: 11, color: '#7a8aaa', marginTop: -6, marginBottom: 14 }}>
+                Abre ambos documentos (se marcan con ✓) para poder aceptarlos.
+              </p>
+            )}
+            <button type="submit" className="btn-primary" disabled={loading || !acceptedTerms || !canAccept || (birthDate !== '' && !isAdult(birthDate))}>
               {loading ? 'Creando cuenta...' : 'Crear cuenta gratis'}
             </button>
           </form>
