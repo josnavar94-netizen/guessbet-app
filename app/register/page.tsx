@@ -77,28 +77,48 @@ export default function RegisterPage() {
                 <p style={{ fontSize: 12, color: '#d95050', marginTop: 6 }}>Debes ser mayor de 18 años para crear una cuenta en GuessBet.</p>
               )}
             </div>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: canAccept ? '#7a8aaa' : '#4a5468', margin: '14px 0', cursor: canAccept ? 'pointer' : 'not-allowed', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12, color: '#7a8aaa', margin: '14px 0 8px' }}>
+              Antes de continuar, abre y lee estos dos documentos:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+              <a
+                href="/terms" target="_blank" rel="noopener noreferrer" onClick={() => setOpenedTerms(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none',
+                  padding: '10px 14px', borderRadius: 9, fontSize: 13, fontWeight: 700,
+                  background: openedTerms ? 'rgba(58,174,108,.12)' : 'rgba(201,168,76,.14)',
+                  border: `1px solid ${openedTerms ? 'rgba(58,174,108,.4)' : 'rgba(201,168,76,.4)'}`,
+                  color: openedTerms ? '#3aae6c' : '#c9a84c',
+                }}
+              >
+                <span>📄 Términos y Condiciones</span>
+                <span>{openedTerms ? '✓ Leído' : 'Abrir →'}</span>
+              </a>
+              <a
+                href="/privacy" target="_blank" rel="noopener noreferrer" onClick={() => setOpenedPrivacy(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none',
+                  padding: '10px 14px', borderRadius: 9, fontSize: 13, fontWeight: 700,
+                  background: openedPrivacy ? 'rgba(58,174,108,.12)' : 'rgba(201,168,76,.14)',
+                  border: `1px solid ${openedPrivacy ? 'rgba(58,174,108,.4)' : 'rgba(201,168,76,.4)'}`,
+                  color: openedPrivacy ? '#3aae6c' : '#c9a84c',
+                }}
+              >
+                <span>📄 Política de Privacidad</span>
+                <span>{openedPrivacy ? '✓ Leído' : 'Abrir →'}</span>
+              </a>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: canAccept ? '#7a8aaa' : '#4a5468', margin: '0 0 14px', cursor: canAccept ? 'pointer' : 'not-allowed', lineHeight: 1.5 }}>
               <input
                 type="checkbox" checked={acceptedTerms} disabled={!canAccept}
                 onChange={e => setAcceptedTerms(e.target.checked)}
                 style={{ marginTop: 2, accentColor: '#c9a84c' }} required
               />
               <span>
-                Acepto los{' '}
-                <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={() => setOpenedTerms(true)} style={{ color: openedTerms ? '#3aae6c' : undefined }}>
-                  Términos y Condiciones{openedTerms && ' ✓'}
-                </a>{' '}
-                y la{' '}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={() => setOpenedPrivacy(true)} style={{ color: openedPrivacy ? '#3aae6c' : undefined }}>
-                  Política de Privacidad{openedPrivacy && ' ✓'}
-                </a>.
+                Acepto los Términos y Condiciones y la Política de Privacidad.
+                {!canAccept && <span style={{ display: 'block', fontSize: 11, marginTop: 4 }}>Abre ambos documentos arriba para poder aceptarlos.</span>}
               </span>
             </label>
-            {!canAccept && (
-              <p style={{ fontSize: 11, color: '#7a8aaa', marginTop: -6, marginBottom: 14 }}>
-                Abre ambos documentos (se marcan con ✓) para poder aceptarlos.
-              </p>
-            )}
             <button type="submit" className="btn-primary" disabled={loading || !acceptedTerms || !canAccept || (birthDate !== '' && !isAdult(birthDate))}>
               {loading ? 'Creando cuenta...' : 'Crear cuenta gratis'}
             </button>
