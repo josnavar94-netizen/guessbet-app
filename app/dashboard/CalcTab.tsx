@@ -144,6 +144,16 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
       .then(r => r.json()).then(d => setLineupChanges(d)).catch(() => setLineupChanges(null));
   }, [home, away, upcoming]);
 
+  // Historial real entre los dos equipos (todo el historial: amistosos, eliminatorias, etc.),
+  // calculado en el servidor desde el dataset completo en vez de la tabla estática (que quedaba
+  // desactualizada e incompleta — ej. no tenía amistosos viejos entre selecciones poco comunes).
+  const [realH2H, setRealH2H] = useState<{ n: number; w1: number; d: number; l1: number; avgGF1: number; avgGA1: number } | null>(null);
+  useEffect(() => {
+    if (!home || !away) { setRealH2H(null); return; }
+    fetch(`/api/h2h?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`)
+      .then(r => r.json()).then(d => setRealH2H(d.error ? null : d)).catch(() => setRealH2H(null));
+  }, [home, away]);
+
   // Cuotas reales por casa (Coolbet/1xBet vía The Odds API, Betano vía OddsPapi).
   // Jugabet/Bet365/Otra no tienen cobertura en ninguna API revisada y siguen siempre manuales.
   const BOOKMAKER_KEY: Record<string, string> = { Coolbet: 'coolbet', '1xBet': '1xbet', Betano: 'betano' };
@@ -238,10 +248,10 @@ function CalcTabUnlocked({ onRegister }: { onRegister: (bet: any) => void }) {
 
   function calc() {
     const wcReal = wcRealLive || WC_REAL;
-    const pFull = modelProbs(home, away, neutral, wcReal);
+    const pFull = modelProbs(home, away, neutral, wcReal, realH2H || undefined);
     const mH = MODEL[home], mA = MODEL[away];
     const wcH = wcReal[home], wcA = wcReal[away];
-    const hd = getH2H(home, away);
+    const hd = realH2H ? { data: realH2H, t1First: true } : getH2H(home, away);
     const min = parseInt(liveMin) || 0;
     const gh = parseInt(liveGh) || 0;
     const ga = parseInt(liveGa) || 0;

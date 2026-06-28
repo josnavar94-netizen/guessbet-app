@@ -14,8 +14,11 @@ function parseCsv(text: string): string[][] {
   return text.trim().split('\n').map(line => line.split(','));
 }
 
-export async function fetchGithubResults(opts: { fromDate: string; tournamentIncludes?: string }): Promise<GhMatch[]> {
-  const res = await fetch(CSV_URL, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+export async function fetchGithubResults(opts: { fromDate: string; tournamentIncludes?: string; revalidateSeconds?: number }): Promise<GhMatch[]> {
+  const fetchOpts: RequestInit & { next?: { revalidate: number } } = opts.revalidateSeconds
+    ? { next: { revalidate: opts.revalidateSeconds }, signal: AbortSignal.timeout(15000) }
+    : { cache: 'no-store', signal: AbortSignal.timeout(15000) };
+  const res = await fetch(CSV_URL, fetchOpts);
   if (!res.ok) throw new Error(`GitHub CSV respondió ${res.status}`);
   const rows = parseCsv(await res.text());
   const [header, ...data] = rows;

@@ -150,7 +150,7 @@ export function overProb(xgH,xgA,line){
   return pO;
 }
 
-export function modelProbs(home,away,neutral,wcRealOverride){
+export function modelProbs(home,away,neutral,wcRealOverride,h2hOverride){
   const mH=MODEL[home]||{avgGF:1.35,avgGA:1.1,elo:1500};
   const mA=MODEL[away]||{avgGF:1.35,avgGA:1.1,elo:1500};
   const eloH=(mH.elo||1500)+(neutral?0:60);
@@ -159,11 +159,15 @@ export function modelProbs(home,away,neutral,wcRealOverride){
   const eloExpA=1-eloExpH;
   let xgH=Math.max(0.15,(getXG(home,true,neutral,true,wcRealOverride)*getXG(away,false,neutral,false,wcRealOverride))/LEAGUE_AVG);
   let xgA=Math.max(0.15,(getXG(away,true,neutral,false,wcRealOverride)*getXG(home,false,neutral,true,wcRealOverride))/LEAGUE_AVG);
-  const hd=getH2H(home,away);
-  if(hd&&hd.data.n>=3){
-    const d=hd.data;
-    xgH=xgH*.85+(hd.t1First?d.avgGF1:d.avgGA1)*.15;
-    xgA=xgA*.85+(hd.t1First?d.avgGA1:d.avgGF1)*.15;
+  // Si llega el historial real (calculado en /api/h2h desde el dataset completo) se usa ese;
+  // si no, se cae al objeto estático H2H como respaldo (queda incompleto/desactualizado a propósito,
+  // solo para que el modelo no se quede sin dato si la llamada a /api/h2h falló).
+  let hdData,hdT1First;
+  if(h2hOverride&&h2hOverride.n>0){ hdData=h2hOverride; hdT1First=true; }
+  else { const hd=getH2H(home,away); if(hd){ hdData=hd.data; hdT1First=hd.t1First; } }
+  if(hdData&&hdData.n>=3){
+    xgH=xgH*.85+(hdT1First?hdData.avgGF1:hdData.avgGA1)*.15;
+    xgA=xgA*.85+(hdT1First?hdData.avgGA1:hdData.avgGF1)*.15;
   }
   const poi=(l,k)=>{let p=Math.exp(-l);for(let i=0;i<k;i++)p*=l/(i+1);return p;};
   let pH=0,pD=0,pA=0,pO=0,pB=0;
