@@ -14,13 +14,20 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const live = await fetchLiveFixtures();
-    if (live.length === 0) return NextResponse.json({ ok: true, liveFixtures: 0, updated: 0 });
-
+    // Antes esto llamaba a API-Football cada 15 min sin importar si había o no un partido en curso,
+    // gastando ~96 de las 100 solicitudes/día de cuota gratis solo en eso. Ahora solo consulta si hay
+    // un partido del Mundial cuyo kickoff fue en las últimas 3 horas (ventana realista de partido en vivo),
+    // dejando cuota real disponible para alineaciones.
     const { rows: dbMatches } = await sql`
       SELECT external_id, home_team, away_team FROM matches
       WHERE competition_code = 'WC' AND status != 'FINISHED'
+        AND kickoff_at IS NOT NULL
+        AND kickoff_at <= NOW() AND kickoff_at >= NOW() - INTERVAL '3 hours'
     `;
+    if (dbMatches.length === 0) return NextResponse.json({ ok: true, skipped: 'sin partidos en ventana de horario de juego', liveFixtures: 0, updated: 0 });
+
+    const live = await fetchLiveFixtures();
+    if (live.length === 0) return NextResponse.json({ ok: true, liveFixtures: 0, updated: 0 });
 
     let updated = 0;
     for (const f of live) {
