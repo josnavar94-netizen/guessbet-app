@@ -273,7 +273,10 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
     const bttsNo = 1 - p.btts;
     const dnbHome = p.home / (p.home + p.away || 1);
     const dnbAway = p.away / (p.home + p.away || 1);
-    const eloFav = p.eloH > p.eloA ? home : away;
+    // Con una diferencia de Elo chica (ruido estadístico, no una ventaja real) declarar un "favorito"
+    // confunde, sobre todo cuando contradice al pronóstico principal del modelo (que sí pesa goles/forma).
+    const eloDiff = Math.abs(p.eloH - p.eloA);
+    const eloFav = eloDiff < 25 ? null : p.eloH > p.eloA ? home : away;
     const h2hExpl = hd && hd.data && hd.data.n >= 3 ? `Se tomó en cuenta que estos equipos ya se enfrentaron ${hd.data.n} veces antes` : 'No hay suficientes partidos anteriores entre estos dos equipos';
     const xT = p.xgH + p.xgA;
     const co = Math.round(xT * 2.8 + 7);
@@ -679,7 +682,11 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
               ))}
             </div>
             <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 8, color: '#7a8aaa' }}>
-              <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>El favorito según el nivel histórico es <strong style={{color:'#6b9fd4',display:'flex',alignItems:'center',gap:5}}><Flag name={result.eloFav} size={13} />{result.eloFav}</strong>.</div>
+              {result.eloFav ? (
+                <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>El favorito según el nivel histórico es <strong style={{color:'#6b9fd4',display:'flex',alignItems:'center',gap:5}}><Flag name={result.eloFav} size={13} />{result.eloFav}</strong>.</div>
+              ) : (
+                <div>Según el nivel histórico (Elo) ambos equipos están muy parejos — la diferencia no es significativa.</div>
+              )}
               <div style={{marginTop:4}}>{result.h2hExpl}.</div>
               {result.live && (result.lv.rh > 0 || result.lv.ra > 0) && (
                 <div style={{color:'#d95050',marginTop:4}}>
