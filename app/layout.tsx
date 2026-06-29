@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 import OrientationLock from './OrientationLock';
 
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <OrientationLock />
         {children}
+        <Analytics />
       </body>
     </html>
   );
