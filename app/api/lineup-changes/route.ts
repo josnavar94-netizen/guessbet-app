@@ -6,9 +6,9 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 type TeamChanges =
-  | { status: 'no_lineup'; starFactorss: StarFactors }
-  | { status: 'no_previous'; starFactorss: StarFactors; starters: string[] }
-  | { status: 'ok'; out: string[]; in: string[]; prevChanges: number; rotationFactor: number; ratingDelta: number | null; starFactorss: StarFactors; starters: string[] };
+  | { status: 'no_lineup'; starFactors: StarFactors }
+  | { status: 'no_previous'; starFactors: StarFactors; starters: string[] }
+  | { status: 'ok'; out: string[]; in: string[]; prevChanges: number; rotationFactor: number; ratingDelta: number | null; starFactors: StarFactors; starters: string[] };
 
 function calcRotationFactor(currentChanges: number, prevChanges: number, ratingDelta: number | null): number {
   if (ratingDelta !== null) {
