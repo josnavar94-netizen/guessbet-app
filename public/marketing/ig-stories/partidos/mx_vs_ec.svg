@@ -20,19 +20,19 @@
 <rect x="60" y="617" width="960" height="410" rx="14" fill="rgba(255,255,255,0.05)"/>
 <text x="540" y="597" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" fill="#C9A227" text-anchor="middle" letter-spacing="4">PROBABILIDADES</text>
 <text x="100" y="695" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="600" fill="#C9A227">México gana</text>
-<text x="980" y="695" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="#C9A227" text-anchor="end">45.6%</text>
+<text x="980" y="695" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="#C9A227" text-anchor="end">46.2%</text>
 <rect x="100" y="713" width="880" height="5" rx="3" fill="rgba(255,255,255,0.08)"/>
-<rect x="100" y="713" width="401.3" height="5" rx="3" fill="#C9A227"/>
+<rect x="100" y="713" width="406.6" height="5" rx="3" fill="#C9A227"/>
 <line x1="100" y1="761" x2="980" y2="761" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
 <text x="100" y="805" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="400" fill="#ffffff">Empate</text>
-<text x="980" y="805" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="rgba(255,255,255,0.55)" text-anchor="end">33.6%</text>
+<text x="980" y="805" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="rgba(255,255,255,0.55)" text-anchor="end">34.6%</text>
 <rect x="100" y="823" width="880" height="5" rx="3" fill="rgba(255,255,255,0.08)"/>
-<rect x="100" y="823" width="295.7" height="5" rx="3" fill="rgba(255,255,255,0.3)"/>
+<rect x="100" y="823" width="304.5" height="5" rx="3" fill="rgba(255,255,255,0.3)"/>
 <line x1="100" y1="871" x2="980" y2="871" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
 <text x="100" y="915" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="400" fill="#ffffff">Ecuador gana</text>
-<text x="980" y="915" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="rgba(255,255,255,0.55)" text-anchor="end">20.8%</text>
+<text x="980" y="915" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="rgba(255,255,255,0.55)" text-anchor="end">19.2%</text>
 <rect x="100" y="933" width="880" height="5" rx="3" fill="rgba(255,255,255,0.08)"/>
-<rect x="100" y="933" width="183.0" height="5" rx="3" fill="rgba(255,255,255,0.3)"/>
+<rect x="100" y="933" width="169.0" height="5" rx="3" fill="rgba(255,255,255,0.3)"/>
 <rect x="60" y="1091" width="960" height="282" rx="14" fill="rgba(201,162,39,0.08)" stroke="rgba(201,162,39,0.25)" stroke-width="1"/>
 <text x="540" y="1071" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" fill="#C9A227" text-anchor="middle" letter-spacing="4">EN RESUMEN</text>
 <text x="100" y="1161" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="500" fill="#C9A227">→</text>
