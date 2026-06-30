@@ -256,7 +256,11 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
 
   function calc() {
     const wcReal = wcRealLive || WC_REAL;
-    const pFull = modelProbs(home, away, neutral, wcReal, realH2H || undefined);
+    const rotationOverride = lineupChanges ? {
+      home: lineupChanges.home?.status === 'ok' ? (lineupChanges.home as any).rotationFactor ?? 1 : 1,
+      away: lineupChanges.away?.status === 'ok' ? (lineupChanges.away as any).rotationFactor ?? 1 : 1,
+    } : undefined;
+    const pFull = modelProbs(home, away, neutral, wcReal, realH2H || undefined, rotationOverride);
     const mH = MODEL[home], mA = MODEL[away];
     const wcH = wcReal[home], wcA = wcReal[away];
     const hd = realH2H ? { data: realH2H, t1First: true } : getH2H(home, away);
@@ -729,13 +733,22 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                     </div>
                     <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 8, marginTop: 10, color: '#7a8aaa' }}>
                       {homeOut === 0 && awayOut === 0 ? (
-                        <span>Ningún equipo con alineación confirmada rotó su 11 titular respecto a su partido anterior — el análisis de arriba no necesita ajuste por este motivo.</span>
+                        <span>Ningún equipo rotó su 11 titular respecto al partido anterior — no se aplica ajuste por rotación.</span>
                       ) : (() => {
                         const parts: string[] = [];
-                        if (homeOut > 0) parts.push(`${home} rotó ${homeOut} titular${homeOut > 1 ? 'es' : ''}`);
-                        if (awayOut > 0) parts.push(`${away} rotó ${awayOut} titular${awayOut > 1 ? 'es' : ''}`);
-                        const mainTeam = homeOut >= awayOut ? home : away;
-                        return <span>{parts.join(' y ')} respecto a su partido anterior. Esto no está reflejado en el cálculo del modelo (que se basa en estadísticas acumuladas, no en quién juega hoy) — si son jugadores clave los que salen, el rendimiento real de {mainTeam} podría ser distinto a lo que muestra arriba.</span>;
+                        const homeRF = lineupChanges?.home?.status === 'ok' ? (lineupChanges.home as any).rotationFactor ?? 1 : 1;
+                        const awayRF = lineupChanges?.away?.status === 'ok' ? (lineupChanges.away as any).rotationFactor ?? 1 : 1;
+                        const homePC = lineupChanges?.home?.status === 'ok' ? (lineupChanges.home as any).prevChanges ?? 0 : 0;
+                        const awayPC = lineupChanges?.away?.status === 'ok' ? (lineupChanges.away as any).prevChanges ?? 0 : 0;
+                        if (homeOut > 0) {
+                          const adj = homePC >= 6 ? `(partido anterior fue rotación masiva → xG ajustado +${Math.round((homeRF-1)*100)}%)` : homePC >= 3 ? `(partido anterior con rotación → xG ajustado +${Math.round((homeRF-1)*100)}%)` : homeOut >= 6 ? `(rotación masiva hoy → xG ajustado ${Math.round((homeRF-1)*100)}%)` : homeOut >= 3 ? `(rotación parcial hoy → xG ajustado ${Math.round((homeRF-1)*100)}%)` : '';
+                          parts.push(`${home} rotó ${homeOut} titular${homeOut > 1 ? 'es' : ''} ${adj}`);
+                        }
+                        if (awayOut > 0) {
+                          const adj = awayPC >= 6 ? `(partido anterior fue rotación masiva → xG ajustado +${Math.round((awayRF-1)*100)}%)` : awayPC >= 3 ? `(partido anterior con rotación → xG ajustado +${Math.round((awayRF-1)*100)}%)` : awayOut >= 6 ? `(rotación masiva hoy → xG ajustado ${Math.round((awayRF-1)*100)}%)` : awayOut >= 3 ? `(rotación parcial hoy → xG ajustado ${Math.round((awayRF-1)*100)}%)` : '';
+                          parts.push(`${away} rotó ${awayOut} titular${awayOut > 1 ? 'es' : ''} ${adj}`);
+                        }
+                        return <span>{parts.join(' · ')}. El modelo ajustó automáticamente los goles esperados según el nivel de rotación detectado.</span>;
                       })()}
                     </div>
                   </>

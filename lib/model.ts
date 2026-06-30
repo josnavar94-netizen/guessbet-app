@@ -150,7 +150,9 @@ export function overProb(xgH,xgA,line){
   return pO;
 }
 
-export function modelProbs(home,away,neutral,wcRealOverride,h2hOverride){
+// rotationOverride: { home: number; away: number } — multiplicador sobre xG atacante de cada equipo.
+// Calculado en /api/lineup-changes comparando alineaciones del partido actual vs anterior vs antepenúltimo.
+export function modelProbs(home,away,neutral,wcRealOverride,h2hOverride,rotationOverride?){
   const mH=MODEL[home]||{avgGF:1.35,avgGA:1.1,elo:1500};
   const mA=MODEL[away]||{avgGF:1.35,avgGA:1.1,elo:1500};
   const eloH=(mH.elo||1500)+(neutral?0:60);
@@ -159,9 +161,12 @@ export function modelProbs(home,away,neutral,wcRealOverride,h2hOverride){
   const eloExpA=1-eloExpH;
   let xgH=Math.max(0.15,(getXG(home,true,neutral,true,wcRealOverride)*getXG(away,false,neutral,false,wcRealOverride))/LEAGUE_AVG);
   let xgA=Math.max(0.15,(getXG(away,true,neutral,false,wcRealOverride)*getXG(home,false,neutral,true,wcRealOverride))/LEAGUE_AVG);
-  // Si llega el historial real (calculado en /api/h2h desde el dataset completo) se usa ese;
-  // si no, se cae al objeto estático H2H como respaldo (queda incompleto/desactualizado a propósito,
-  // solo para que el modelo no se quede sin dato si la llamada a /api/h2h falló).
+  // Ajuste por rotación: si el partido anterior de un equipo fue rotación masiva, su xG base está
+  // contaminado por ese partido → se aplica un boost. Si hoy rotan, se penaliza.
+  if(rotationOverride){
+    xgH=Math.max(0.15,xgH*(rotationOverride.home??1));
+    xgA=Math.max(0.15,xgA*(rotationOverride.away??1));
+  }
   let hdData,hdT1First;
   if(h2hOverride&&h2hOverride.n>0){ hdData=h2hOverride; hdT1First=true; }
   else { const hd=getH2H(home,away); if(hd){ hdData=hd.data; hdT1First=hd.t1First; } }
