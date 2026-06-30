@@ -36,10 +36,11 @@ export async function GET(req: NextRequest) {
 
       // regularTime = marcador a los 90 min (o 120 con prórroga); fullTime incluye penales en football-data.org.
       // Si regularTime no viene (partidos de fase de grupos), se usa fullTime como fallback.
-      const regHome = m.score.regularTime?.home ?? m.score.fullTime.home;
-      const regAway = m.score.regularTime?.away ?? m.score.fullTime.away;
-      const penHome = m.score.penalties?.home ?? null;
-      const penAway = m.score.penalties?.away ?? null;
+      const score = m.score as any;
+      const regHome = score.regularTime?.home ?? m.score.fullTime.home;
+      const regAway = score.regularTime?.away ?? m.score.fullTime.away;
+      const penHome = score.penalties?.home ?? null;
+      const penAway = score.penalties?.away ?? null;
 
       await sql`
         INSERT INTO matches (external_id, competition_code, match_date, kickoff_at, home_team, away_team, home_goals, away_goals, penalty_home, penalty_away, status, stage, group_name)
