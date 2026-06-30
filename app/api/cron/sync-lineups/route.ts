@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const now = new Date();
-    const windowEnd = new Date(now.getTime() + 40 * 60 * 1000);
+    const windowEnd = new Date(now.getTime() + 80 * 60 * 1000);
 
     // Partidos del Mundial que arrancan en los próximos 40 min y todavía no tienen alineación guardada.
     const { rows: upcoming } = await sql`
