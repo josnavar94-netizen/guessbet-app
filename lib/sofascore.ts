@@ -23,6 +23,48 @@ async function sfGet(path: string, context: string): Promise<any | null> {
 }
 
 export type SofaLineup = { team: string; starters: string[] };
+export type SofaPlayerRating = { name: string; rating: number };
+export type SofaMatchRatings = { home: SofaPlayerRating[]; away: SofaPlayerRating[] };
+
+// Busca el event ID de SofaScore dado dos equipos y una fecha.
+async function findEventId(homeTeam: string, awayTeam: string, dateISO: string): Promise<number | null> {
+  const data = await sfGet(`/sport/football/scheduled-events/${dateISO}`, 'scheduled-events');
+  if (!data?.events) return null;
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normHome = normalize(homeTeam);
+  const normAway = normalize(awayTeam);
+  const event = data.events.find((e: any) => {
+    const h = normalize(e.homeTeam?.name ?? '');
+    const a = normalize(e.awayTeam?.name ?? '');
+    return h.includes(normHome.slice(0, 4)) && a.includes(normAway.slice(0, 4));
+  });
+  return event?.id ?? null;
+}
+
+// Ratings por jugador titular tras un partido ya terminado.
+// Devuelve ratings 0-10 de SofaScore por equipo (solo starters).
+export async function fetchSofascoreRatings(
+  homeTeam: string,
+  awayTeam: string,
+  dateISO: string,
+): Promise<SofaMatchRatings | null> {
+  const eventId = await findEventId(homeTeam, awayTeam, dateISO);
+  if (!eventId) return null;
+
+  const data = await sfGet(`/event/${eventId}/lineups`, 'lineups-ratings');
+  if (!data) return null;
+
+  const extract = (side: 'home' | 'away'): SofaPlayerRating[] => {
+    const raw = data[side];
+    if (!raw?.players) return [];
+    return (raw.players as any[])
+      .filter((p: any) => p.substitute === false && p.statistics?.rating != null)
+      .map((p: any) => ({ name: p.player?.name as string, rating: parseFloat(p.statistics.rating) }))
+      .filter((p) => p.name && !isNaN(p.rating));
+  };
+
+  return { home: extract('home'), away: extract('away') };
+}
 
 export async function fetchSofascoreLineups(
   homeTeam: string,
@@ -37,13 +79,11 @@ export async function fetchSofascoreLineups(
   const normHome = normalize(homeTeam);
   const normAway = normalize(awayTeam);
 
+  const normalize2 = normalize;
   const event = data.events.find((e: any) => {
-    const h = normalize(e.homeTeam?.name ?? '');
-    const a = normalize(e.awayTeam?.name ?? '');
-    return h.includes(normHome) || normHome.includes(h) || a.includes(normAway) || normAway.includes(a)
-      ? normalize(e.homeTeam?.name ?? '').includes(normHome.slice(0, 4)) &&
-          normalize(e.awayTeam?.name ?? '').includes(normAway.slice(0, 4))
-      : false;
+    const h = normalize2(e.homeTeam?.name ?? '');
+    const a = normalize2(e.awayTeam?.name ?? '');
+    return h.includes(normHome.slice(0, 4)) && a.includes(normAway.slice(0, 4));
   });
 
   if (!event) return [];

@@ -6,6 +6,7 @@ import { crossValidate, Discrepancy } from '@/lib/crossValidate';
 import { gradeBet } from '@/lib/gradeBet';
 import { fetchOddsApiOdds, FetchedOdds } from '@/lib/oddsApi';
 import { fetchBetanoOdds } from '@/lib/oddsPapi';
+import { fetchSofascoreRatings } from '@/lib/sofascore';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -56,6 +57,32 @@ export async function GET(req: NextRequest) {
           updated_at = NOW()
       `;
       upserted++;
+
+      // Guardar ratings de SofaScore solo para partidos ya terminados y que tengan alineaciones guardadas.
+      // Si el rating ya existe en la DB (rating IS NOT NULL), se salta para no gastar llamadas innecesarias.
+      if (m.status === 'FINISHED' && regHome != null) {
+        const dateISO = m.utcDate.slice(0, 10);
+        const { rows: lineupsWithoutRating } = await sql`
+          SELECT COUNT(*) AS cnt FROM lineups
+          WHERE (team = ${m.homeTeam.name} OR team = ${m.awayTeam.name})
+            AND kickoff_at = ${m.utcDate}
+            AND rating IS NULL
+        `;
+        if (parseInt(lineupsWithoutRating[0]?.cnt ?? '0') > 0) {
+          const ratings = await fetchSofascoreRatings(m.homeTeam.name, m.awayTeam.name, dateISO);
+          if (ratings) {
+            for (const [side, players] of [['home', ratings.home], ['away', ratings.away]] as const) {
+              const teamName = normalizeTeam(side === 'home' ? m.homeTeam.name : m.awayTeam.name);
+              for (const p of players) {
+                await sql`
+                  UPDATE lineups SET rating = ${p.rating}
+                  WHERE team = ${teamName} AND kickoff_at = ${m.utcDate} AND player_name = ${p.name}
+                `;
+              }
+            }
+          }
+        }
+      }
     }
 
     const { rows: dbMatches } = await sql`

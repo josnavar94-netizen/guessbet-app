@@ -7,21 +7,23 @@ export const fetchCache = 'force-no-store';
 type TeamChanges =
   | { status: 'no_lineup' }
   | { status: 'no_previous' }
-  | { status: 'ok'; out: string[]; in: string[]; prevChanges: number; rotationFactor: number };
+  | { status: 'ok'; out: string[]; in: string[]; prevChanges: number; rotationFactor: number; ratingDelta: number | null };
 
-// rotationFactor: multiplicador sobre xG atacante del equipo.
-// Si el partido ANTERIOR fue rotación masiva (6+ cambios), hoy probablemente vuelven los titulares
-// → el dato de ese partido contamina el promedio WC, así que se sube el factor (1.15).
-// Si fue rotación parcial (3-5 cambios) → leve penalización sobre el partido actual (0.90).
-// Si el partido ACTUAL tiene muchos cambios respecto al anterior → rotación hoy → penalizar (0.85 o 0.92).
-function calcRotationFactor(prevChanges: number, currentChanges: number): number {
-  // Rotación masiva en el partido anterior → hoy vuelven titulares → boost
+// Factor de rotación basado en diferencia de rating promedio entre el once de hoy y el anterior.
+// Si hay ratings disponibles, se usa la diferencia normalizada (cada punto de rating ≈ 8% de xG).
+// Si no hay ratings, se cae al conteo de cambios como fallback.
+function calcRotationFactor(currentChanges: number, prevChanges: number, ratingDelta: number | null): number {
+  if (ratingDelta !== null) {
+    // ratingDelta = avgRating(hoy) - avgRating(anterior)
+    // +1 punto de rating promedio → ~8% más de xG; cap en ±30%
+    const factor = 1 + Math.max(-0.30, Math.min(0.30, ratingDelta * 0.08));
+    return Math.round(factor * 100) / 100;
+  }
+
+  // Fallback sin ratings: usar conteo de cambios
   if (prevChanges >= 6) return 1.15;
-  // Rotación parcial en el partido anterior → leve boost
   if (prevChanges >= 3) return 1.07;
-  // Rotación masiva hoy → penalizar ataque
   if (currentChanges >= 6) return 0.75;
-  // Rotación parcial hoy → leve penalización
   if (currentChanges >= 3) return 0.90;
   return 1.0;
 }
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
 
   async function changesFor(team: string): Promise<TeamChanges> {
     const { rows } = await sql`
-      SELECT kickoff_at, array_agg(player_name) AS starters
+      SELECT kickoff_at, array_agg(player_name) AS starters, array_agg(rating) AS ratings
       FROM lineups WHERE team = ${team}
       GROUP BY kickoff_at ORDER BY kickoff_at DESC LIMIT 3
     `;
@@ -54,18 +56,24 @@ export async function GET(req: NextRequest) {
     const inNow = (current.starters as string[]).filter(p => !previousSet.has(p));
     const currentChanges = out.length;
 
-    // Cambios entre el penúltimo y antepenúltimo partido (para detectar si el partido anterior fue rotación)
+    // Cambios del partido anterior vs antepenúltimo (para detectar si el anterior fue rotación)
     let prevChanges = 0;
     if (rows.length >= 3) {
-      const [, prev, prevPrev] = rows;
-      const prevSet = new Set(prev.starters as string[]);
-      const prevPrevSet = new Set(prevPrev.starters as string[]);
-      prevChanges = (prevPrev.starters as string[]).filter(p => !prevSet.has(p)).length;
-      void prevPrevSet; // usado implícitamente arriba
+      const prevSet2 = new Set(rows[1].starters as string[]);
+      prevChanges = (rows[2].starters as string[]).filter((p: string) => !prevSet2.has(p)).length;
     }
 
-    const rotationFactor = calcRotationFactor(prevChanges, currentChanges);
-    return { status: 'ok', out, in: inNow, prevChanges, rotationFactor };
+    // Rating promedio del once de hoy vs el del partido anterior (si hay ratings guardados)
+    const avgRating = (ratingArr: (number | null)[]) => {
+      const valid = ratingArr.filter((r): r is number => r != null);
+      return valid.length >= 7 ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+    };
+    const currentAvg = avgRating(current.ratings as (number | null)[]);
+    const previousAvg = avgRating(previous.ratings as (number | null)[]);
+    const ratingDelta = currentAvg != null && previousAvg != null ? currentAvg - previousAvg : null;
+
+    const rotationFactor = calcRotationFactor(currentChanges, prevChanges, ratingDelta);
+    return { status: 'ok', out, in: inNow, prevChanges, rotationFactor, ratingDelta };
   }
 
   const [homeChanges, awayChanges] = await Promise.all([changesFor(home), changesFor(away)]);

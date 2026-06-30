@@ -197,3 +197,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_bet_limit_pending_at TIMESTAMP
 -- los penales se guardan en penalty_home/penalty_away (null si no hubo).
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS penalty_home INTEGER;
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS penalty_away INTEGER;
+
+-- Migración: rating individual por jugador titular (0-10, fuente SofaScore), guardado tras cada partido.
+-- Permite medir calidad de rotación comparando rating promedio del once actual vs el anterior.
+ALTER TABLE lineups ADD COLUMN IF NOT EXISTS rating NUMERIC(3,1);

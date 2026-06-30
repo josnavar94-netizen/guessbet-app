@@ -738,17 +738,17 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                         const parts: string[] = [];
                         const homeRF = lineupChanges?.home?.status === 'ok' ? (lineupChanges.home as any).rotationFactor ?? 1 : 1;
                         const awayRF = lineupChanges?.away?.status === 'ok' ? (lineupChanges.away as any).rotationFactor ?? 1 : 1;
-                        const homePC = lineupChanges?.home?.status === 'ok' ? (lineupChanges.home as any).prevChanges ?? 0 : 0;
-                        const awayPC = lineupChanges?.away?.status === 'ok' ? (lineupChanges.away as any).prevChanges ?? 0 : 0;
-                        if (homeOut > 0) {
-                          const adj = homePC >= 6 ? `(partido anterior fue rotación masiva → xG ajustado +${Math.round((homeRF-1)*100)}%)` : homePC >= 3 ? `(partido anterior con rotación → xG ajustado +${Math.round((homeRF-1)*100)}%)` : homeOut >= 6 ? `(rotación masiva hoy → xG ajustado ${Math.round((homeRF-1)*100)}%)` : homeOut >= 3 ? `(rotación parcial hoy → xG ajustado ${Math.round((homeRF-1)*100)}%)` : '';
-                          parts.push(`${home} rotó ${homeOut} titular${homeOut > 1 ? 'es' : ''} ${adj}`);
-                        }
-                        if (awayOut > 0) {
-                          const adj = awayPC >= 6 ? `(partido anterior fue rotación masiva → xG ajustado +${Math.round((awayRF-1)*100)}%)` : awayPC >= 3 ? `(partido anterior con rotación → xG ajustado +${Math.round((awayRF-1)*100)}%)` : awayOut >= 6 ? `(rotación masiva hoy → xG ajustado ${Math.round((awayRF-1)*100)}%)` : awayOut >= 3 ? `(rotación parcial hoy → xG ajustado ${Math.round((awayRF-1)*100)}%)` : '';
-                          parts.push(`${away} rotó ${awayOut} titular${awayOut > 1 ? 'es' : ''} ${adj}`);
-                        }
-                        return <span>{parts.join(' · ')}. El modelo ajustó automáticamente los goles esperados según el nivel de rotación detectado.</span>;
+                        const homeRD: number | null = lineupChanges?.home?.status === 'ok' ? (lineupChanges.home as any).ratingDelta ?? null : null;
+                        const awayRD: number | null = lineupChanges?.away?.status === 'ok' ? (lineupChanges.away as any).ratingDelta ?? null : null;
+                        const fmtAdj = (rf: number, rd: number | null) => {
+                          const pct = Math.round((rf - 1) * 100);
+                          const sign = pct >= 0 ? '+' : '';
+                          const base = `xG ajustado ${sign}${pct}%`;
+                          return rd != null ? `${base} (calidad del once: ${rd >= 0 ? '+' : ''}${rd.toFixed(1)} pts rating)` : base;
+                        };
+                        if (homeOut > 0) parts.push(`${home} rotó ${homeOut} titular${homeOut > 1 ? 'es' : ''} → ${fmtAdj(homeRF, homeRD)}`);
+                        if (awayOut > 0) parts.push(`${away} rotó ${awayOut} titular${awayOut > 1 ? 'es' : ''} → ${fmtAdj(awayRF, awayRD)}`);
+                        return <span>{parts.join(' · ')}. El modelo ajustó automáticamente los goles esperados según la calidad del once detectada.</span>;
                       })()}
                     </div>
                   </>
