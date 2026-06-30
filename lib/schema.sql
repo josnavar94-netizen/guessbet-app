@@ -201,3 +201,14 @@ ALTER TABLE matches ADD COLUMN IF NOT EXISTS penalty_away INTEGER;
 -- Migración: rating individual por jugador titular (0-10, fuente SofaScore), guardado tras cada partido.
 -- Permite medir calidad de rotación comparando rating promedio del once actual vs el anterior.
 ALTER TABLE lineups ADD COLUMN IF NOT EXISTS rating NUMERIC(3,1);
+
+-- Tabla para trackear notificaciones push ya enviadas, independiente del guardado de datos.
+-- Evita reenviar la misma notificación si el cron corre varias veces.
+CREATE TABLE IF NOT EXISTS match_notifications (
+  id SERIAL PRIMARY KEY,
+  home_team VARCHAR(100) NOT NULL,
+  kickoff_at TIMESTAMP NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(home_team, kickoff_at, type)
+);

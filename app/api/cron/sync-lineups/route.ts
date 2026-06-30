@@ -19,18 +19,21 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const windowEnd = new Date(now.getTime() + 80 * 60 * 1000);
 
-    // Partidos del Mundial que arrancan en los próximos 40 min y todavía no tienen alineación guardada.
+    // Partidos en ventana: tienen o no alineación, pero aún no se notificó.
+    // La notificación se trackea en match_notifications separado del guardado de lineups.
     const { rows: upcoming } = await sql`
       SELECT m.kickoff_at, m.home_team, m.away_team
       FROM matches m
       WHERE m.competition_code = 'WC' AND m.status != 'FINISHED'
         AND m.kickoff_at IS NOT NULL AND m.kickoff_at BETWEEN ${now.toISOString()} AND ${windowEnd.toISOString()}
-        AND NOT EXISTS (SELECT 1 FROM lineups l WHERE l.team = m.home_team AND l.kickoff_at = m.kickoff_at)
+        AND NOT EXISTS (
+          SELECT 1 FROM match_notifications mn
+          WHERE mn.home_team = m.home_team AND mn.kickoff_at = m.kickoff_at AND mn.type = 'lineups'
+        )
     `;
 
     if (upcoming.length === 0) return NextResponse.json({ ok: true, checked: 0, saved: 0 });
 
-    // Una sola consulta a /fixtures?date=... cubre todos los partidos de hoy, sin adivinar IDs de competencia.
     const dateISO = now.toISOString().slice(0, 10);
     const fixturesToday = await fetchFixturesByDate(dateISO);
 
@@ -38,35 +41,44 @@ export async function GET(req: NextRequest) {
     for (const m of upcoming) {
       const home = normalizeTeam(m.home_team);
       const away = normalizeTeam(m.away_team);
-      const ref = fixturesToday.find(f => normalizeTeam(f.home) === home && normalizeTeam(f.away) === away);
-      if (!ref) continue;
 
-      let lineups = await fetchLineups(ref.id);
+      // Verificar si ya hay alineaciones guardadas (de una corrida anterior)
+      const { rows: existing } = await sql`
+        SELECT COUNT(*) AS cnt FROM lineups
+        WHERE team = ${home} AND kickoff_at = ${m.kickoff_at}
+      `;
+      const alreadySaved = parseInt(existing[0]?.cnt ?? '0') > 0;
 
-      // Fallback: si API-Football aún no publicó alineaciones, intentar SofaScore
-      if (lineups.length === 0) {
-        lineups = await fetchSofascoreLineups(home, away, dateISO);
-      }
+      if (!alreadySaved) {
+        const ref = fixturesToday.find(f => normalizeTeam(f.home) === home && normalizeTeam(f.away) === away);
+        if (!ref) continue;
 
-      if (lineups.length === 0) continue; // ninguna fuente tiene datos todavía
+        let lineups = await fetchLineups(ref.id);
+        if (lineups.length === 0) lineups = await fetchSofascoreLineups(home, away, dateISO);
+        if (lineups.length === 0) continue;
 
-      for (const team of lineups) {
-        const teamName = normalizeTeam(team.team);
-        for (const player of team.starters) {
-          const playerNorm = normalizePlayerName(player);
-          await sql`
-            INSERT INTO lineups (team, kickoff_at, player_name)
-            VALUES (${teamName}, ${m.kickoff_at}, ${playerNorm})
-            ON CONFLICT (team, kickoff_at, player_name) DO NOTHING
-          `;
+        for (const team of lineups) {
+          const teamName = normalizeTeam(team.team);
+          for (const player of team.starters) {
+            const playerNorm = normalizePlayerName(player);
+            await sql`
+              INSERT INTO lineups (team, kickoff_at, player_name)
+              VALUES (${teamName}, ${m.kickoff_at}, ${playerNorm})
+              ON CONFLICT (team, kickoff_at, player_name) DO NOTHING
+            `;
+          }
+          saved++;
         }
-        saved++;
       }
 
-      // Esta es la primera vez que se guarda la alineación de este partido (el filtro de arriba
-      // ya descarta los que ya se habían procesado) — corresponde avisar ahora, una sola vez.
+      // Notificar y marcar como notificado (independiente de si se guardó ahora o antes)
       try {
-        await sendPushToAll(`${home} vs ${away}`, '¡Alineaciones confirmadas! Revisa las cuotas confirmadas');
+        await sendPushToAll(`${home} vs ${away}`, '¡Alineaciones confirmadas! Revisa el análisis del partido');
+        await sql`
+          INSERT INTO match_notifications (home_team, kickoff_at, type)
+          VALUES (${m.home_team}, ${m.kickoff_at}, 'lineups')
+          ON CONFLICT DO NOTHING
+        `;
       } catch (err) {
         await logError(err, 'cron/sync-lineups:push');
       }
