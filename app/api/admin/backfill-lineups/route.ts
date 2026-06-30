@@ -62,6 +62,14 @@ export async function GET(req: NextRequest) {
     const fixtures = await fetchFixturesByDate(dateISO);
     apiCalls++;
 
+    // Debug: para la primera fecha, mostrar qué devuelve API-Football
+    if (results.length === 0 && fixtures.length > 0) {
+      results.push({ debug: `API-Football para ${dateISO}: ${fixtures.slice(0, 5).map(f => `${f.home} vs ${f.away}`).join(' | ')}` } as any);
+    }
+    if (fixtures.length === 0) {
+      results.push({ date: dateISO, status: 'no fixtures from API-Football' } as any);
+    }
+
     for (const m of dayMatches) {
       const home = normalizeTeam(m.home_team);
       const away = normalizeTeam(m.away_team);
@@ -77,7 +85,7 @@ export async function GET(req: NextRequest) {
         norm(f.away).includes(norm(away).slice(0, 5))
       );
       if (!ref) {
-        results.push({ match: `${home} vs ${away}`, date: dateISO, status: 'fixture not found' });
+        results.push({ match: `${home} vs ${away}`, date: dateISO, status: 'fixture not found', sampleFixtures: fixtures.slice(0, 3).map(f => `${f.home} vs ${f.away}`) });
         continue;
       }
 
