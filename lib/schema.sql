@@ -191,3 +191,9 @@ CREATE TABLE IF NOT EXISTS team_refs (
 ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_bet_limit INTEGER;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_bet_limit_pending INTEGER;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_bet_limit_pending_at TIMESTAMP;
+
+-- Migración: marcador de tiempo reglamentario y penales por separado.
+-- home_goals/away_goals pasa a guardar solo los 90 min (o 120 con prórroga);
+-- los penales se guardan en penalty_home/penalty_away (null si no hubo).
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS penalty_home INTEGER;
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS penalty_away INTEGER;

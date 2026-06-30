@@ -1093,7 +1093,10 @@ function HistTab({ results: liveResults, league, setLeague }: { results: PastRes
           <div key={i} style={{ background:'var(--sur)', border:'1px solid rgba(201,168,76,.1)', borderRadius:11, padding:'12px 15px', marginBottom:8, display:'grid', gridTemplateColumns:'34px minmax(0,1fr) auto minmax(0,1fr)', alignItems:'center', gap:8 }}>
             <span style={{ fontSize:11, color:'#7a8aaa' }}>{m.d}</span>
             <span style={{ fontWeight:600, fontSize:13, display:'flex', alignItems:'center', gap:7, minWidth:0 }}><Flag name={m.h} /><span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.h}</span></span>
-            <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:16, color:'#c9a84c', background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', padding:'3px 12px', borderRadius:7, whiteSpace:'nowrap' }}>{m.gh} - {m.ga}</span>
+            <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:16, color:'#c9a84c', background:'rgba(201,168,76,.1)', border:'1px solid rgba(201,168,76,.3)', padding:'3px 12px', borderRadius:7, whiteSpace:'nowrap', textAlign:'center' }}>
+              {m.gh} - {m.ga}
+              {m.ph != null && <span style={{ display:'block', fontSize:9, fontWeight:600, color:'#7a8aaa', marginTop:1 }}>pen. {m.ph}-{m.pa}</span>}
+            </span>
             <span style={{ fontWeight:600, fontSize:13, display:'flex', alignItems:'center', gap:7, justifyContent:'flex-end', minWidth:0 }}><span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.a}</span><Flag name={m.a} /></span>
           </div>
         ))}
