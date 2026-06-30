@@ -76,6 +76,23 @@ export async function resolveTeamId(name: string): Promise<number | null> {
 
 export type PastFixture = { id: number; dateISO: string };
 
+// Trae fixture IDs de los partidos de hoy para una lista de equipos, sin gastar una request global.
+// Se usa para resolver api_football_id en matches cuando aún es null.
+export async function fetchFixtureIdForMatch(homeTeam: string, awayTeam: string, dateISO: string): Promise<number | null> {
+  const data = await afGet(`/fixtures?date=${dateISO}`, 'fetchFixtureIdForMatch');
+  if (!data) return null;
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const nh = norm(homeTeam);
+  const na = norm(awayTeam);
+  const match = (data.response || []).find((f: any) => {
+    const h = norm(f.teams?.home?.name ?? '');
+    const a = norm(f.teams?.away?.name ?? '');
+    return (h.includes(nh.slice(0, 5)) || nh.includes(h.slice(0, 5))) &&
+           (a.includes(na.slice(0, 5)) || na.includes(a.slice(0, 5)));
+  });
+  return match?.fixture?.id ?? null;
+}
+
 export async function fetchTeamLastFixtures(teamId: number, last = 12): Promise<PastFixture[]> {
   const data = await afGet(`/fixtures?team=${teamId}&last=${last}`, 'fetchTeamLastFixtures');
   if (!data) return [];

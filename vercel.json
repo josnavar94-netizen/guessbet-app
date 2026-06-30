@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/sync-results",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/sync-lineups",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

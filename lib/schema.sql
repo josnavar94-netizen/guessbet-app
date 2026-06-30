@@ -202,6 +202,9 @@ ALTER TABLE matches ADD COLUMN IF NOT EXISTS penalty_away INTEGER;
 -- Permite medir calidad de rotación comparando rating promedio del once actual vs el anterior.
 ALTER TABLE lineups ADD COLUMN IF NOT EXISTS rating NUMERIC(3,1);
 
+-- ID del partido en API-Football (se resuelve una vez y se reutiliza para fetchLineups sin gastar cuota).
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS api_football_id INTEGER;
+
 -- Tabla para trackear notificaciones push ya enviadas, independiente del guardado de datos.
 -- Evita reenviar la misma notificación si el cron corre varias veces.
 CREATE TABLE IF NOT EXISTS match_notifications (
