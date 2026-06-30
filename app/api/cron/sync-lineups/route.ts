@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { fetchFixturesByDate, fetchLineups } from '@/lib/apiFootball';
 import { fetchSofascoreLineups } from '@/lib/sofascore';
-import { normalizeTeam } from '@/lib/githubResults';
+import { normalizeTeam, normalizePlayerName } from '@/lib/githubResults';
 import { logError } from '@/lib/logError';
 import { sendPushToAll } from '@/lib/webPush';
 
@@ -53,9 +53,10 @@ export async function GET(req: NextRequest) {
       for (const team of lineups) {
         const teamName = normalizeTeam(team.team);
         for (const player of team.starters) {
+          const playerNorm = normalizePlayerName(player);
           await sql`
             INSERT INTO lineups (team, kickoff_at, player_name)
-            VALUES (${teamName}, ${m.kickoff_at}, ${player})
+            VALUES (${teamName}, ${m.kickoff_at}, ${playerNorm})
             ON CONFLICT (team, kickoff_at, player_name) DO NOTHING
           `;
         }

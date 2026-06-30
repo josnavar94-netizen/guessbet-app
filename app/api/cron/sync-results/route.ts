@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { fetchCompetitionMatches } from '@/lib/footballData';
-import { fetchGithubResults, normalizeTeam } from '@/lib/githubResults';
+import { fetchGithubResults, normalizeTeam, normalizePlayerName } from '@/lib/githubResults';
 import { crossValidate, Discrepancy } from '@/lib/crossValidate';
 import { gradeBet } from '@/lib/gradeBet';
 import { fetchOddsApiOdds, FetchedOdds } from '@/lib/oddsApi';
@@ -62,24 +62,33 @@ export async function GET(req: NextRequest) {
       // Si el rating ya existe en la DB (rating IS NOT NULL), se salta para no gastar llamadas innecesarias.
       if (m.status === 'FINISHED' && regHome != null) {
         const dateISO = m.utcDate.slice(0, 10);
+        const homeNorm = normalizeTeam(m.homeTeam.name);
+        const awayNorm = normalizeTeam(m.awayTeam.name);
         const { rows: lineupsWithoutRating } = await sql`
           SELECT COUNT(*) AS cnt FROM lineups
-          WHERE (team = ${m.homeTeam.name} OR team = ${m.awayTeam.name})
+          WHERE (team = ${homeNorm} OR team = ${awayNorm})
             AND kickoff_at = ${m.utcDate}
             AND rating IS NULL
         `;
         if (parseInt(lineupsWithoutRating[0]?.cnt ?? '0') > 0) {
           const ratings = await fetchSofascoreRatings(m.homeTeam.name, m.awayTeam.name, dateISO);
           if (ratings) {
+            let ratingsUpdated = 0;
             for (const [side, players] of [['home', ratings.home], ['away', ratings.away]] as const) {
-              const teamName = normalizeTeam(side === 'home' ? m.homeTeam.name : m.awayTeam.name);
+              const teamName = side === 'home' ? homeNorm : awayNorm;
               for (const p of players) {
-                await sql`
+                // Normalizar nombre del jugador antes de comparar (quita acentos, minúsculas)
+                const playerNorm = normalizePlayerName(p.name);
+                const { rowCount } = await sql`
                   UPDATE lineups SET rating = ${p.rating}
-                  WHERE team = ${teamName} AND kickoff_at = ${m.utcDate} AND player_name = ${p.name}
+                  WHERE team = ${teamName} AND kickoff_at = ${m.utcDate} AND player_name = ${playerNorm}
                 `;
+                if (rowCount && rowCount > 0) ratingsUpdated++;
               }
             }
+            console.log(`[sync-results] ratings ${homeNorm} vs ${awayNorm}: ${ratingsUpdated}/${ratings.home.length + ratings.away.length} guardados`);
+          } else {
+            console.log(`[sync-results] SofaScore sin ratings para ${homeNorm} vs ${awayNorm} (${dateISO})`);
           }
         }
       }

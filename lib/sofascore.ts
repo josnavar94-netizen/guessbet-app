@@ -1,6 +1,7 @@
 // SofaScore API no oficial — usada como fallback cuando API-Football aún no tiene alineaciones.
 // Los endpoints son reverse-engineered de la app móvil; no hay contrato de estabilidad.
 import { logError } from './logError';
+import { normalizePlayerName } from './githubResults';
 
 const SOFA_BASE = 'https://api.sofascore.com/api/v1';
 const SOFA_HEADERS = {
@@ -58,8 +59,12 @@ export async function fetchSofascoreRatings(
     const raw = data[side];
     if (!raw?.players) return [];
     return (raw.players as any[])
-      .filter((p: any) => p.substitute === false && p.statistics?.rating != null)
-      .map((p: any) => ({ name: p.player?.name as string, rating: parseFloat(p.statistics.rating) }))
+      .filter((p: any) => p.substitute === false)
+      .map((p: any) => {
+        // SofaScore puede guardar el rating en statistics.rating o en rating directamente
+        const rawRating = p.statistics?.rating ?? p.rating ?? null;
+        return { name: normalizePlayerName(p.player?.name ?? ''), rating: rawRating != null ? parseFloat(rawRating) : NaN };
+      })
       .filter((p) => p.name && !isNaN(p.rating));
   };
 
@@ -98,7 +103,7 @@ export async function fetchSofascoreLineups(
     if (!raw?.players) continue;
     const starters = (raw.players as any[])
       .filter((p: any) => p.substitute === false)
-      .map((p: any) => p.player?.name)
+      .map((p: any) => normalizePlayerName(p.player?.name ?? ''))
       .filter(Boolean);
     if (starters.length > 0) result.push({ team: side === 'home' ? homeTeam : awayTeam, starters });
   }

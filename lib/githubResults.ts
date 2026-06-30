@@ -59,3 +59,15 @@ const TEAM_ALIASES: Record<string, string> = {
 export function normalizeTeam(name: string): string {
   return TEAM_ALIASES[name] || name;
 }
+
+// Normaliza nombres de jugadores para comparar entre fuentes (API-Football vs SofaScore).
+// Quita acentos, convierte a minúsculas y elimina caracteres especiales.
+export function normalizePlayerName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '') // quita diacríticos (á→a, ü→u, ç→c, etc.)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
