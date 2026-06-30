@@ -9,7 +9,7 @@ export default function LeagueSelector({ league, setLeague }: { league: string; 
   return (
     <div style={card}>
       <div style={secTitle}>Liga</div>
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="hide-scrollbar">
         {LEAGUES.map(l => (
           <button
             key={l.id}

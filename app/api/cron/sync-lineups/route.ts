@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { fetchFixturesByDate, fetchLineups } from '@/lib/apiFootball';
+import { fetchSofascoreLineups } from '@/lib/sofascore';
 import { normalizeTeam } from '@/lib/githubResults';
 import { logError } from '@/lib/logError';
 import { sendPushToAll } from '@/lib/webPush';
@@ -40,8 +41,14 @@ export async function GET(req: NextRequest) {
       const ref = fixturesToday.find(f => normalizeTeam(f.home) === home && normalizeTeam(f.away) === away);
       if (!ref) continue;
 
-      const lineups = await fetchLineups(ref.id);
-      if (lineups.length === 0) continue; // todavía no se publicó (normal hasta ~30-40 min antes)
+      let lineups = await fetchLineups(ref.id);
+
+      // Fallback: si API-Football aún no publicó alineaciones, intentar SofaScore
+      if (lineups.length === 0) {
+        lineups = await fetchSofascoreLineups(home, away, dateISO);
+      }
+
+      if (lineups.length === 0) continue; // ninguna fuente tiene datos todavía
 
       for (const team of lineups) {
         const teamName = normalizeTeam(team.team);

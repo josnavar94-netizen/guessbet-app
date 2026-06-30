@@ -13,6 +13,9 @@
 
 .h-scroll { touch-action: pan-x; overscroll-behavior-x: contain; overflow-y: hidden !important; }
 
+.hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+
 :root {
   --bg: #0a0f1e;
   --sur: #111b30;
