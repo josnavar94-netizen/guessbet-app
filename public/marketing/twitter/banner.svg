@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="500" viewBox="0 0 1500 500">
+<rect width="1500" height="500" fill="#0a0a0a"/>
+<line x1="480" y1="60" x2="480" y2="440" stroke="#C9A227" stroke-width="1.5" stroke-opacity="0.5"/>
+<text x="560" y="198" font-family="Segoe UI, Arial, sans-serif" font-size="88" font-weight="500" fill="#ffffff">Apostamos con datos,</text>
+<text x="560" y="300" font-family="Segoe UI, Arial, sans-serif" font-size="88" font-weight="500">
+  <tspan fill="#ffffff">no con el </tspan><tspan fill="#C9A227">corazón.</tspan>
+</text>
+<text x="560" y="364" font-family="Segoe UI, Arial, sans-serif" font-size="36" font-weight="400" fill="rgba(255,255,255,0.5)" letter-spacing="1">Modelo ELO  ·  +14.000 partidos  ·  #Mundial2026</text>
+</svg>
