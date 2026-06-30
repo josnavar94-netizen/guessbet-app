@@ -870,7 +870,7 @@ function AccountTab({ username, email, plan, avatar, setTab, logout, emailVerifi
 // ─────────────────────────────────────────────
 // HOME TAB
 // ─────────────────────────────────────────────
-type PastResult = { kickoffAt: string; h: string; a: string; gh: number; ga: number };
+type PastResult = { kickoffAt: string; h: string; a: string; gh: number; ga: number; ph: number | null; pa: number | null };
 
 // Sin "timeZone" explícito: usa la zona horaria del dispositivo del cliente.
 const histDayFmt = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
