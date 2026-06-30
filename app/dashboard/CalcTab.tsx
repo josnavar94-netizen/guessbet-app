@@ -256,9 +256,10 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
 
   function calc() {
     const wcReal = wcRealLive || WC_REAL;
+    const getStarFactor = (side: 'home' | 'away') => (lineupChanges as any)?.[side]?.starFactor ?? 1;
     const rotationOverride = lineupChanges ? {
-      home: lineupChanges.home?.status === 'ok' ? (lineupChanges.home as any).rotationFactor ?? 1 : 1,
-      away: lineupChanges.away?.status === 'ok' ? (lineupChanges.away as any).rotationFactor ?? 1 : 1,
+      home: ((lineupChanges.home as any)?.rotationFactor ?? 1) * getStarFactor('home'),
+      away: ((lineupChanges.away as any)?.rotationFactor ?? 1) * getStarFactor('away'),
     } : undefined;
     const pFull = modelProbs(home, away, neutral, wcReal, realH2H || undefined, rotationOverride);
     const mH = MODEL[home], mA = MODEL[away];
@@ -748,7 +749,13 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                         };
                         if (homeOut > 0) parts.push(`${home} rotó ${homeOut} titular${homeOut > 1 ? 'es' : ''} → ${fmtAdj(homeRF, homeRD)}`);
                         if (awayOut > 0) parts.push(`${away} rotó ${awayOut} titular${awayOut > 1 ? 'es' : ''} → ${fmtAdj(awayRF, awayRD)}`);
-                        return <span>{parts.join(' · ')}. El modelo ajustó automáticamente los goles esperados según la calidad del once detectada.</span>;
+                        // Mostrar estrellas detectadas
+                        const homeSF: number = (lineupChanges?.home as any)?.starFactor ?? 1;
+                        const awaySF: number = (lineupChanges?.away as any)?.starFactor ?? 1;
+                        const starParts: string[] = [];
+                        if (Math.abs(homeSF - 1) > 0.02) starParts.push(`${home} (estrella${homeSF > 1 ? ' presente' : ' ausente'}: ${homeSF > 1 ? '+' : ''}${Math.round((homeSF-1)*100)}% xG)`);
+                        if (Math.abs(awaySF - 1) > 0.02) starParts.push(`${away} (estrella${awaySF > 1 ? ' presente' : ' ausente'}: ${awaySF > 1 ? '+' : ''}${Math.round((awaySF-1)*100)}% xG)`);
+                        return <span>{[...parts, ...starParts].join(' · ')}. El modelo ajustó automáticamente los goles esperados según calidad del once y presencia de estrellas.</span>;
                       })()}
                     </div>
                   </>
