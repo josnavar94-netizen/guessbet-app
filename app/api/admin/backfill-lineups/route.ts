@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
   // Agrupar por fecha para minimizar llamadas a API-Football
   const byDate = new Map<string, typeof pastMatches>();
   for (const m of pastMatches) {
-    const d = String(m.match_date).slice(0, 10);
+    const d = new Date(m.kickoff_at).toISOString().slice(0, 10);
     if (!byDate.has(d)) byDate.set(d, []);
     byDate.get(d)!.push(m);
   }
