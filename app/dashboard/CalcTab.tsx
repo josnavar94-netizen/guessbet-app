@@ -256,10 +256,15 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
 
   function calc() {
     const wcReal = wcRealLive || WC_REAL;
-    const getStarFactor = (side: 'home' | 'away') => (lineupChanges as any)?.[side]?.starFactor ?? 1;
+    // xgH = goles esperados del local → sube con ataque local + defensa visitante mala
+    // xgA = goles esperados del visitante → sube con ataque visitante + defensa local mala
+    const homeSF = (lineupChanges?.home as any)?.starFactors ?? { attackFactor: 1, defenseFactor: 1 };
+    const awaySF = (lineupChanges?.away as any)?.starFactors ?? { attackFactor: 1, defenseFactor: 1 };
+    const homeRot = (lineupChanges?.home as any)?.rotationFactor ?? 1;
+    const awayRot = (lineupChanges?.away as any)?.rotationFactor ?? 1;
     const rotationOverride = lineupChanges ? {
-      home: ((lineupChanges.home as any)?.rotationFactor ?? 1) * getStarFactor('home'),
-      away: ((lineupChanges.away as any)?.rotationFactor ?? 1) * getStarFactor('away'),
+      home: homeRot * homeSF.attackFactor * awaySF.defenseFactor,
+      away: awayRot * awaySF.attackFactor * homeSF.defenseFactor,
     } : undefined;
     const pFull = modelProbs(home, away, neutral, wcReal, realH2H || undefined, rotationOverride);
     const mH = MODEL[home], mA = MODEL[away];
@@ -750,11 +755,17 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                         if (homeOut > 0) parts.push(`${home} rotó ${homeOut} titular${homeOut > 1 ? 'es' : ''} → ${fmtAdj(homeRF, homeRD)}`);
                         if (awayOut > 0) parts.push(`${away} rotó ${awayOut} titular${awayOut > 1 ? 'es' : ''} → ${fmtAdj(awayRF, awayRD)}`);
                         // Mostrar estrellas detectadas
-                        const homeSF: number = (lineupChanges?.home as any)?.starFactor ?? 1;
-                        const awaySF: number = (lineupChanges?.away as any)?.starFactor ?? 1;
+                        const hSF = (lineupChanges?.home as any)?.starFactors ?? { attackFactor: 1, defenseFactor: 1 };
+                        const aSF = (lineupChanges?.away as any)?.starFactors ?? { attackFactor: 1, defenseFactor: 1 };
                         const starParts: string[] = [];
-                        if (Math.abs(homeSF - 1) > 0.02) starParts.push(`${home} (estrella${homeSF > 1 ? ' presente' : ' ausente'}: ${homeSF > 1 ? '+' : ''}${Math.round((homeSF-1)*100)}% xG)`);
-                        if (Math.abs(awaySF - 1) > 0.02) starParts.push(`${away} (estrella${awaySF > 1 ? ' presente' : ' ausente'}: ${awaySF > 1 ? '+' : ''}${Math.round((awaySF-1)*100)}% xG)`);
+                        const fmtStar = (team: string, sf: { attackFactor: number; defenseFactor: number }) => {
+                          const parts: string[] = [];
+                          if (Math.abs(sf.attackFactor - 1) > 0.02) parts.push(`ataque ${sf.attackFactor > 1 ? '+' : ''}${Math.round((sf.attackFactor-1)*100)}%`);
+                          if (Math.abs(sf.defenseFactor - 1) > 0.02) parts.push(`defensa ${sf.defenseFactor < 1 ? '+' : ''}${Math.round((1-sf.defenseFactor)*100)}% menos goles recibidos`);
+                          if (parts.length > 0) starParts.push(`${team} (estrella: ${parts.join(', ')})`);
+                        };
+                        fmtStar(home, hSF);
+                        fmtStar(away, aSF);
                         return <span>{[...parts, ...starParts].join(' · ')}. El modelo ajustó automáticamente los goles esperados según calidad del once y presencia de estrellas.</span>;
                       })()}
                     </div>

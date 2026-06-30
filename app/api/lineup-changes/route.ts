@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { calcStarFactor } from '@/lib/starPlayers';
+import { calcStarFactor, StarFactors } from '@/lib/starPlayers';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 type TeamChanges =
-  | { status: 'no_lineup'; starFactor: number }
-  | { status: 'no_previous'; starFactor: number; starters: string[] }
-  | { status: 'ok'; out: string[]; in: string[]; prevChanges: number; rotationFactor: number; ratingDelta: number | null; starFactor: number; starters: string[] };
+  | { status: 'no_lineup'; starFactorss: StarFactors }
+  | { status: 'no_previous'; starFactorss: StarFactors; starters: string[] }
+  | { status: 'ok'; out: string[]; in: string[]; prevChanges: number; rotationFactor: number; ratingDelta: number | null; starFactorss: StarFactors; starters: string[] };
 
 function calcRotationFactor(currentChanges: number, prevChanges: number, ratingDelta: number | null): number {
   if (ratingDelta !== null) {
@@ -35,17 +35,17 @@ export async function GET(req: NextRequest) {
       GROUP BY kickoff_at ORDER BY kickoff_at DESC LIMIT 3
     `;
 
-    if (rows.length === 0) return { status: 'no_lineup', starFactor: calcStarFactor(team, []) };
+    if (rows.length === 0) return { status: 'no_lineup', starFactors: calcStarFactor(team, []) as StarFactors };
 
     if (kickoffAt) {
       const diff = Math.abs(new Date(rows[0].kickoff_at).getTime() - new Date(kickoffAt).getTime());
-      if (diff > 6 * 60 * 60 * 1000) return { status: 'no_lineup', starFactor: calcStarFactor(team, []) };
+      if (diff > 6 * 60 * 60 * 1000) return { status: 'no_lineup', starFactors: calcStarFactor(team, []) as StarFactors };
     }
 
     const currentStarters = rows[0].starters as string[];
-    const starFactor = calcStarFactor(team, currentStarters);
+    const starFactors = calcStarFactor(team, currentStarters);
 
-    if (rows.length < 2) return { status: 'no_previous', starFactor, starters: currentStarters };
+    if (rows.length < 2) return { status: 'no_previous', starFactors, starters: currentStarters };
 
     const [current, previous] = rows;
     const currentSet = new Set(currentStarters);
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
     const ratingDelta = currentAvg != null && previousAvg != null ? currentAvg - previousAvg : null;
 
     const rotationFactor = calcRotationFactor(currentChanges, prevChanges, ratingDelta);
-    return { status: 'ok', out, in: inNow, prevChanges, rotationFactor, ratingDelta, starFactor, starters: currentStarters };
+    return { status: 'ok', out, in: inNow, prevChanges, rotationFactor, ratingDelta, starFactors, starters: currentStarters };
   }
 
   const [homeChanges, awayChanges] = await Promise.all([changesFor(home), changesFor(away)]);
