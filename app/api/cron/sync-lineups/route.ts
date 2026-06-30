@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const now = new Date();
+    const windowStart = new Date(now.getTime() - 30 * 60 * 1000);  // 30 min hacia atrás
     const windowEnd = new Date(now.getTime() + 80 * 60 * 1000);
 
     // Partidos en ventana: tienen o no alineación, pero aún no se notificó.
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
       SELECT m.kickoff_at, m.home_team, m.away_team
       FROM matches m
       WHERE m.competition_code = 'WC' AND m.status != 'FINISHED'
-        AND m.kickoff_at IS NOT NULL AND m.kickoff_at BETWEEN ${now.toISOString()} AND ${windowEnd.toISOString()}
+        AND m.kickoff_at IS NOT NULL AND m.kickoff_at BETWEEN ${windowStart.toISOString()} AND ${windowEnd.toISOString()}
         AND NOT EXISTS (
           SELECT 1 FROM match_notifications mn
           WHERE mn.home_team = m.home_team AND mn.kickoff_at = m.kickoff_at AND mn.type = 'lineups'
