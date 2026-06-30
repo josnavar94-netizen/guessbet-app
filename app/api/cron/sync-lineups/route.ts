@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { fetchFixturesByDate, fetchLineups } from '@/lib/apiFootball';
 import { fetchSofascoreLineups } from '@/lib/sofascore';
+import { fetchEspnLineups } from '@/lib/espn';
 import { normalizeTeam, normalizePlayerName } from '@/lib/githubResults';
 import { logError } from '@/lib/logError';
 import { sendPushToAll } from '@/lib/webPush';
@@ -56,6 +57,7 @@ export async function GET(req: NextRequest) {
 
         let lineups = await fetchLineups(ref.id);
         if (lineups.length === 0) lineups = await fetchSofascoreLineups(home, away, dateISO);
+        if (lineups.length === 0) lineups = await fetchEspnLineups(home, away, dateISO);
         if (lineups.length === 0) continue;
 
         for (const team of lineups) {
