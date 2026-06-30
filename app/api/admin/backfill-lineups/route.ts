@@ -39,12 +39,13 @@ export async function GET(req: NextRequest) {
   }
 
   // Partidos FINISHED de esos equipos, más recientes primero
-  const { rows: pastMatches } = await sql`
-    SELECT home_team, away_team, match_date, kickoff_at FROM matches
-    WHERE competition_code = 'WC' AND status = 'FINISHED'
-      AND (home_team = ANY(${teamsToBackfill}) OR away_team = ANY(${teamsToBackfill}))
-    ORDER BY kickoff_at DESC
-  `;
+  const { rows: pastMatches } = await sql.query(
+    `SELECT home_team, away_team, match_date, kickoff_at FROM matches
+     WHERE competition_code = 'WC' AND status = 'FINISHED'
+       AND (home_team = ANY($1) OR away_team = ANY($1))
+     ORDER BY kickoff_at DESC`,
+    [teamsToBackfill]
+  );
 
   // Agrupar por fecha para minimizar llamadas a API-Football
   const byDate = new Map<string, typeof pastMatches>();
