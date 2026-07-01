@@ -67,7 +67,7 @@ def build_svg(
         f'stroke="rgba(201,162,39,0.18)" stroke-width="2"/>')
 
     # ── header ────────────────────────────────────────────────────────────────
-    HDR_Y = 62
+    HDR_Y = 52
     # Logo G
     add(f'<circle cx="60" cy="{HDR_Y}" r="22" fill="none" stroke="{GOLD}" stroke-width="2"/>')
     add(f'<text x="60" y="{HDR_Y+7}" font-family="{FONT}" font-size="18" font-weight="700" '
@@ -83,13 +83,13 @@ def build_svg(
         f'stroke="rgba(255,255,255,0.08)" stroke-width="1"/>')
 
     # ── fase label ────────────────────────────────────────────────────────────
-    PHASE_Y = HDR_Y + 60
+    PHASE_Y = HDR_Y + 50
     add(f'<text x="{W//2}" y="{PHASE_Y}" font-family="{FONT}" font-size="24" font-weight="400" '
         f'fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="3">'
         f'{esc(phase_label)}</text>')
 
     # ── bloque equipos ────────────────────────────────────────────────────────
-    TEAMS_CY = PHASE_Y + 120
+    TEAMS_CY = PHASE_Y + 100
     FLAG_W, FLAG_H_px = 110, 72
     FLAG_R = 8
     home_cx, away_cx, vs_cx = 230, W-230, W//2
@@ -110,7 +110,7 @@ def build_svg(
     draw_flag(home_cx, home_flag_code, 'hflag')
     draw_flag(away_cx, away_flag_code, 'aflag')
 
-    NAME_Y = TEAMS_CY + FLAG_H_px//2 + 40
+    NAME_Y = TEAMS_CY + FLAG_H_px//2 + 32
     add(f'<text x="{home_cx}" y="{NAME_Y}" font-family="{FONT}" font-size="34" font-weight="600" '
         f'fill="{WHITE}" text-anchor="middle">{esc(home_name)}</text>')
     add(f'<text x="{vs_cx}" y="{TEAMS_CY+10}" font-family="{FONT}" font-size="46" font-weight="700" '
@@ -119,10 +119,10 @@ def build_svg(
         f'fill="{WHITE}" text-anchor="middle">{esc(away_name)}</text>')
 
     # ── PROBABILIDADES ────────────────────────────────────────────────────────
-    PROB_TOP = NAME_Y + 44
-    PAD_X = 40
+    PROB_TOP = NAME_Y + 34
+    PAD_X = 32
     INNER_W = W - 80
-    ROW_H = 96
+    ROW_H = 84
     PROB_H = ROW_H * 3 + PAD_X
 
     add(f'<rect x="40" y="{PROB_TOP}" width="{INNER_W}" height="{PROB_H}" rx="12" '
@@ -166,7 +166,7 @@ def build_svg(
                 f'stroke="rgba(255,255,255,0.06)" stroke-width="1"/>')
 
     # ── stats secundarios ─────────────────────────────────────────────────────
-    STATS_Y = PROB_TOP + PROB_H + 32
+    STATS_Y = PROB_TOP + PROB_H + 20
     stats = [
         ('xG', f'{xg_home:.2f} – {xg_away:.2f}'),
         ('+2.5 goles', f'{over25:.1f}%'),
@@ -184,9 +184,9 @@ def build_svg(
                 f'stroke="rgba(255,255,255,0.1)" stroke-width="1"/>')
 
     # ── EN RESUMEN ────────────────────────────────────────────────────────────
-    SUM_TOP = STATS_Y + 68
-    LINE_H  = 56
-    SUM_PAD = 28
+    SUM_TOP = STATS_Y + 52
+    LINE_H  = 48
+    SUM_PAD = 22
     SUM_H   = len(summary_points)*LINE_H + SUM_PAD*2
 
     add(f'<rect x="40" y="{SUM_TOP}" width="{INNER_W}" height="{SUM_H}" rx="12" '
@@ -204,8 +204,8 @@ def build_svg(
         add(f'<text x="{TEXT_X}" y="{py}" font-family="{FONT}" font-size="26" font-weight="400">{tspans}</text>')
 
     # ── CTA footer ────────────────────────────────────────────────────────────
-    CTA_Y = SUM_TOP + SUM_H + 28
-    CTA_H = 64
+    CTA_Y = SUM_TOP + SUM_H + 20
+    CTA_H = 60
     CTA_W = 760
     CTA_X = (W - CTA_W)//2
     add(f'<rect x="{CTA_X}" y="{CTA_Y}" width="{CTA_W}" height="{CTA_H}" rx="32" fill="{GOLD}"/>')
