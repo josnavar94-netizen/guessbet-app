@@ -1,53 +1,57 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1080" viewBox="0 0 1080 1080">
-<rect width="1080" height="1080" fill="#0a0a0a"/>
-<rect x="1" y="1" width="1078" height="1078" rx="0" fill="none" stroke="rgba(201,162,39,0.18)" stroke-width="2"/>
-<circle cx="60" cy="52" r="22" fill="none" stroke="#C9A227" stroke-width="2"/>
-<text x="60" y="59" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#C9A227" text-anchor="middle">G</text>
-<text x="96" y="59" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" fill="#ffffff" letter-spacing="1">guess_bet</text>
-<text x="1040" y="59" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="600" fill="#C9A227" text-anchor="end" letter-spacing="2">MUNDIAL 2026</text>
-<line x1="40" y1="78" x2="1040" y2="78" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-<text x="540" y="102" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="3">DIECISEISAVOS DE FINAL · HOY 20:00 CL</text>
-<defs><clipPath id="hflag"><rect x="175" y="166" width="110" height="72" rx="8"/></clipPath></defs>
-<rect x="175" y="166" width="110" height="72" rx="8" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
-<image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAqCAMAAAATdiw4AAAAS1BMVEWzGUL///8KMWHsxtDZjKHGU3IMNGMgQ28nSXQ1VX1xXYBgeZiJnLP//v7CzNhGZIgRN2bl6e9RbY+xvc1wh6Prxc+Zqr709vhyX4F3rzwPAAABHklEQVRIx+2UwW7CMBQEzQD77MYkjgmh//+lvUAhFkplK4dWdA5W5rJStKvn+AFXCzYFUNcJwmSUXh+ofgBiBIZelF4fiBKBlAgkyWzp7Ou4OIBu9ODHDnQ+69lhV8fJgWGelOQNw/ulNwRaP4BiFAy9UfqhEgcxILoOEaJQ4Q2lQJgNbA6gadKz0xb4ai4351iJgw7AB7h9Lr2hlOtjLlej9IbZrA+7IRDyaGBjBs2znr2pFMMPKGkwjBCW3hDo+3wfcu49pTdcm2LYhTcdhxANLD6G/e20lbI27IbATJJ8kBKZlMgkcfeG4/DyDj68oRTvgdsjSq8O/PxYp/qXT7tNOW0feNlvysW9Ib+/5c0DjxvzB1o+bMz/cXgHvgD4OyGtUE286gAAAABJRU5ErkJggg==" x="175" y="166" width="110" height="72" preserveAspectRatio="xMidYMid slice" clip-path="url(#hflag)"/>
-<defs><clipPath id="aflag"><rect x="795" y="166" width="110" height="72" rx="8"/></clipPath></defs>
-<rect x="795" y="166" width="110" height="72" rx="8" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
-<image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAoCAMAAABevo0zAAAANlBMVEUAI5X////n6vU/Wa9TWmT6yAISMpz+ywAwQnmAksrT2e1JYrMdPKECJJWTodKUotKNnNB/kMovD5pFAAAA30lEQVRIx63Ryw7CMAxEUTuBQvru//8sBHVRKicZ27Hk7dVIh+hyO/NOtCz0eL6ge1P9xmkaiWIktNgIDsPvt5XQYmvh9+aUQkhpxopAkGJgDhHciAQpMSdUBgpqZJCgSgZaqJFBg7AMHERl8CAoAwdRGXwhKKMKIjK6ICCjDLZldEFARrmwLaMPNmQMwbqMJViVMQTrMpaFVRljsCxjDRZlzMGSjDVYlDEvLMl4gqKMKyjJ+IKCjCsoyfgWCjLu4F3GH7zJdAj+y/iDp8x6ynRYmGWOLHNkmT7Bi4wQ/ADJxx38Ocik1AAAAABJRU5ErkJggg==" x="795" y="166" width="110" height="72" preserveAspectRatio="xMidYMid slice" clip-path="url(#aflag)"/>
-<text x="230" y="270" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="600" fill="#ffffff" text-anchor="middle">USA</text>
-<text x="540" y="212" font-family="Segoe UI, Arial, sans-serif" font-size="46" font-weight="700" fill="#C9A227" text-anchor="middle">VS</text>
-<text x="850" y="270" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="600" fill="#ffffff" text-anchor="middle">Bosnia</text>
-<rect x="40" y="304" width="1000" height="284" rx="12" fill="rgba(255,255,255,0.04)"/>
-<text x="540" y="286" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#C9A227" text-anchor="middle" letter-spacing="4">PROBABILIDADES</text>
-<text x="72" y="362" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="600" fill="#C9A227">USA gana</text>
-<text x="1008" y="362" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#C9A227" text-anchor="end">66.3%</text>
-<rect x="72" y="376" width="936" height="5" rx="3" fill="rgba(255,255,255,0.07)"/>
-<rect x="72" y="376" width="620.6" height="5" rx="3" fill="#C9A227"/>
-<line x1="72" y1="408" x2="1008" y2="408" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-<text x="72" y="446" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="400" fill="#ffffff">Empate</text>
-<text x="1008" y="446" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="rgba(255,255,255,0.3)" text-anchor="end">18.8%</text>
-<rect x="72" y="460" width="936" height="5" rx="3" fill="rgba(255,255,255,0.07)"/>
-<rect x="72" y="460" width="176.0" height="5" rx="3" fill="rgba(255,255,255,0.3)"/>
-<line x1="72" y1="492" x2="1008" y2="492" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-<text x="72" y="530" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="400" fill="#ffffff">Bosnia gana</text>
-<text x="1008" y="530" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="rgba(255,255,255,0.3)" text-anchor="end">14.9%</text>
-<rect x="72" y="544" width="936" height="5" rx="3" fill="rgba(255,255,255,0.07)"/>
-<rect x="72" y="544" width="139.5" height="5" rx="3" fill="rgba(255,255,255,0.3)"/>
-<text x="206" y="608" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="400" fill="rgba(255,255,255,0.40)" text-anchor="middle">xG</text>
-<text x="206" y="640" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#ffffff" text-anchor="middle">2.15 – 0.77</text>
-<line x1="373" y1="594" x2="373" y2="650" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-<text x="539" y="608" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="400" fill="rgba(255,255,255,0.40)" text-anchor="middle">+2.5 goles</text>
-<text x="539" y="640" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#ffffff" text-anchor="middle">55.7%</text>
-<line x1="706" y1="594" x2="706" y2="650" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-<text x="872" y="608" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="400" fill="rgba(255,255,255,0.40)" text-anchor="middle">Ambos anotan</text>
-<text x="872" y="640" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#ffffff" text-anchor="middle">47.3%</text>
-<rect x="40" y="660" width="1000" height="188" rx="12" fill="rgba(201,162,39,0.07)" stroke="rgba(201,162,39,0.22)" stroke-width="1"/>
-<text x="540" y="644" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#C9A227" text-anchor="middle" letter-spacing="4">EN RESUMEN</text>
-<text x="62" y="712" font-family="Segoe UI, Arial, sans-serif" font-size="26" fill="#C9A227">→</text>
-<text x="102" y="712" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="400"><tspan fill="#C9A227">USA</tspan><tspan fill="rgba(255,255,255,0.82)"> aplastante con </tspan><tspan fill="#C9A227">66.3%</tspan><tspan fill="rgba(255,255,255,0.82)">. Mayor diferencia ELO del día.</tspan></text>
-<text x="62" y="760" font-family="Segoe UI, Arial, sans-serif" font-size="26" fill="#C9A227">→</text>
-<text x="102" y="760" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="400"><tspan fill="rgba(255,255,255,0.82)">xG de </tspan><tspan fill="#C9A227">2.15</tspan><tspan fill="rgba(255,255,255,0.82)"> para USA — el más alto de los 3 partidos.</tspan></text>
-<text x="62" y="808" font-family="Segoe UI, Arial, sans-serif" font-size="26" fill="#C9A227">→</text>
-<text x="102" y="808" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="400"><tspan fill="rgba(255,255,255,0.82)">+2.5 goles en </tspan><tspan fill="#C9A227">55.7%</tspan><tspan fill="rgba(255,255,255,0.82)">: el partido con más goles proyectados.</tspan></text>
-<rect x="160" y="868" width="760" height="60" rx="32" fill="#C9A227"/>
-<text x="540" y="909" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#0a0f1e" text-anchor="middle">Analiza tú mismo → guessbet.vercel.app</text>
+<defs><linearGradient id="bggrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#111116"/><stop offset="100%" stop-color="#0a0a0a"/></linearGradient><linearGradient id="bargrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#C9A227"/><stop offset="100%" stop-color="#e8c45a"/></linearGradient></defs>
+<rect width="1080" height="1080" fill="url(#bggrad)"/>
+<rect x="0" y="0" width="1080" height="4" fill="#C9A227"/>
+<circle cx="56" cy="52" r="20" fill="none" stroke="#C9A227" stroke-width="1.5"/>
+<text x="56" y="59" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#C9A227" text-anchor="middle">G</text>
+<text x="88" y="59" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="400" fill="#ffffff" letter-spacing="1">guess_bet</text>
+<rect x="700" y="34" width="340" height="36" rx="18" fill="rgba(201,162,39,0.12)" stroke="rgba(201,162,39,0.4)" stroke-width="1"/>
+<text x="870" y="57" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="600" fill="#C9A227" text-anchor="middle" letter-spacing="1">MUNDIAL 2026 · 20:00 CL</text>
+<line x1="40" y1="88" x2="1040" y2="88" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+<defs><clipPath id="hflag"><rect x="110" y="108" width="200" height="130" rx="12"/></clipPath></defs>
+<rect x="110" y="108" width="200" height="130" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+<image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAABUCAMAAAAyEswQAAAAQlBMVEX///8KMWGzGULsxtDZjKFCYIURN2YdQW0sTnd2jKezobRbdZWntce+yNWFmbHl6e/K0t3W3eX29/lNaYyaqr7rxc9T6EpSAAAB7klEQVRo3u2ZzXKDMAyEpSa2oQb/Qd7/VXvAwkxLTQuDQjLakyd78I4tf2gUwIP6OFnwGgHtvF/TzMvyY83nCKhsVNO+Ro2jMlMSFa2aklR9loARumlXbFNqp5XpIFLAms9yxaFzdIMh0B26LtBl1nyOgNpgg4gGERtcLI1G1Lru4/1kLV5xp2mlu/IS7IqPxUc4W7SR6lPI5dWG1KtcaN7n8lv1OQNiCz0te8hR0ACYms8Z0Nn54jpLj2Jwbvjh6+JzBbSIqBH1BOJptfjxd58n4CFQswT00BOIgcrL9OApYM3nAXWkom+8JxC3sYC64rOAWuGQ6auMUXk5oCJQV3zOduvvoF74fAH3gprvBHeCmi/gKoi3Qc3TLAionwhqlm/xEVBzBDwEar52a2dHfTtXDwH1GaD+V0fNN/rYCWoZfbx9R82BmfcDtX7K6MOlMV+kHZObyk+7EJyZffvd550sQMhHZAIQ51RKquazBmzLl6JdBfWK/wKjD5ZmoYnlHMvZxHleXvM5ONgmYrLpgMbRygONo6s+C6h7vwZiX2qu4rOMPgakl5BBjIg44JBfbdWXf5ouH/DzoE7HjEgk2tDjdmk94OPikoASUAJuBbw8ZkQi0YbuF5eAWgJKwJcPKBKJpFmQZkECSkAJWNMXoKFkunVTetAAAAAASUVORK5CYII=" x="110" y="108" width="200" height="130" preserveAspectRatio="xMidYMid slice" clip-path="url(#hflag)"/>
+<defs><clipPath id="aflag"><rect x="770" y="108" width="200" height="130" rx="12"/></clipPath></defs>
+<rect x="770" y="108" width="200" height="130" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+<image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAABQCAMAAACpg44GAAAAPFBMVEUAI5Xsvwrr7fdPZrZgYV0xQ3cGKJf+ywD///9AWrCOndD09fscO6DO1eu+x+Smstqvut5mesA3Uqx1iMVooA+OAAABx0lEQVRo3s3Vy3KDMAyFYRda11xyf/93bUPaThbUka1zJGnBAKtv8Ig/pf9mKN8zPL34ePuEzntSzVS2mbaHnAlCJXAuy+WylHl7GEfCN1QCh8Oa0np4nPHpRDhlHfA6b6ea5+v9uiwZL9QB8/PNWMqI3xTlEf/wpvucSzlvNxkphADTNJS/GSboN8QA03r89R1X7CmDgCndHr4b+o8NA7KaAgOymgIDspoCA7KaggLSmoIC0pqC22JSU8BAfFPQQHhT4EB0UwhAbFMIQGxTCEBsUwhAbFPwQHBT8EBwUxhbDG0KDYhqCg8IagoRiGkKFYhoChWIaAoViGgKFYhoChMIaQoTCGkKd4sBTTEA6ppiAVQ1xQSoaYoRsL8pRsD+phgB+5tiBOxvig1Q0RQboKIpVlvc3RRTYE9TbIEdTTEGtjfFHNjaFHNga1PMga1NMQe2NsUa2NwUa2BzU+y3uLEpTkB5U7yA4qa4AaVNcQTKmuIIlDXFEShriiNQ1hQ/oLApfkBhUzy3WNQUd+CrpvgDXzQlALDelBDAWlNCAGtNCQGsNSUEsNaUCMBqUyIAq02JscWVpgQC7jclEnC3KaGAe02RAb8AnB1zD/uh8tsAAAAASUVORK5CYII=" x="770" y="108" width="200" height="130" preserveAspectRatio="xMidYMid slice" clip-path="url(#aflag)"/>
+<text x="540" y="188" font-family="Segoe UI, Arial, sans-serif" font-size="64" font-weight="900" fill="#C9A227" text-anchor="middle">VS</text>
+<text x="210" y="272" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" text-anchor="middle">USA</text>
+<text x="870" y="272" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" text-anchor="middle">Bosnia</text>
+<text x="210" y="314" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#C9A227" text-anchor="middle">66.3%</text>
+<text x="870" y="314" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="rgba(255,255,255,0.5)" text-anchor="middle">14.9%</text>
+<line x1="40" y1="336" x2="1040" y2="336" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+<text x="540" y="370" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="rgba(255,255,255,0.35)" text-anchor="middle" letter-spacing="5">PROBABILIDADES</text>
+<text x="48" y="414" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#C9A227">USA gana</text>
+<text x="1032" y="414" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#C9A227" text-anchor="end">66.3%</text>
+<rect x="48" y="426" width="984" height="6" rx="3" fill="rgba(255,255,255,0.06)"/>
+<rect x="48" y="426" width="652.4" height="6" rx="3" fill="url(#bargrad)"/>
+<text x="48" y="482" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="400" fill="#ffffff">Empate</text>
+<text x="1032" y="482" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#ffffff" text-anchor="end">18.8%</text>
+<rect x="48" y="494" width="984" height="6" rx="3" fill="rgba(255,255,255,0.06)"/>
+<rect x="48" y="494" width="185.0" height="6" rx="3" fill="rgba(255,255,255,0.25)"/>
+<text x="48" y="550" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="400" fill="#ffffff">Bosnia gana</text>
+<text x="1032" y="550" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#ffffff" text-anchor="end">14.9%</text>
+<rect x="48" y="562" width="984" height="6" rx="3" fill="rgba(255,255,255,0.06)"/>
+<rect x="48" y="562" width="146.6" height="6" rx="3" fill="rgba(255,255,255,0.25)"/>
+<line x1="40" y1="604" x2="1040" y2="604" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+<text x="206" y="638" font-family="Segoe UI, Arial, sans-serif" font-size="19" font-weight="400" fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="1">xG esperados</text>
+<text x="206" y="672" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="600" fill="#ffffff" text-anchor="middle">2.15 – 0.77</text>
+<line x1="373" y1="622" x2="373" y2="684" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<text x="539" y="638" font-family="Segoe UI, Arial, sans-serif" font-size="19" font-weight="400" fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="1">+2.5 goles</text>
+<text x="539" y="672" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="600" fill="#ffffff" text-anchor="middle">55.7%</text>
+<line x1="706" y1="622" x2="706" y2="684" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<text x="872" y="638" font-family="Segoe UI, Arial, sans-serif" font-size="19" font-weight="400" fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="1">Ambos anotan</text>
+<text x="872" y="672" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="600" fill="#ffffff" text-anchor="middle">47.3%</text>
+<line x1="40" y1="700" x2="1040" y2="700" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+<text x="540" y="730" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="rgba(255,255,255,0.35)" text-anchor="middle" letter-spacing="5">EN RESUMEN</text>
+<text x="40" y="760" font-family="Segoe UI, Arial, sans-serif" font-size="24" fill="#C9A227">→</text>
+<text x="80" y="760" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400"><tspan fill="#C9A227">USA aplastante</tspan><tspan fill="rgba(255,255,255,0.80)">: 66.3%. Mayor ventaja ELO del día.</tspan></text>
+<text x="40" y="816" font-family="Segoe UI, Arial, sans-serif" font-size="24" fill="#C9A227">→</text>
+<text x="80" y="816" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400"><tspan fill="rgba(255,255,255,0.80)">xG de </tspan><tspan fill="#C9A227">2.15</tspan><tspan fill="rgba(255,255,255,0.80)"> para USA — el más alto de los 3 partidos.</tspan></text>
+<text x="40" y="872" font-family="Segoe UI, Arial, sans-serif" font-size="24" fill="#C9A227">→</text>
+<text x="80" y="872" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400"><tspan fill="rgba(255,255,255,0.80)">+2.5 goles en </tspan><tspan fill="#C9A227">55.7%</tspan><tspan fill="rgba(255,255,255,0.80)">: el partido con más goles proyectados.</tspan></text>
+<defs><linearGradient id="ctaGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#b8911f"/><stop offset="50%" stop-color="#C9A227"/><stop offset="100%" stop-color="#b8911f"/></linearGradient></defs>
+<rect x="140" y="912" width="800" height="64" rx="32" fill="url(#ctaGrad)"/>
+<text x="540" y="954" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" fill="#0a0a0a" text-anchor="middle" letter-spacing="0.5">Analiza tú mismo → guessbet.vercel.app</text>
+<rect x="0" y="1076" width="1080" height="4" fill="#C9A227"/>
 </svg>

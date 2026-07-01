@@ -5,7 +5,7 @@ Uso: python scripts/build_ig_post_partidos.py
 
 import os, subprocess, urllib.request, base64
 
-RESVG = r'C:\Users\Isabella\AppData\Local\Temp\resvg_bin\resvg.exe'
+RESVG   = r'C:\Users\Isabella\AppData\Local\Temp\resvg_bin\resvg.exe'
 OUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'public', 'marketing', 'ig-posts', 'partidos')
 os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -22,7 +22,7 @@ FLAG_CACHE: dict = {}
 def flag_b64(code: str) -> str:
     if code in FLAG_CACHE:
         return FLAG_CACHE[code]
-    url = f'https://flagcdn.com/w80/{code}.png'
+    url = f'https://flagcdn.com/w160/{code}.png'
     try:
         with urllib.request.urlopen(url, timeout=8) as r:
             data = base64.b64encode(r.read()).decode()
@@ -47,11 +47,11 @@ def _parse_bold(text: str):
 def build_svg(
     home_name, away_name,
     home_flag_code, away_flag_code,
-    phase_label,      # e.g. "DIECISEISAVOS · 12:00 CL"
+    phase_label,
     prob_home, prob_draw, prob_away,
     xg_home, xg_away,
     over25, btts,
-    summary_points,   # lista de strings, **palabra** en dorado
+    summary_points,
 ) -> str:
     lines = []
     def add(*s): lines.extend(s)
@@ -59,158 +59,178 @@ def build_svg(
     add(f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
         f'width="{W}" height="{H}" viewBox="0 0 {W} {H}">')
 
-    # fondo
-    add(f'<rect width="{W}" height="{H}" fill="{BLACK}"/>')
+    # ── fondo con gradiente sutil ─────────────────────────────────────────────
+    add(f'<defs>'
+        f'<linearGradient id="bggrad" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0%" stop-color="#111116"/>'
+        f'<stop offset="100%" stop-color="#0a0a0a"/>'
+        f'</linearGradient>'
+        f'<linearGradient id="bargrad" x1="0" y1="0" x2="1" y2="0">'
+        f'<stop offset="0%" stop-color="#C9A227"/>'
+        f'<stop offset="100%" stop-color="#e8c45a"/>'
+        f'</linearGradient>'
+        f'</defs>')
+    add(f'<rect width="{W}" height="{H}" fill="url(#bggrad)"/>')
 
-    # borde sutil dorado
-    add(f'<rect x="1" y="1" width="{W-2}" height="{H-2}" rx="0" fill="none" '
-        f'stroke="rgba(201,162,39,0.18)" stroke-width="2"/>')
+    # franja dorada superior (4px)
+    add(f'<rect x="0" y="0" width="{W}" height="4" fill="{GOLD}"/>')
 
-    # ── header ────────────────────────────────────────────────────────────────
-    HDR_Y = 52
+    # ── ZONA 1: HEADER (0–90px) ───────────────────────────────────────────────
     # Logo G
-    add(f'<circle cx="60" cy="{HDR_Y}" r="22" fill="none" stroke="{GOLD}" stroke-width="2"/>')
-    add(f'<text x="60" y="{HDR_Y+7}" font-family="{FONT}" font-size="18" font-weight="700" '
+    add(f'<circle cx="56" cy="52" r="20" fill="none" stroke="{GOLD}" stroke-width="1.5"/>')
+    add(f'<text x="56" y="59" font-family="{FONT}" font-size="16" font-weight="700" '
         f'fill="{GOLD}" text-anchor="middle">G</text>')
-    add(f'<text x="96" y="{HDR_Y+7}" font-family="{FONT}" font-size="22" font-weight="500" '
+    add(f'<text x="88" y="59" font-family="{FONT}" font-size="20" font-weight="400" '
         f'fill="{WHITE}" letter-spacing="1">guess_bet</text>')
-    # Etiqueta derecha
-    add(f'<text x="{W-40}" y="{HDR_Y+7}" font-family="{FONT}" font-size="20" font-weight="600" '
-        f'fill="{GOLD}" text-anchor="end" letter-spacing="2">MUNDIAL 2026</text>')
 
-    # línea separadora header
-    add(f'<line x1="40" y1="{HDR_Y+26}" x2="{W-40}" y2="{HDR_Y+26}" '
-        f'stroke="rgba(255,255,255,0.08)" stroke-width="1"/>')
+    # badge fase — derecha
+    BADGE_W, BADGE_H = 340, 36
+    BADGE_X = W - 40 - BADGE_W
+    add(f'<rect x="{BADGE_X}" y="34" width="{BADGE_W}" height="{BADGE_H}" rx="18" '
+        f'fill="rgba(201,162,39,0.12)" stroke="rgba(201,162,39,0.4)" stroke-width="1"/>')
+    add(f'<text x="{BADGE_X + BADGE_W//2}" y="57" font-family="{FONT}" font-size="17" '
+        f'font-weight="600" fill="{GOLD}" text-anchor="middle" letter-spacing="1">'
+        f'MUNDIAL 2026 · {esc(phase_label)}</text>')
 
-    # ── fase label ────────────────────────────────────────────────────────────
-    PHASE_Y = HDR_Y + 50
-    add(f'<text x="{W//2}" y="{PHASE_Y}" font-family="{FONT}" font-size="24" font-weight="400" '
-        f'fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="3">'
-        f'{esc(phase_label)}</text>')
+    # separador
+    add(f'<line x1="40" y1="88" x2="{W-40}" y2="88" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>')
 
-    # ── bloque equipos ────────────────────────────────────────────────────────
-    TEAMS_CY = PHASE_Y + 100
-    FLAG_W, FLAG_H_px = 110, 72
-    FLAG_R = 8
-    home_cx, away_cx, vs_cx = 230, W-230, W//2
+    # ── ZONA 2: EQUIPOS (90–360px) ────────────────────────────────────────────
+    # Banderas grandes
+    FLAG_W, FLAG_H_px = 200, 130
+    FLAG_R = 12
+    home_cx, away_cx = 210, W-210
 
-    def draw_flag(cx, code, clip_id):
-        fx = cx - FLAG_W//2
-        fy = TEAMS_CY - FLAG_H_px//2
-        uri = flag_b64(code) if code else ''
-        add(f'<defs><clipPath id="{clip_id}">'
-            f'<rect x="{fx}" y="{fy}" width="{FLAG_W}" height="{FLAG_H_px}" rx="{FLAG_R}"/>'
-            f'</clipPath></defs>')
-        add(f'<rect x="{fx}" y="{fy}" width="{FLAG_W}" height="{FLAG_H_px}" rx="{FLAG_R}" '
-            f'fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>')
-        if uri:
-            add(f'<image href="{uri}" x="{fx}" y="{fy}" width="{FLAG_W}" height="{FLAG_H_px}" '
-                f'preserveAspectRatio="xMidYMid slice" clip-path="url(#{clip_id})"/>')
+    # bandera home
+    hfx, hfy = home_cx - FLAG_W//2, 108
+    add(f'<defs><clipPath id="hflag"><rect x="{hfx}" y="{hfy}" width="{FLAG_W}" height="{FLAG_H_px}" rx="{FLAG_R}"/></clipPath></defs>')
+    add(f'<rect x="{hfx}" y="{hfy}" width="{FLAG_W}" height="{FLAG_H_px}" rx="{FLAG_R}" '
+        f'fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>')
+    uri_h = flag_b64(home_flag_code)
+    if uri_h:
+        add(f'<image href="{uri_h}" x="{hfx}" y="{hfy}" width="{FLAG_W}" height="{FLAG_H_px}" '
+            f'preserveAspectRatio="xMidYMid slice" clip-path="url(#hflag)"/>')
 
-    draw_flag(home_cx, home_flag_code, 'hflag')
-    draw_flag(away_cx, away_flag_code, 'aflag')
+    # bandera away
+    afx, afy = away_cx - FLAG_W//2, 108
+    add(f'<defs><clipPath id="aflag"><rect x="{afx}" y="{afy}" width="{FLAG_W}" height="{FLAG_H_px}" rx="{FLAG_R}"/></clipPath></defs>')
+    add(f'<rect x="{afx}" y="{afy}" width="{FLAG_W}" height="{FLAG_H_px}" rx="{FLAG_R}" '
+        f'fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>')
+    uri_a = flag_b64(away_flag_code)
+    if uri_a:
+        add(f'<image href="{uri_a}" x="{afx}" y="{afy}" width="{FLAG_W}" height="{FLAG_H_px}" '
+            f'preserveAspectRatio="xMidYMid slice" clip-path="url(#aflag)"/>')
 
-    NAME_Y = TEAMS_CY + FLAG_H_px//2 + 32
-    add(f'<text x="{home_cx}" y="{NAME_Y}" font-family="{FONT}" font-size="34" font-weight="600" '
-        f'fill="{WHITE}" text-anchor="middle">{esc(home_name)}</text>')
-    add(f'<text x="{vs_cx}" y="{TEAMS_CY+10}" font-family="{FONT}" font-size="46" font-weight="700" '
+    # VS central
+    add(f'<text x="{W//2}" y="188" font-family="{FONT}" font-size="64" font-weight="900" '
         f'fill="{GOLD}" text-anchor="middle">VS</text>')
-    add(f'<text x="{away_cx}" y="{NAME_Y}" font-family="{FONT}" font-size="34" font-weight="600" '
+
+    # nombres equipos
+    add(f'<text x="{home_cx}" y="272" font-family="{FONT}" font-size="38" font-weight="700" '
+        f'fill="{WHITE}" text-anchor="middle">{esc(home_name)}</text>')
+    add(f'<text x="{away_cx}" y="272" font-family="{FONT}" font-size="38" font-weight="700" '
         f'fill="{WHITE}" text-anchor="middle">{esc(away_name)}</text>')
 
-    # ── PROBABILIDADES ────────────────────────────────────────────────────────
-    PROB_TOP = NAME_Y + 34
-    PAD_X = 32
-    INNER_W = W - 80
-    ROW_H = 84
-    PROB_H = ROW_H * 3 + PAD_X
+    # probabilidades debajo del nombre (grande, destacado)
+    fav = prob_home if prob_home > prob_away else prob_away
+    h_color = GOLD if prob_home >= prob_away else 'rgba(255,255,255,0.5)'
+    a_color = GOLD if prob_away > prob_home else 'rgba(255,255,255,0.5)'
+    add(f'<text x="{home_cx}" y="314" font-family="{FONT}" font-size="32" font-weight="700" '
+        f'fill="{h_color}" text-anchor="middle">{prob_home:.1f}%</text>')
+    add(f'<text x="{away_cx}" y="314" font-family="{FONT}" font-size="32" font-weight="700" '
+        f'fill="{a_color}" text-anchor="middle">{prob_away:.1f}%</text>')
 
-    add(f'<rect x="40" y="{PROB_TOP}" width="{INNER_W}" height="{PROB_H}" rx="12" '
-        f'fill="rgba(255,255,255,0.04)"/>')
-    add(f'<text x="{W//2}" y="{PROB_TOP-18}" font-family="{FONT}" font-size="22" font-weight="700" '
-        f'fill="{GOLD}" text-anchor="middle" letter-spacing="4">PROBABILIDADES</text>')
+    # separador
+    add(f'<line x1="40" y1="336" x2="{W-40}" y2="336" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>')
+
+    # ── ZONA 3: PROBABILIDADES (340–590px) ───────────────────────────────────
+    add(f'<text x="{W//2}" y="370" font-family="{FONT}" font-size="20" font-weight="700" '
+        f'fill="rgba(255,255,255,0.35)" text-anchor="middle" letter-spacing="5">PROBABILIDADES</text>')
 
     rows = [
         (home_name + ' gana', prob_home),
         ('Empate',             prob_draw),
         (away_name + ' gana',  prob_away),
     ]
-    try:
-        fav_idx = max(range(3), key=lambda i: float(rows[i][1]))
-    except Exception:
-        fav_idx = 0
+    fav_idx = max(range(3), key=lambda i: float(rows[i][1]))
 
-    BAR_H = 5
+    ROW_TOP = 390
+    ROW_H   = 68
+    BAR_H   = 6
+    PAD_X   = 48
+
     for ri, (label, prob) in enumerate(rows):
-        ry = PROB_TOP + PAD_X//2 + 10 + ri * ROW_H
+        ry = ROW_TOP + ri * ROW_H
         is_fav = ri == fav_idx
         txt_col = GOLD if is_fav else WHITE
-        bar_col = GOLD if is_fav else 'rgba(255,255,255,0.3)'
+        bar_fill = 'url(#bargrad)' if is_fav else 'rgba(255,255,255,0.25)'
+        weight = '700' if is_fav else '400'
 
-        add(f'<text x="{40+PAD_X}" y="{ry+32}" font-family="{FONT}" font-size="30" '
-            f'font-weight="{"600" if is_fav else "400"}" fill="{txt_col}">{esc(label)}</text>')
+        add(f'<text x="{PAD_X}" y="{ry+24}" font-family="{FONT}" font-size="28" '
+            f'font-weight="{weight}" fill="{txt_col}">{esc(label)}</text>')
+        add(f'<text x="{W-PAD_X}" y="{ry+24}" font-family="{FONT}" font-size="32" '
+            f'font-weight="700" fill="{txt_col}" text-anchor="end">{float(prob):.1f}%</text>')
 
-        prob_str = f'{float(prob):.1f}%'
-        add(f'<text x="{40+INNER_W-PAD_X}" y="{ry+32}" font-family="{FONT}" font-size="34" '
-            f'font-weight="700" fill="{bar_col}" text-anchor="end">{prob_str}</text>')
-
-        bx = 40 + PAD_X
-        by = ry + 46
-        bw = INNER_W - PAD_X*2
+        bx, by = PAD_X, ry + 36
+        bw = W - PAD_X*2
         fw = bw * float(prob) / 100
-        add(f'<rect x="{bx}" y="{by}" width="{bw}" height="{BAR_H}" rx="3" fill="rgba(255,255,255,0.07)"/>')
-        add(f'<rect x="{bx}" y="{by}" width="{fw:.1f}" height="{BAR_H}" rx="3" fill="{bar_col}"/>')
+        add(f'<rect x="{bx}" y="{by}" width="{bw}" height="{BAR_H}" rx="3" fill="rgba(255,255,255,0.06)"/>')
+        add(f'<rect x="{bx}" y="{by}" width="{fw:.1f}" height="{BAR_H}" rx="3" fill="{bar_fill}"/>')
 
-        if ri < 2:
-            add(f'<line x1="{40+PAD_X}" y1="{ry+ROW_H-6}" x2="{40+INNER_W-PAD_X}" y2="{ry+ROW_H-6}" '
-                f'stroke="rgba(255,255,255,0.06)" stroke-width="1"/>')
+    # separador
+    add(f'<line x1="40" y1="604" x2="{W-40}" y2="604" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>')
 
-    # ── stats secundarios ─────────────────────────────────────────────────────
-    STATS_Y = PROB_TOP + PROB_H + 20
+    # ── ZONA 4: STATS SECUNDARIOS (608–690px) ────────────────────────────────
     stats = [
-        ('xG', f'{xg_home:.2f} – {xg_away:.2f}'),
-        ('+2.5 goles', f'{over25:.1f}%'),
-        ('Ambos anotan', f'{btts:.1f}%'),
+        ('xG esperados', f'{xg_home:.2f} – {xg_away:.2f}'),
+        ('+2.5 goles',   f'{over25:.1f}%'),
+        ('Ambos anotan',  f'{btts:.1f}%'),
     ]
-    col_w = INNER_W // 3
+    col_w = (W - 80) // 3
     for si, (slabel, sval) in enumerate(stats):
-        sx = 40 + col_w*si + col_w//2
-        add(f'<text x="{sx}" y="{STATS_Y}" font-family="{FONT}" font-size="21" font-weight="400" '
-            f'fill="rgba(255,255,255,0.40)" text-anchor="middle">{esc(slabel)}</text>')
-        add(f'<text x="{sx}" y="{STATS_Y+32}" font-family="{FONT}" font-size="28" font-weight="600" '
+        sx = 40 + col_w * si + col_w // 2
+        add(f'<text x="{sx}" y="638" font-family="{FONT}" font-size="19" font-weight="400" '
+            f'fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="1">{esc(slabel)}</text>')
+        add(f'<text x="{sx}" y="672" font-family="{FONT}" font-size="30" font-weight="600" '
             f'fill="{WHITE}" text-anchor="middle">{esc(sval)}</text>')
         if si < 2:
-            add(f'<line x1="{40+col_w*(si+1)}" y1="{STATS_Y-14}" x2="{40+col_w*(si+1)}" y2="{STATS_Y+42}" '
-                f'stroke="rgba(255,255,255,0.1)" stroke-width="1"/>')
+            add(f'<line x1="{40+col_w*(si+1)}" y1="622" x2="{40+col_w*(si+1)}" y2="684" '
+                f'stroke="rgba(255,255,255,0.09)" stroke-width="1"/>')
 
-    # ── EN RESUMEN ────────────────────────────────────────────────────────────
-    SUM_TOP = STATS_Y + 52
-    LINE_H  = 48
-    SUM_PAD = 22
-    SUM_H   = len(summary_points)*LINE_H + SUM_PAD*2
+    # separador
+    add(f'<line x1="40" y1="700" x2="{W-40}" y2="700" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>')
 
-    add(f'<rect x="40" y="{SUM_TOP}" width="{INNER_W}" height="{SUM_H}" rx="12" '
-        f'fill="rgba(201,162,39,0.07)" stroke="rgba(201,162,39,0.22)" stroke-width="1"/>')
-    add(f'<text x="{W//2}" y="{SUM_TOP-16}" font-family="{FONT}" font-size="22" font-weight="700" '
-        f'fill="{GOLD}" text-anchor="middle" letter-spacing="4">EN RESUMEN</text>')
+    # ── ZONA 5: EN RESUMEN (704–880px) ───────────────────────────────────────
+    add(f'<text x="{W//2}" y="730" font-family="{FONT}" font-size="20" font-weight="700" '
+        f'fill="rgba(255,255,255,0.35)" text-anchor="middle" letter-spacing="5">EN RESUMEN</text>')
 
+    LINE_H = 56
     for pi, point in enumerate(summary_points):
-        py = SUM_TOP + SUM_PAD + pi*LINE_H + 30
-        add(f'<text x="{40+SUM_PAD}" y="{py}" font-family="{FONT}" font-size="26" fill="{GOLD}">→</text>')
-        TEXT_X = 40 + SUM_PAD + 40
+        py = 760 + pi * LINE_H
+        add(f'<text x="40" y="{py}" font-family="{FONT}" font-size="24" fill="{GOLD}">→</text>')
+        TEXT_X = 80
         parts = _parse_bold(point)
-        tspans = ''.join(f'<tspan fill="{GOLD if b else "rgba(255,255,255,0.82)"}">{esc(t)}</tspan>'
-                         for t,b in parts)
-        add(f'<text x="{TEXT_X}" y="{py}" font-family="{FONT}" font-size="26" font-weight="400">{tspans}</text>')
+        tspans = ''.join(
+            f'<tspan fill="{GOLD if b else "rgba(255,255,255,0.80)"}">{esc(t)}</tspan>'
+            for t, b in parts)
+        add(f'<text x="{TEXT_X}" y="{py}" font-family="{FONT}" font-size="24" font-weight="400">'
+            f'{tspans}</text>')
 
-    # ── CTA footer ────────────────────────────────────────────────────────────
-    CTA_Y = SUM_TOP + SUM_H + 20
-    CTA_H = 60
-    CTA_W = 760
-    CTA_X = (W - CTA_W)//2
-    add(f'<rect x="{CTA_X}" y="{CTA_Y}" width="{CTA_W}" height="{CTA_H}" rx="32" fill="{GOLD}"/>')
-    add(f'<text x="{W//2}" y="{CTA_Y+CTA_H//2+11}" font-family="{FONT}" font-size="28" font-weight="600" '
-        f'fill="#0a0f1e" text-anchor="middle">{esc("Analiza tú mismo → guessbet.vercel.app")}</text>')
+    # ── ZONA 6: CTA (900–980px) ──────────────────────────────────────────────
+    CTA_Y, CTA_H, CTA_W = 912, 64, 800
+    CTA_X = (W - CTA_W) // 2
+    add(f'<defs><linearGradient id="ctaGrad" x1="0" y1="0" x2="1" y2="0">'
+        f'<stop offset="0%" stop-color="#b8911f"/>'
+        f'<stop offset="50%" stop-color="#C9A227"/>'
+        f'<stop offset="100%" stop-color="#b8911f"/>'
+        f'</linearGradient></defs>')
+    add(f'<rect x="{CTA_X}" y="{CTA_Y}" width="{CTA_W}" height="{CTA_H}" rx="32" fill="url(#ctaGrad)"/>')
+    add(f'<text x="{W//2}" y="{CTA_Y + CTA_H//2 + 10}" font-family="{FONT}" font-size="26" '
+        f'font-weight="700" fill="#0a0a0a" text-anchor="middle" letter-spacing="0.5">'
+        f'{esc("Analiza tú mismo → guessbet.vercel.app")}</text>')
+
+    # franja dorada inferior (4px)
+    add(f'<rect x="0" y="{H-4}" width="{W}" height="4" fill="{GOLD}"/>')
 
     add('</svg>')
     return '\n'.join(lines)
@@ -232,18 +252,14 @@ CASES = [
         away_name='RD Congo',
         home_flag_code='gb-eng',
         away_flag_code='cd',
-        phase_label='DIECISEISAVOS DE FINAL · HOY 12:00 CL',
-        prob_home=53.7,
-        prob_draw=26.6,
-        prob_away=19.7,
-        xg_home=1.46,
-        xg_away=0.72,
-        over25=37.4,
-        btts=39.6,
+        phase_label='12:00 CL',
+        prob_home=53.7, prob_draw=26.6, prob_away=19.7,
+        xg_home=1.46, xg_away=0.72,
+        over25=37.4, btts=39.6,
         summary_points=[
-            '**Inglaterra** favorita clara con **53.7%** de probabilidad.',
-            'Ventaja ELO de **160 puntos** a favor de los ingleses.',
-            'Partido pronosticado **cerrado en goles** (xG 1.46 – 0.72).',
+            '**Inglaterra** favorita con **53.7%** de probabilidad.',
+            'Ventaja ELO de **160 puntos** para los ingleses.',
+            'Partido cerrado en goles: xG proyectado **1.46 – 0.72**.',
         ],
     ),
     dict(
@@ -252,18 +268,14 @@ CASES = [
         away_name='Senegal',
         home_flag_code='be',
         away_flag_code='sn',
-        phase_label='DIECISEISAVOS DE FINAL · HOY 16:00 CL',
-        prob_home=40.3,
-        prob_draw=28.5,
-        prob_away=31.2,
-        xg_home=1.31,
-        xg_away=0.84,
-        over25=36.4,
-        btts=41.6,
+        phase_label='16:00 CL',
+        prob_home=40.3, prob_draw=28.5, prob_away=31.2,
+        xg_home=1.31, xg_away=0.84,
+        over25=36.4, btts=41.6,
         summary_points=[
-            '**Senegal** tiene ELO más alto (1800 vs 1776). Partido parejo.',
-            'El empate tiene **28.5%** — opción real en este cruce.',
-            '**Ambos anotan**: 41.6%. El más abierto de los 3 hoy.',
+            '**Senegal** con ELO más alto (1800 vs 1776). Partido parejo.',
+            'El **empate tiene 28.5%** — opción real a considerar.',
+            '**Ambos anotan: 41.6%** — el cruce más abierto del día.',
         ],
     ),
     dict(
@@ -272,16 +284,12 @@ CASES = [
         away_name='Bosnia',
         home_flag_code='us',
         away_flag_code='ba',
-        phase_label='DIECISEISAVOS DE FINAL · HOY 20:00 CL',
-        prob_home=66.3,
-        prob_draw=18.8,
-        prob_away=14.9,
-        xg_home=2.15,
-        xg_away=0.77,
-        over25=55.7,
-        btts=47.3,
+        phase_label='20:00 CL',
+        prob_home=66.3, prob_draw=18.8, prob_away=14.9,
+        xg_home=2.15, xg_away=0.77,
+        over25=55.7, btts=47.3,
         summary_points=[
-            '**USA** aplastante con **66.3%**. Mayor diferencia ELO del día.',
+            '**USA aplastante**: 66.3%. Mayor ventaja ELO del día.',
             'xG de **2.15** para USA — el más alto de los 3 partidos.',
             '+2.5 goles en **55.7%**: el partido con más goles proyectados.',
         ],

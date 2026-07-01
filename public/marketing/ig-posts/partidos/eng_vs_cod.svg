@@ -1,53 +1,57 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1080" viewBox="0 0 1080 1080">
-<rect width="1080" height="1080" fill="#0a0a0a"/>
-<rect x="1" y="1" width="1078" height="1078" rx="0" fill="none" stroke="rgba(201,162,39,0.18)" stroke-width="2"/>
-<circle cx="60" cy="52" r="22" fill="none" stroke="#C9A227" stroke-width="2"/>
-<text x="60" y="59" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#C9A227" text-anchor="middle">G</text>
-<text x="96" y="59" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="500" fill="#ffffff" letter-spacing="1">guess_bet</text>
-<text x="1040" y="59" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="600" fill="#C9A227" text-anchor="end" letter-spacing="2">MUNDIAL 2026</text>
-<line x1="40" y1="78" x2="1040" y2="78" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-<text x="540" y="102" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400" fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="3">DIECISEISAVOS DE FINAL · HOY 12:00 CL</text>
-<defs><clipPath id="hflag"><rect x="175" y="166" width="110" height="72" rx="8"/></clipPath></defs>
-<rect x="175" y="166" width="110" height="72" rx="8" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
-<image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAwAgMAAAD7ixVkAAAADFBMVEXIEC7////VS2HTPle0Xg6sAAAAKklEQVQoz2MIhYJwBoarMDbDqOBACa6CghUMDFowNsNQAVgdPxrFg0kQADYKDVwTPzRcAAAAAElFTkSuQmCC" x="175" y="166" width="110" height="72" preserveAspectRatio="xMidYMid slice" clip-path="url(#hflag)"/>
-<defs><clipPath id="aflag"><rect x="795" y="166" width="110" height="72" rx="8"/></clipPath></defs>
-<rect x="795" y="166" width="110" height="72" rx="8" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
-<image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAA8CAMAAADG+c2+AAAAPFBMVEUAf/+vvVrYyzT20BgIgvd7qozv0x/31hjOECEfiuLPFSHaSh7xuhnicB3qmxrTKx9MmrhBlsHGxUWatW9A5cWMAAABPklEQVRYw+3V2RKDIAxAUbCRQFfE///XIhUXwE4heeqYV+sdTkUUgmuMRMT7jSsHvUK8PK6aqTd0fnnPl9ZJEICi1ToLipGiLQRBDQRtIWixJ2gLwREdQVsI+sumXZsHB0TVt2vzYO9/Idu1eXASIDRrlyBMa0/HmWqtn9dzte5nhHqtvj4uuBWso2yL9nb3FxaE2/Q606Sd7rTbTR1HQpvW77ndnfHRqOPl2a9aaZKDIa7QkLXzwRCnp2uX/zCwHVkbDwa/W0xXNFdq54MhvBww5uZq7Uc8Z8AqV7OT5cEzdOvhbxzQtPn3zuyPtEPtty8GNLy30lC/QL9pWd5bypl8ak/tqT21/6gVglUbgozaMJzaMJzaYpCiLQVJ2jxI1KZBsjYJ0rW7IId2E+TRrkEmbQyyaT9BRm0YTu00b9tKNjCuKQPqAAAAAElFTkSuQmCC" x="795" y="166" width="110" height="72" preserveAspectRatio="xMidYMid slice" clip-path="url(#aflag)"/>
-<text x="230" y="270" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="600" fill="#ffffff" text-anchor="middle">Inglaterra</text>
-<text x="540" y="212" font-family="Segoe UI, Arial, sans-serif" font-size="46" font-weight="700" fill="#C9A227" text-anchor="middle">VS</text>
-<text x="850" y="270" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="600" fill="#ffffff" text-anchor="middle">RD Congo</text>
-<rect x="40" y="304" width="1000" height="284" rx="12" fill="rgba(255,255,255,0.04)"/>
-<text x="540" y="286" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#C9A227" text-anchor="middle" letter-spacing="4">PROBABILIDADES</text>
-<text x="72" y="362" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="600" fill="#C9A227">Inglaterra gana</text>
-<text x="1008" y="362" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#C9A227" text-anchor="end">53.7%</text>
-<rect x="72" y="376" width="936" height="5" rx="3" fill="rgba(255,255,255,0.07)"/>
-<rect x="72" y="376" width="502.6" height="5" rx="3" fill="#C9A227"/>
-<line x1="72" y1="408" x2="1008" y2="408" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-<text x="72" y="446" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="400" fill="#ffffff">Empate</text>
-<text x="1008" y="446" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="rgba(255,255,255,0.3)" text-anchor="end">26.6%</text>
-<rect x="72" y="460" width="936" height="5" rx="3" fill="rgba(255,255,255,0.07)"/>
-<rect x="72" y="460" width="249.0" height="5" rx="3" fill="rgba(255,255,255,0.3)"/>
-<line x1="72" y1="492" x2="1008" y2="492" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-<text x="72" y="530" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="400" fill="#ffffff">RD Congo gana</text>
-<text x="1008" y="530" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="rgba(255,255,255,0.3)" text-anchor="end">19.7%</text>
-<rect x="72" y="544" width="936" height="5" rx="3" fill="rgba(255,255,255,0.07)"/>
-<rect x="72" y="544" width="184.4" height="5" rx="3" fill="rgba(255,255,255,0.3)"/>
-<text x="206" y="608" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="400" fill="rgba(255,255,255,0.40)" text-anchor="middle">xG</text>
-<text x="206" y="640" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#ffffff" text-anchor="middle">1.46 – 0.72</text>
-<line x1="373" y1="594" x2="373" y2="650" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-<text x="539" y="608" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="400" fill="rgba(255,255,255,0.40)" text-anchor="middle">+2.5 goles</text>
-<text x="539" y="640" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#ffffff" text-anchor="middle">37.4%</text>
-<line x1="706" y1="594" x2="706" y2="650" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-<text x="872" y="608" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="400" fill="rgba(255,255,255,0.40)" text-anchor="middle">Ambos anotan</text>
-<text x="872" y="640" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#ffffff" text-anchor="middle">39.6%</text>
-<rect x="40" y="660" width="1000" height="188" rx="12" fill="rgba(201,162,39,0.07)" stroke="rgba(201,162,39,0.22)" stroke-width="1"/>
-<text x="540" y="644" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#C9A227" text-anchor="middle" letter-spacing="4">EN RESUMEN</text>
-<text x="62" y="712" font-family="Segoe UI, Arial, sans-serif" font-size="26" fill="#C9A227">→</text>
-<text x="102" y="712" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="400"><tspan fill="#C9A227">Inglaterra</tspan><tspan fill="rgba(255,255,255,0.82)"> favorita clara con </tspan><tspan fill="#C9A227">53.7%</tspan><tspan fill="rgba(255,255,255,0.82)"> de probabilidad.</tspan></text>
-<text x="62" y="760" font-family="Segoe UI, Arial, sans-serif" font-size="26" fill="#C9A227">→</text>
-<text x="102" y="760" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="400"><tspan fill="rgba(255,255,255,0.82)">Ventaja ELO de </tspan><tspan fill="#C9A227">160 puntos</tspan><tspan fill="rgba(255,255,255,0.82)"> a favor de los ingleses.</tspan></text>
-<text x="62" y="808" font-family="Segoe UI, Arial, sans-serif" font-size="26" fill="#C9A227">→</text>
-<text x="102" y="808" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="400"><tspan fill="rgba(255,255,255,0.82)">Partido pronosticado </tspan><tspan fill="#C9A227">cerrado en goles</tspan><tspan fill="rgba(255,255,255,0.82)"> (xG 1.46 – 0.72).</tspan></text>
-<rect x="160" y="868" width="760" height="60" rx="32" fill="#C9A227"/>
-<text x="540" y="909" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600" fill="#0a0f1e" text-anchor="middle">Analiza tú mismo → guessbet.vercel.app</text>
+<defs><linearGradient id="bggrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#111116"/><stop offset="100%" stop-color="#0a0a0a"/></linearGradient><linearGradient id="bargrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#C9A227"/><stop offset="100%" stop-color="#e8c45a"/></linearGradient></defs>
+<rect width="1080" height="1080" fill="url(#bggrad)"/>
+<rect x="0" y="0" width="1080" height="4" fill="#C9A227"/>
+<circle cx="56" cy="52" r="20" fill="none" stroke="#C9A227" stroke-width="1.5"/>
+<text x="56" y="59" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#C9A227" text-anchor="middle">G</text>
+<text x="88" y="59" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="400" fill="#ffffff" letter-spacing="1">guess_bet</text>
+<rect x="700" y="34" width="340" height="36" rx="18" fill="rgba(201,162,39,0.12)" stroke="rgba(201,162,39,0.4)" stroke-width="1"/>
+<text x="870" y="57" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="600" fill="#C9A227" text-anchor="middle" letter-spacing="1">MUNDIAL 2026 · 12:00 CL</text>
+<line x1="40" y1="88" x2="1040" y2="88" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+<defs><clipPath id="hflag"><rect x="110" y="108" width="200" height="130" rx="12"/></clipPath></defs>
+<rect x="110" y="108" width="200" height="130" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+<image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAABgAgMAAADnSZEKAAAADFBMVEXIEC7////jh5beboGM+ng+AAAAP0lEQVRIx+3UoRUAIAzE0Gj2YRQcw6GZsg7RGjQk8t63LSM3AXqZEQqFQuEHcOcWQCszZm93fQq+FKFQKBSeAsIbs66TjVkrAAAAAElFTkSuQmCC" x="110" y="108" width="200" height="130" preserveAspectRatio="xMidYMid slice" clip-path="url(#hflag)"/>
+<defs><clipPath id="aflag"><rect x="770" y="108" width="200" height="130" rx="12"/></clipPath></defs>
+<rect x="770" y="108" width="200" height="130" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+<image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAB4CAMAAABCfAldAAAAPFBMVEUAf/97q4z20BjaSh7XyzUfiuHu0yD31hjOECFFl77icB3PFSHTKx/xuhnqmxq1vlWsvF0PhPBhoaSQsXl0HoKUAAACYklEQVR42u3Z3XaDIBBFYW0EpG2i6Pu/a+N/EGVoTZlzMVwHu5dfsFNbFIBLtWZe9xtiX6nnvI/Prxovz1bL7Xt813WNrFvXeIGeLl7gThctMNBNCFQ5dc1elw5UPasuHVhWrLp0YGUs09lNC1TGlJy6ZGBnTMWpSwY2z12KUZcKdMO+jlGXCuyGjQ2jLhU4bXd8ulTgtL/j0yUC7bS95dMlAvvpAppPlwhcrmHZdOOBdrlIz6YbD1ynH82mGw9cGbTl0vUCt53k6nPpPtf3Y9vcpOVduKG/1a2/Pj9M+FyJr0rl073dnx/2LqHJvjan7vhx/yrEF1F3WXXDwGVAeDfvH3WPAovunLlxmXWHexIcSXfKXGbXNfrwZ7rmnU+XK7qNon7LvfAqAN3dsO/1vfVtRopu/BsV3EINo7sbFNZlYXTnNwqXj/Dbzy5xSCoY3eWNwn4pEN31jcJ8t/9i/G9nN3jIaLs9tBsQ3deBYZwN1tvhIHRf/97s/SGxYz+7/t+b2+g3Tw8thO46+Xuj38imHYLuIty6cEi0ALqzcLhhYO4BdCfho/vt2tjAkE13HBROJvvy3DibbvyfS7Zk10WambneVV3ShZqZRVd0RVd0RVd0RVd0RVd0RVd0RVd0RVd0RVd0RVd0RVd0uXWLAlt3DcTU3QJBdZdAWN0pEFh3XMi640LWTQ7k0k0NZNNNC2TUTQlk1U0I5NUlA7l1iUB+3XgggG4sEEL3PBBE9zQQRfckEEf3MBBJ9ygQSjcMBNPdB8Lp7gLxdL1ARN2XQEzdLRBUdwmE1Z0CgXXHhaw7rB+nksZPAOSbmAAAAABJRU5ErkJggg==" x="770" y="108" width="200" height="130" preserveAspectRatio="xMidYMid slice" clip-path="url(#aflag)"/>
+<text x="540" y="188" font-family="Segoe UI, Arial, sans-serif" font-size="64" font-weight="900" fill="#C9A227" text-anchor="middle">VS</text>
+<text x="210" y="272" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" text-anchor="middle">Inglaterra</text>
+<text x="870" y="272" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" text-anchor="middle">RD Congo</text>
+<text x="210" y="314" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#C9A227" text-anchor="middle">53.7%</text>
+<text x="870" y="314" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="rgba(255,255,255,0.5)" text-anchor="middle">19.7%</text>
+<line x1="40" y1="336" x2="1040" y2="336" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+<text x="540" y="370" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="rgba(255,255,255,0.35)" text-anchor="middle" letter-spacing="5">PROBABILIDADES</text>
+<text x="48" y="414" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#C9A227">Inglaterra gana</text>
+<text x="1032" y="414" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#C9A227" text-anchor="end">53.7%</text>
+<rect x="48" y="426" width="984" height="6" rx="3" fill="rgba(255,255,255,0.06)"/>
+<rect x="48" y="426" width="528.4" height="6" rx="3" fill="url(#bargrad)"/>
+<text x="48" y="482" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="400" fill="#ffffff">Empate</text>
+<text x="1032" y="482" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#ffffff" text-anchor="end">26.6%</text>
+<rect x="48" y="494" width="984" height="6" rx="3" fill="rgba(255,255,255,0.06)"/>
+<rect x="48" y="494" width="261.7" height="6" rx="3" fill="rgba(255,255,255,0.25)"/>
+<text x="48" y="550" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="400" fill="#ffffff">RD Congo gana</text>
+<text x="1032" y="550" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#ffffff" text-anchor="end">19.7%</text>
+<rect x="48" y="562" width="984" height="6" rx="3" fill="rgba(255,255,255,0.06)"/>
+<rect x="48" y="562" width="193.8" height="6" rx="3" fill="rgba(255,255,255,0.25)"/>
+<line x1="40" y1="604" x2="1040" y2="604" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+<text x="206" y="638" font-family="Segoe UI, Arial, sans-serif" font-size="19" font-weight="400" fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="1">xG esperados</text>
+<text x="206" y="672" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="600" fill="#ffffff" text-anchor="middle">1.46 – 0.72</text>
+<line x1="373" y1="622" x2="373" y2="684" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<text x="539" y="638" font-family="Segoe UI, Arial, sans-serif" font-size="19" font-weight="400" fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="1">+2.5 goles</text>
+<text x="539" y="672" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="600" fill="#ffffff" text-anchor="middle">37.4%</text>
+<line x1="706" y1="622" x2="706" y2="684" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<text x="872" y="638" font-family="Segoe UI, Arial, sans-serif" font-size="19" font-weight="400" fill="rgba(255,255,255,0.38)" text-anchor="middle" letter-spacing="1">Ambos anotan</text>
+<text x="872" y="672" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="600" fill="#ffffff" text-anchor="middle">39.6%</text>
+<line x1="40" y1="700" x2="1040" y2="700" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+<text x="540" y="730" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="rgba(255,255,255,0.35)" text-anchor="middle" letter-spacing="5">EN RESUMEN</text>
+<text x="40" y="760" font-family="Segoe UI, Arial, sans-serif" font-size="24" fill="#C9A227">→</text>
+<text x="80" y="760" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400"><tspan fill="#C9A227">Inglaterra</tspan><tspan fill="rgba(255,255,255,0.80)"> favorita con </tspan><tspan fill="#C9A227">53.7%</tspan><tspan fill="rgba(255,255,255,0.80)"> de probabilidad.</tspan></text>
+<text x="40" y="816" font-family="Segoe UI, Arial, sans-serif" font-size="24" fill="#C9A227">→</text>
+<text x="80" y="816" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400"><tspan fill="rgba(255,255,255,0.80)">Ventaja ELO de </tspan><tspan fill="#C9A227">160 puntos</tspan><tspan fill="rgba(255,255,255,0.80)"> para los ingleses.</tspan></text>
+<text x="40" y="872" font-family="Segoe UI, Arial, sans-serif" font-size="24" fill="#C9A227">→</text>
+<text x="80" y="872" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="400"><tspan fill="rgba(255,255,255,0.80)">Partido cerrado en goles: xG proyectado </tspan><tspan fill="#C9A227">1.46 – 0.72</tspan><tspan fill="rgba(255,255,255,0.80)">.</tspan></text>
+<defs><linearGradient id="ctaGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#b8911f"/><stop offset="50%" stop-color="#C9A227"/><stop offset="100%" stop-color="#b8911f"/></linearGradient></defs>
+<rect x="140" y="912" width="800" height="64" rx="32" fill="url(#ctaGrad)"/>
+<text x="540" y="954" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" fill="#0a0a0a" text-anchor="middle" letter-spacing="0.5">Analiza tú mismo → guessbet.vercel.app</text>
+<rect x="0" y="1076" width="1080" height="4" fill="#C9A227"/>
 </svg>
