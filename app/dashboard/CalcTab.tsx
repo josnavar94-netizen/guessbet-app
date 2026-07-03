@@ -612,7 +612,7 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
           {activeTab === 'main' && result?.p?.exactScores && (
             <div style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1rem', marginBottom: '1rem' }}>
               <div style={secTitle}>Marcadores más probables</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
                 {result.p.exactScores.map((s: { h: number; a: number; p: number }, i: number) => (
                   <div key={i} style={{ background: i === 0 ? 'rgba(201,168,76,.1)' : 'var(--sur2)', border: `1px solid ${i === 0 ? 'rgba(201,168,76,.35)' : 'rgba(201,168,76,.1)'}`, borderRadius: 10, padding: '10px 8px', textAlign: 'center' }}>
                     <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: i === 0 ? 22 : 18, color: i === 0 ? '#c9a84c' : '#f0ece0' }}>{s.h} - {s.a}</div>
@@ -620,6 +620,37 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                     <div style={{ fontSize: 10, color: '#5a6a7a', marginTop: 2 }}>cuota justa {(1 / s.p).toFixed(1)}</div>
                   </div>
                 ))}
+              </div>
+
+              {/* Transparencia: qué datos usa el modelo */}
+              <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#7a8aaa', textTransform: 'uppercase' as const, letterSpacing: '.06em', marginBottom: 8 }}>Basado en</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 11 }}>
+                  <div style={{ background: 'var(--sur2)', borderRadius: 8, padding: '8px 10px' }}>
+                    <div style={{ color: '#7a8aaa', marginBottom: 4 }}>{home}</div>
+                    <div style={{ color: '#f0ece0' }}>xG esperado: <span style={{ color: '#c9a84c', fontWeight: 700 }}>{result.p.xgH?.toFixed(2)}</span></div>
+                    <div style={{ color: '#7a8aaa', marginTop: 3 }}>
+                      Histórico: {result.mH?.avgGF?.toFixed(2) ?? '—'} goles/p · ELO {result.p.eloH}
+                    </div>
+                    {result.wcH && <div style={{ color: '#7a8aaa', marginTop: 2 }}>Mundial 2026: {result.wcH.avgGF?.toFixed(2)} goles/p ({result.wcH.pj} partidos)</div>}
+                  </div>
+                  <div style={{ background: 'var(--sur2)', borderRadius: 8, padding: '8px 10px' }}>
+                    <div style={{ color: '#7a8aaa', marginBottom: 4 }}>{away}</div>
+                    <div style={{ color: '#f0ece0' }}>xG esperado: <span style={{ color: '#c9a84c', fontWeight: 700 }}>{result.p.xgA?.toFixed(2)}</span></div>
+                    <div style={{ color: '#7a8aaa', marginTop: 3 }}>
+                      Histórico: {result.mA?.avgGF?.toFixed(2) ?? '—'} goles/p · ELO {result.p.eloA}
+                    </div>
+                    {result.wcA && <div style={{ color: '#7a8aaa', marginTop: 2 }}>Mundial 2026: {result.wcA.avgGF?.toFixed(2)} goles/p ({result.wcA.pj} partidos)</div>}
+                  </div>
+                </div>
+                {result.hd?.data?.n >= 3 && (
+                  <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 6 }}>
+                    H2H ({result.hd.data.n} partidos): {result.hd.data.avgGF1?.toFixed(1)} – {result.hd.data.avgGA1?.toFixed(1)} goles promedio · influye 15% en el xG
+                  </div>
+                )}
+                <div style={{ fontSize: 10, color: '#5a6a7a', marginTop: 6, lineHeight: 1.5 }}>
+                  El xG combina rendimiento histórico (2004–2026) con el desempeño real en este Mundial. Con pocos partidos jugados, el Mundial pesa menos; con más partidos, pesa más.
+                </div>
               </div>
             </div>
           )}
