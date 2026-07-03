@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { fetchLineups, fetchFixtureIdForMatch } from '@/lib/apiFootball';
+import { fetchFotmobLineups } from '@/lib/fotmob';
 import { fetchEspnLineups } from '@/lib/espn';
 import { normalizeTeam, normalizePlayerName } from '@/lib/githubResults';
 import { logError } from '@/lib/logError';
@@ -56,8 +57,9 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        // Intentar API-Football primero (publica lineups ~1h antes), luego ESPN (al kickoff)
-        let lineups = fixtureId ? await fetchLineups(fixtureId) : [];
+        // FotMob publica lineups ~1h antes (sin API key). API-Football como 2do fallback, ESPN como 3ro.
+        let lineups = await fetchFotmobLineups(home, away, dateISO);
+        if (lineups.length === 0 && fixtureId) lineups = await fetchLineups(fixtureId);
         if (lineups.length === 0) lineups = await fetchEspnLineups(home, away, dateISO);
         if (lineups.length === 0) continue;
 
