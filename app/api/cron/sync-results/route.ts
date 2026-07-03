@@ -34,11 +34,12 @@ export async function GET(req: NextRequest) {
       // llegan con homeTeam.name/awayTeam.name en null — se ignoran hasta que se sepa quién juega.
       if (!m.homeTeam?.name || !m.awayTeam?.name) continue;
 
-      // regularTime = marcador a los 90 min (o 120 con prórroga); fullTime incluye penales en football-data.org.
-      // Si regularTime no viene (partidos de fase de grupos), se usa fullTime como fallback.
+      // fullTime en football-data.org = marcador final incluyendo prórroga (pero NO penales).
+      // penalties = resultado del shootout (solo existe si hubo penales).
+      // home_goals/away_goals guarda el marcador final real (90 min + ET si hubo).
       const score = m.score as any;
-      const regHome = score.regularTime?.home ?? m.score.fullTime.home;
-      const regAway = score.regularTime?.away ?? m.score.fullTime.away;
+      const regHome = m.score.fullTime.home;
+      const regAway = m.score.fullTime.away;
       const penHome = score.penalties?.home ?? null;
       const penAway = score.penalties?.away ?? null;
 
