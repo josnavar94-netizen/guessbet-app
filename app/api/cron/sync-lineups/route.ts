@@ -21,6 +21,9 @@ export async function GET(req: NextRequest) {
     const windowStart = new Date(now.getTime() - 30 * 60 * 1000);
     const windowEnd = new Date(now.getTime() + 80 * 60 * 1000);
 
+    // Asegura que la columna existe antes de usarla
+    await sql`ALTER TABLE matches ADD COLUMN IF NOT EXISTS api_football_id INTEGER`;
+
     const { rows: upcoming } = await sql`
       SELECT m.kickoff_at, m.home_team, m.away_team, m.api_football_id
       FROM matches m
