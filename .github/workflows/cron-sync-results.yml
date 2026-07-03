@@ -1,0 +1,16 @@
+name: Sync Results (cada hora)
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call sync-results
+        run: |
+          curl -s -X GET "https://guessbet.vercel.app/api/cron/sync-results" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --fail --show-error
