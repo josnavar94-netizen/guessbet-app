@@ -608,6 +608,22 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
             );
           })()}
 
+          {/* Marcadores exactos más probables */}
+          {activeTab === 'main' && result?.p?.exactScores && (
+            <div style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1rem', marginBottom: '1rem' }}>
+              <div style={secTitle}>Marcadores más probables</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                {result.p.exactScores.map((s: { h: number; a: number; p: number }, i: number) => (
+                  <div key={i} style={{ background: i === 0 ? 'rgba(201,168,76,.1)' : 'var(--sur2)', border: `1px solid ${i === 0 ? 'rgba(201,168,76,.35)' : 'rgba(201,168,76,.1)'}`, borderRadius: 10, padding: '10px 8px', textAlign: 'center' }}>
+                    <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: i === 0 ? 22 : 18, color: i === 0 ? '#c9a84c' : '#f0ece0' }}>{s.h} - {s.a}</div>
+                    <div style={{ fontSize: 11, color: '#7a8aaa', marginTop: 4 }}>{(s.p * 100).toFixed(1)}%</div>
+                    <div style={{ fontSize: 10, color: '#5a6a7a', marginTop: 2 }}>cuota justa {(1 / s.p).toFixed(1)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Secondary markets — table (desktop) + stacked cards (mobile) */}
           {activeTab === 'sec' && (
             <div style={{ marginBottom: '1rem' }}>

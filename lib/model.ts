@@ -176,16 +176,19 @@ export function modelProbs(home,away,neutral,wcRealOverride,h2hOverride,rotation
   }
   const poi=(l,k)=>{let p=Math.exp(-l);for(let i=0;i<k;i++)p*=l/(i+1);return p;};
   let pH=0,pD=0,pA=0,pO=0,pB=0;
+  const scores:{h:number;a:number;p:number}[]=[];
   for(let i=0;i<=10;i++)for(let j=0;j<=10;j++){
     const p=poi(xgH,i)*poi(xgA,j);
     if(i>j)pH+=p;else if(i===j)pD+=p;else pA+=p;
     if(i+j>2.5)pO+=p;
     if(i>0&&j>0)pB+=p;
+    if(i<=6&&j<=6)scores.push({h:i,a:j,p});
   }
+  const exactScores=scores.sort((a,b)=>b.p-a.p).slice(0,6);
   const bH=0.5*pH+0.5*eloExpH*(1-pD);
   const bA=0.5*pA+0.5*eloExpA*(1-pD);
   const bD=Math.max(0,1-bH-bA);
-  return{home:bH,draw:bD,away:bA,over25:pO,under25:1-pO,btts:pB,xgH,xgA,eloH:mH.elo||1500,eloA:mA.elo||1500};
+  return{home:bH,draw:bD,away:bA,over25:pO,under25:1-pO,btts:pB,xgH,xgA,eloH:mH.elo||1500,eloA:mA.elo||1500,exactScores};
 }
 
 // ═══ BEST PICK ═══
