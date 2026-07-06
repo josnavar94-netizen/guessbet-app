@@ -205,6 +205,19 @@ ALTER TABLE lineups ADD COLUMN IF NOT EXISTS rating NUMERIC(3,1);
 -- ID del partido en API-Football (se resuelve una vez y se reutiliza para fetchLineups sin gastar cuota).
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS api_football_id INTEGER;
 
+-- Goleadores del torneo por partido. Permite calcular cuántos goles tiene cada titular.
+CREATE TABLE IF NOT EXISTS wc_scorers (
+  id SERIAL PRIMARY KEY,
+  competition_code VARCHAR(10) NOT NULL DEFAULT 'WC',
+  espn_event_id VARCHAR(20) NOT NULL,
+  team VARCHAR(100) NOT NULL,
+  player_name VARCHAR(150) NOT NULL,
+  minute INTEGER,
+  is_own_goal BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(espn_event_id, team, player_name, minute)
+);
+
 -- Tabla para trackear notificaciones push ya enviadas, independiente del guardado de datos.
 -- Evita reenviar la misma notificación si el cron corre varias veces.
 CREATE TABLE IF NOT EXISTS match_notifications (

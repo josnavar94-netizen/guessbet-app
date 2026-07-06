@@ -262,9 +262,11 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
     const awaySF = (lineupChanges?.away as any)?.starFactors ?? { attackFactor: 1, defenseFactor: 1 };
     const homeRot = (lineupChanges?.home as any)?.rotationFactor ?? 1;
     const awayRot = (lineupChanges?.away as any)?.rotationFactor ?? 1;
+    const homeGoalF = (lineupChanges?.home as any)?.scorerFactor?.factor ?? 1;
+    const awayGoalF = (lineupChanges?.away as any)?.scorerFactor?.factor ?? 1;
     const rotationOverride = lineupChanges ? {
-      home: homeRot * homeSF.attackFactor * awaySF.defenseFactor,
-      away: awayRot * awaySF.attackFactor * homeSF.defenseFactor,
+      home: homeRot * homeSF.attackFactor * awaySF.defenseFactor * homeGoalF,
+      away: awayRot * awaySF.attackFactor * homeSF.defenseFactor * awayGoalF,
     } : undefined;
     const pFull = modelProbs(home, away, neutral, wcReal, realH2H || undefined, rotationOverride);
     const mH = MODEL[home], mA = MODEL[away];
@@ -633,6 +635,14 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                       Histórico: {result.mH?.avgGF?.toFixed(2) ?? '—'} goles/p · ELO {result.p.eloH}
                     </div>
                     {result.wcH && <div style={{ color: '#7a8aaa', marginTop: 2 }}>Mundial 2026: {result.wcH.avgGF?.toFixed(2)} goles/p ({result.wcH.pj} partidos)</div>}
+                {(() => {
+                  const sf = (lineupChanges?.home as any)?.scorerFactor;
+                  if (!sf) return null;
+                  const topScorers = Object.entries(sf.goals as Record<string, number>)
+                    .filter(([, g]) => g > 0).sort(([,a],[,b]) => b - a).slice(0, 3);
+                  if (!topScorers.length) return null;
+                  return <div style={{ color: '#c9a84c', marginTop: 3 }}>Goleadores titulares: {topScorers.map(([n,g]) => `${n} (${g})`).join(', ')}</div>;
+                })()}
                   </div>
                   <div style={{ background: 'var(--sur2)', borderRadius: 8, padding: '8px 10px' }}>
                     <div style={{ color: '#7a8aaa', marginBottom: 4 }}>{away}</div>
@@ -641,6 +651,14 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                       Histórico: {result.mA?.avgGF?.toFixed(2) ?? '—'} goles/p · ELO {result.p.eloA}
                     </div>
                     {result.wcA && <div style={{ color: '#7a8aaa', marginTop: 2 }}>Mundial 2026: {result.wcA.avgGF?.toFixed(2)} goles/p ({result.wcA.pj} partidos)</div>}
+                {(() => {
+                  const sf = (lineupChanges?.away as any)?.scorerFactor;
+                  if (!sf) return null;
+                  const topScorers = Object.entries(sf.goals as Record<string, number>)
+                    .filter(([, g]) => g > 0).sort(([,a],[,b]) => b - a).slice(0, 3);
+                  if (!topScorers.length) return null;
+                  return <div style={{ color: '#c9a84c', marginTop: 3 }}>Goleadores titulares: {topScorers.map(([n,g]) => `${n} (${g})`).join(', ')}</div>;
+                })()}
                   </div>
                 </div>
                 {result.hd?.data?.n >= 3 && (

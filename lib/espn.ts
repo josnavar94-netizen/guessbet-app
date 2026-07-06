@@ -52,3 +52,41 @@ export async function fetchEspnLineups(homeTeam: string, awayTeam: string, dateI
 
   return result;
 }
+
+export type EspnGoal = { eventId: string; team: string; playerName: string; minute: number | null; isOwnGoal: boolean };
+
+// Extrae los goleadores de un partido terminado a partir de keyEvents de ESPN.
+export async function fetchEspnGoals(espnEventId: string): Promise<EspnGoal[]> {
+  const summary = await espnGet(`/summary?event=${espnEventId}`);
+  if (!summary?.keyEvents) return [];
+
+  const goals: EspnGoal[] = [];
+  for (const ev of summary.keyEvents as any[]) {
+    if (!ev.scoringPlay) continue;
+    const typeText: string = ev.type?.type ?? '';
+    if (!typeText.includes('goal') && !typeText.includes('penalty')) continue;
+    const isOwnGoal = typeText.includes('own-goal');
+    const playerName: string = ev.participants?.[0]?.athlete?.displayName ?? ev.shortText?.split(' Goal')[0] ?? '';
+    const teamName: string = ev.team?.displayName ?? '';
+    const minute: number | null = ev.clock?.value ? Math.floor(ev.clock.value / 60) : null;
+    if (playerName && teamName) {
+      goals.push({ eventId: espnEventId, team: teamName, playerName, minute, isOwnGoal });
+    }
+  }
+  return goals;
+}
+
+// Devuelve todos los eventos ESPN de una fecha con sus IDs.
+export async function fetchEspnEventsByDate(dateISO: string): Promise<{ id: string; home: string; away: string }[]> {
+  const dateStr = dateISO.replace(/-/g, '');
+  const scoreboard = await espnGet(`/scoreboard?dates=${dateStr}`);
+  if (!scoreboard?.events) return [];
+  return scoreboard.events.map((e: any) => {
+    const comps = e.competitions?.[0]?.competitors ?? [];
+    return {
+      id: String(e.id),
+      home: comps.find((c: any) => c.homeAway === 'home')?.team?.displayName ?? '',
+      away: comps.find((c: any) => c.homeAway === 'away')?.team?.displayName ?? '',
+    };
+  });
+}

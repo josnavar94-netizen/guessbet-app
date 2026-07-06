@@ -71,6 +71,34 @@ export async function GET(req: NextRequest) {
     return { status: 'ok', out, in: inNow, prevChanges, rotationFactor, ratingDelta, starFactors, starters: currentStarters };
   }
 
+  // Goleadores del torneo por equipo — cuántos goles lleva cada titular
+  async function scorerFactor(team: string, starters: string[]): Promise<{ goals: Record<string, number>; factor: number }> {
+    if (starters.length === 0) return { goals: {}, factor: 1.0 };
+    const { rows } = await sql`
+      SELECT player_name, COUNT(*) AS goals
+      FROM wc_scorers
+      WHERE team = ${team} AND is_own_goal = FALSE
+      GROUP BY player_name
+    `.catch(() => ({ rows: [] as any[] }));
+
+    const goals: Record<string, number> = {};
+    let totalGoals = 0;
+    for (const r of rows) {
+      const n = r.player_name as string;
+      const g = parseInt(r.goals);
+      goals[n] = g;
+      if (starters.includes(n)) totalGoals += g;
+    }
+    // Cada gol de un titular en el torneo añade ~3% al xG (cap +25%)
+    const factor = Math.min(1.25, 1 + totalGoals * 0.03);
+    return { goals, factor };
+  }
+
   const [homeChanges, awayChanges] = await Promise.all([changesFor(home), changesFor(away)]);
-  return NextResponse.json({ home: homeChanges, away: awayChanges });
+
+  const homeStarters = (homeChanges as any).starters ?? [];
+  const awayStarters = (awayChanges as any).starters ?? [];
+  const [homeSF, awaySF] = await Promise.all([scorerFactor(home, homeStarters), scorerFactor(away, awayStarters)]);
+
+  return NextResponse.json({ home: { ...homeChanges, scorerFactor: homeSF }, away: { ...awayChanges, scorerFactor: awaySF } });
 }
