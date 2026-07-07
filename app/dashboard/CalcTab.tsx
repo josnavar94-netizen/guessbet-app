@@ -331,15 +331,18 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
     { label: 'Más de 2.5 goles', prob: result.p.over25, oddKey: 'over' },
     { label: 'Menos de 2.5 goles', prob: result.p.under25, oddKey: 'under' },
     ...((() => {
-      const o2 = overProb(result.p.xgH, result.p.xgA, 2);
+      const o2raw = overProb(result.p.xgH, result.p.xgA, 2);
       const push2 = exactTotalProb(result.p.xgH, result.p.xgA, 2);
-      const u2 = 1 - o2 - push2;
-      // Cuota justa ajustada por push: (1 - P(empate en exactamente 2)) / P(ganar)
-      const fairO2 = o2 > 0 ? (1 - push2) / o2 : 0;
-      const fairU2 = u2 > 0 ? (1 - push2) / u2 : 0;
+      const u2raw = 1 - o2raw - push2;
+      const nonPush = 1 - push2;
+      // Probabilidad efectiva: condicional a que la apuesta se resuelva (excluye el push).
+      // Así suman 100% y la cuota justa = 1/prob_efectiva ya es correcta.
+      const o2 = nonPush > 0 ? o2raw / nonPush : 0;
+      const u2 = nonPush > 0 ? u2raw / nonPush : 0;
+      const pushNote = `Si hay exactamente 2 goles devuelve el dinero (P push=${(push2*100).toFixed(1)}%)`;
       return [
-        { label: 'Más de 2 goles', prob: o2, oddKey: 'over2', fairOddOverride: fairO2, pushNote: `Si hay exactamente 2 goles, devuelve el dinero (P=${(push2*100).toFixed(1)}%)` },
-        { label: 'Menos de 2 goles', prob: u2, oddKey: 'under2', fairOddOverride: fairU2, pushNote: `Si hay exactamente 2 goles, devuelve el dinero (P=${(push2*100).toFixed(1)}%)` },
+        { label: 'Más de 2 goles', prob: o2, oddKey: 'over2', pushNote },
+        { label: 'Menos de 2 goles', prob: u2, oddKey: 'under2', pushNote },
       ];
     })()),
     { label: 'Ambos equipos anotan', prob: result.p.btts, oddKey: 'btts' },
@@ -565,7 +568,7 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
             const rows = mkts.map((m, i) => {
               const userOdd = odds[m.oddKey] || '';
               const uOdd = toD(userOdd);
-              const fairOdd = (m as any).fairOddOverride ?? (m.prob > 0 ? 1 / m.prob : 0);
+              const fairOdd = m.prob > 0 ? 1 / m.prob : 0;
               const ev = eC(m.prob, uOdd);
               const isSelected = selected.some(s => s.label === m.label);
               const positive = ev.ev !== null && ev.ev > 5;
