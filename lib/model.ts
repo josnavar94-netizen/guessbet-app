@@ -133,7 +133,7 @@ export function getXG(team,asAtt,neutral,isHome,wcRealOverride){
     // Con pocos partidos jugados en el torneo, un resultado extremo (ej. 7-1) no debe dominar la cuota:
     // se limita el valor a un rango razonable y se usa una mezcla que exige más partidos para ganar peso real.
     const wv=Math.min(4,Math.max(0.3,asAtt?wc.avgGF:wc.avgGA));
-    const wr=wc.pj/(wc.pj+5); // 1 partido→~17%, 2→~29%, crece gradualmente con más partidos
+    const wr=wc.pj/(wc.pj+2); // 1 partido→~33%, 3→~60%, el WC 2026 es más goleador que el historial
     base=base*(1-wr)+wv*wr;
   }
   return Math.max(0.15,base);

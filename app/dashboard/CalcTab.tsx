@@ -325,6 +325,8 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
     { label: `Gana ${away} (2)`, prob: result.p.away, oddKey: 'away', team: away },
     { label: 'Más de 2.5 goles', prob: result.p.over25, oddKey: 'over' },
     { label: 'Menos de 2.5 goles', prob: result.p.under25, oddKey: 'under' },
+    { label: 'Más de 2 goles', prob: overProb(result.p.xgH, result.p.xgA, 2), oddKey: 'over2' },
+    { label: 'Menos de 2 goles', prob: 1 - overProb(result.p.xgH, result.p.xgA, 2), oddKey: 'under2' },
     { label: 'Ambos equipos anotan', prob: result.p.btts, oddKey: 'btts' },
     { label: 'NO ambos anotan', prob: result.bttsNo, oddKey: 'bttsno' },
     { label: `Gana ${home} o empatan`, prob: result.dcHomeDraw, oddKey: 'dc1x', team: home },
@@ -422,7 +424,7 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
         </div>
         <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>¿Cuántos goles habrá?</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
-          {[['over', 'Más de 2.5 goles'], ['under', 'Menos de 2.5 goles'], ['btts', 'Ambos anotan']].map(([k, ph]) => (
+          {[['over', 'Más de 2.5 goles'], ['under', 'Menos de 2.5 goles'], ['over2', 'Más de 2 goles'], ['under2', 'Menos de 2 goles'], ['btts', 'Ambos anotan']].map(([k, ph]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
               <span style={{ fontSize: 13 }}>{ph}</span>
               <input type="number" step="0.01" placeholder="–" value={odds[k] || ''} onChange={e => setOddsField(k, e.target.value)} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none', color: oddsInputColor(k), fontWeight: autoFilledKeys.has(k) ? 700 : 400 }} />

@@ -49,8 +49,13 @@ export async function GET(req: NextRequest) {
 
     const [current, previous] = rows;
     const currentSet = new Set(currentStarters);
+    const previousSet = new Set(previous.starters as string[]);
+    // Si el overlap es menor a 4, las alineaciones son de fuentes incompatibles (FotMob vs ESPN usan
+    // nombres distintos) — no reportar cambios falsos, tratar como primer partido registrado.
+    const overlap = currentStarters.filter(p => previousSet.has(p)).length;
+    if (overlap < 4) return { status: 'no_previous', starFactors, starters: currentStarters };
     const out = (previous.starters as string[]).filter(p => !currentSet.has(p));
-    const inNow = currentStarters.filter(p => !new Set(previous.starters as string[]).has(p));
+    const inNow = currentStarters.filter(p => !previousSet.has(p));
     const currentChanges = out.length;
 
     let prevChanges = 0;
