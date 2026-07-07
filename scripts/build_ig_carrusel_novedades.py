@@ -141,8 +141,8 @@ def feature_slide(slide_idx, num_label, emoji, title1, title2, hook, body_bullet
 def slide_cta():
     parts = [svg_open(), header_row(6)]
 
-    cy = 380
-    for r, op in [(280,0.04),(200,0.06),(120,0.09)]:
+    cy = 300
+    for r, op in [(200,0.04),(150,0.06),(100,0.09)]:
         parts.append(f'<circle cx="{W//2}" cy="{cy}" r="{r}" fill="none" stroke="rgba(201,162,39,{op})" stroke-width="1"/>')
     parts.append(f'<circle cx="{W//2}" cy="{cy}" r="72" fill="rgba(201,162,39,0.10)" stroke="rgba(201,162,39,0.28)" stroke-width="2"/>')
     parts.append(f'<text x="{W//2}" y="{cy+26}" font-family="{FONT}" font-size="60" font-weight="900" fill="{GOLD}" text-anchor="middle">✓</text>')
@@ -162,7 +162,6 @@ def slide_cta():
     bw, bh = 860, 72
     bx = (W-bw)//2
     parts.append(f'<rect x="{bx}" y="936" width="{bw}" height="{bh}" rx="36" fill="url(#gold)"/>')
-    parts.append(f'<text x="{W//2}" y="936+{bh//2}+12" font-family="{FONT}" font-size="28" font-weight="700" fill="#0a0a0a" text-anchor="middle">Entra gratis → guessbet.vercel.app</text>')
     parts.append(f'<text x="{W//2}" y="{936 + bh//2 + 12}" font-family="{FONT}" font-size="28" font-weight="700" fill="#0a0a0a" text-anchor="middle">Entra gratis → guessbet.vercel.app</text>')
 
     parts.append(f'<text x="{W//2}" y="1044" font-family="{FONT}" font-size="20" fill="rgba(255,255,255,0.22)" text-anchor="middle">Modelo ELO + Poisson · +14.000 partidos analizados</text>')
