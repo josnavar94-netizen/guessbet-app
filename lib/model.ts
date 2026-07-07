@@ -150,6 +150,15 @@ export function overProb(xgH,xgA,line){
   return pO;
 }
 
+// Probabilidad de que el total de goles sea exactamente N — para calcular el push en líneas enteras.
+// Ej: línea 2 goles → si hay exactamente 2 goles, la apuesta devuelve el dinero (push).
+export function exactTotalProb(xgH,xgA,n){
+  const poi=(l,k)=>{let p=Math.exp(-l);for(let i=0;i<k;i++)p*=l/(i+1);return p;};
+  let p=0;
+  for(let i=0;i<=n;i++) p+=poi(xgH,i)*poi(xgA,n-i);
+  return p;
+}
+
 // rotationOverride: { home: number; away: number } — multiplicador sobre xG atacante de cada equipo.
 // Calculado en /api/lineup-changes comparando alineaciones del partido actual vs anterior vs antepenúltimo.
 export function modelProbs(home,away,neutral,wcRealOverride,h2hOverride,rotationOverride?){

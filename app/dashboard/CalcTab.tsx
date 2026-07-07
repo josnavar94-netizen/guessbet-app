@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { modelProbs, getH2H, MODEL, WC_REAL, FLAG_CODES, overProb } from '@/lib/model';
+import { modelProbs, getH2H, MODEL, WC_REAL, FLAG_CODES, overProb, exactTotalProb } from '@/lib/model';
 import LeagueSelector from './LeagueSelector';
 
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
@@ -182,16 +182,21 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
   // Qué campos de cuota vienen de una casa real (se pintan distinto a lo tipeado a mano).
   const [autoFilledKeys, setAutoFilledKeys] = useState<Set<string>>(new Set());
   function useRealOdds(label: string, data: any) {
-    const isLine25 = data.total_line == null || Number(data.total_line) === 2.5;
-    setCustomLine(isLine25 ? null : Number(data.total_line));
+    const line = data.total_line == null ? 2.5 : Number(data.total_line);
+    const isLine25 = line === 2.5;
+    const isLine2 = line === 2.0;
+    // Línea 2.5 → filas estándar over/under; línea 2.0 → filas over2/under2; otra → customLine
+    setCustomLine(!isLine25 && !isLine2 ? line : null);
     const filled: Record<string, string> = {
       ...(data.home_odds != null && { home: String(data.home_odds) }),
       ...(data.draw_odds != null && { draw: String(data.draw_odds) }),
       ...(data.away_odds != null && { away: String(data.away_odds) }),
       ...(isLine25 && data.over_odds != null && { over: String(data.over_odds) }),
       ...(isLine25 && data.under_odds != null && { under: String(data.under_odds) }),
-      ...(!isLine25 && data.over_odds != null && { overCustom: String(data.over_odds) }),
-      ...(!isLine25 && data.under_odds != null && { underCustom: String(data.under_odds) }),
+      ...(isLine2 && data.over_odds != null && { over2: String(data.over_odds) }),
+      ...(isLine2 && data.under_odds != null && { under2: String(data.under_odds) }),
+      ...(!isLine25 && !isLine2 && data.over_odds != null && { overCustom: String(data.over_odds) }),
+      ...(!isLine25 && !isLine2 && data.under_odds != null && { underCustom: String(data.under_odds) }),
     };
     setOdds(prev => ({ ...prev, ...filled }));
     setAutoFilledKeys(new Set(Object.keys(filled)));
@@ -325,8 +330,18 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
     { label: `Gana ${away} (2)`, prob: result.p.away, oddKey: 'away', team: away },
     { label: 'Más de 2.5 goles', prob: result.p.over25, oddKey: 'over' },
     { label: 'Menos de 2.5 goles', prob: result.p.under25, oddKey: 'under' },
-    { label: 'Más de 2 goles', prob: overProb(result.p.xgH, result.p.xgA, 2), oddKey: 'over2' },
-    { label: 'Menos de 2 goles', prob: 1 - overProb(result.p.xgH, result.p.xgA, 2), oddKey: 'under2' },
+    ...((() => {
+      const o2 = overProb(result.p.xgH, result.p.xgA, 2);
+      const push2 = exactTotalProb(result.p.xgH, result.p.xgA, 2);
+      const u2 = 1 - o2 - push2;
+      // Cuota justa ajustada por push: (1 - P(empate en exactamente 2)) / P(ganar)
+      const fairO2 = o2 > 0 ? (1 - push2) / o2 : 0;
+      const fairU2 = u2 > 0 ? (1 - push2) / u2 : 0;
+      return [
+        { label: 'Más de 2 goles', prob: o2, oddKey: 'over2', fairOddOverride: fairO2, pushNote: `Si hay exactamente 2 goles, devuelve el dinero (P=${(push2*100).toFixed(1)}%)` },
+        { label: 'Menos de 2 goles', prob: u2, oddKey: 'under2', fairOddOverride: fairU2, pushNote: `Si hay exactamente 2 goles, devuelve el dinero (P=${(push2*100).toFixed(1)}%)` },
+      ];
+    })()),
     { label: 'Ambos equipos anotan', prob: result.p.btts, oddKey: 'btts' },
     { label: 'NO ambos anotan', prob: result.bttsNo, oddKey: 'bttsno' },
     { label: `Gana ${home} o empatan`, prob: result.dcHomeDraw, oddKey: 'dc1x', team: home },
@@ -550,7 +565,7 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
             const rows = mkts.map((m, i) => {
               const userOdd = odds[m.oddKey] || '';
               const uOdd = toD(userOdd);
-              const fairOdd = m.prob > 0 ? 1 / m.prob : 0;
+              const fairOdd = (m as any).fairOddOverride ?? (m.prob > 0 ? 1 / m.prob : 0);
               const ev = eC(m.prob, uOdd);
               const isSelected = selected.some(s => s.label === m.label);
               const positive = ev.ev !== null && ev.ev > 5;
@@ -575,6 +590,7 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                           </td>
                           <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontWeight: 500, fontSize: 13 }}>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</span>
+                            {(m as any).pushNote && <div style={{ fontSize: 10, color: '#6b9fd4', marginTop: 2 }}>{(m as any).pushNote}</div>}
                           </td>
                           <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{(m.prob * 100).toFixed(1)}%</td>
                           <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{uOdd ? ((1 / uOdd) * 100).toFixed(1) + '%' : '—'}</td>
