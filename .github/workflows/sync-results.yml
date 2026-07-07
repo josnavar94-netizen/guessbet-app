@@ -18,3 +18,8 @@ jobs:
           curl -sf -w "\nHTTP %{http_code}\n" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             https://guessbet.vercel.app/api/cron/sync-results
+      - name: Sincronizar goleadores
+        run: |
+          curl -sf -w "\nHTTP %{http_code}\n" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://guessbet.vercel.app/api/cron/sync-scorers
