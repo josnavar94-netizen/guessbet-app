@@ -134,6 +134,13 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
     fetch('/api/wc-real').then(r => r.json()).then(d => setWcRealLive(d.wcReal)).catch(() => {});
   }, []);
 
+  // Stats reales del Mundial 2026 (córners, amarillas, tiros) por equipo — desde ESPN boxscore
+  type TeamMatchStats = { pj: number; avgCorners: number; avgYellow: number; avgShots: number; avgShotsOnTarget: number; avgFouls: number; avgPossession: number };
+  const [wcMatchStats, setWcMatchStats] = useState<{ wcStats: Record<string, TeamMatchStats>; tournamentAvg: { avgCorners: number; avgYellow: number; avgShots: number; avgShotsOnTarget: number } | null } | null>(null);
+  useEffect(() => {
+    fetch('/api/wc-stats').then(r => r.json()).then(d => setWcMatchStats(d)).catch(() => {});
+  }, []);
+
   // Cambios de alineación titular vs. el partido anterior de cada equipo en este Mundial
   // (solo si ya hay alineación confirmada del partido elegido, ~30-40 min antes del kickoff).
   type TeamLineupChanges = { status: 'no_lineup' } | { status: 'no_previous' } | { status: 'ok'; out: string[]; in: string[] };
@@ -296,11 +303,29 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
     const eloFav = eloDiff < 25 ? null : p.eloH > p.eloA ? home : away;
     const h2hExpl = hd && hd.data && hd.data.n >= 3 ? `Se tomó en cuenta que estos equipos ya se enfrentaron ${hd.data.n} veces antes` : 'No hay suficientes partidos anteriores entre estos dos equipos';
     const xT = p.xgH + p.xgA;
-    const co = Math.round(xT * 2.8 + 7);
-    const sH = Math.round(p.xgH * 5 + 3);
-    const sA = Math.round(p.xgA * 5 + 2);
-    const ta = Math.round(xT * 0.8 + 2.5);
-    setResult({ p, mH, mA, wcH, wcA, hd, eloFav, h2hExpl, live, lv: { min, gh, ga, rh, ra }, dcHomeDraw, dcAwayDraw, dcHomeAway, bttsNo, dnbHome, dnbAway, sec: { co, sH, sA, ta } });
+    // Stats reales del torneo por equipo (con fallback al promedio del torneo, y si no hay datos al modelo)
+    const statsH = wcMatchStats?.wcStats[home];
+    const statsA = wcMatchStats?.wcStats[away];
+    const tavg = wcMatchStats?.tournamentAvg;
+    // Blend: datos reales del equipo si tiene 2+ partidos; si no, promedio del torneo; si no hay nada, fórmula heurística
+    const blend = (teamVal: number | undefined, teamPj: number | undefined, fallback: number) => {
+      if (teamVal != null && (teamPj ?? 0) >= 2) return teamVal;
+      if (teamVal != null && (teamPj ?? 0) === 1) return teamVal * 0.5 + fallback * 0.5;
+      return fallback;
+    };
+    const tAvgCorners = tavg?.avgCorners ?? 4.8;
+    const tAvgYellow = tavg?.avgYellow ?? 1.1;
+    const tAvgShots = tavg?.avgShotsOnTarget ?? 4.0;
+    const cornersH = blend(statsH?.avgCorners, statsH?.pj, tAvgCorners);
+    const cornersA = blend(statsA?.avgCorners, statsA?.pj, tAvgCorners);
+    const co = Math.round(cornersH + cornersA);
+    const yellowH = blend(statsH?.avgYellow, statsH?.pj, tAvgYellow);
+    const yellowA = blend(statsA?.avgYellow, statsA?.pj, tAvgYellow);
+    const ta = Math.round(yellowH + yellowA);
+    const sH = Math.round(blend(statsH?.avgShotsOnTarget, statsH?.pj, tAvgShots));
+    const sA = Math.round(blend(statsA?.avgShotsOnTarget, statsA?.pj, tAvgShots));
+    const statsSource = statsH && statsA ? `${statsH.pj}p/${statsA.pj}p reales` : statsH || statsA ? 'datos parciales' : 'modelo';
+    setResult({ p, mH, mA, wcH, wcA, hd, eloFav, h2hExpl, live, lv: { min, gh, ga, rh, ra }, dcHomeDraw, dcAwayDraw, dcHomeAway, bttsNo, dnbHome, dnbAway, sec: { co, sH, sA, ta, statsSource, cornersH: Math.round(cornersH * 10) / 10, cornersA: Math.round(cornersA * 10) / 10, yellowH: Math.round(yellowH * 10) / 10, yellowA: Math.round(yellowA * 10) / 10 } });
   }
 
   function toggleMarket(label: string, prob: number, userOddStr: string, fairOdd: number) {
@@ -359,10 +384,40 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
   ] : [];
 
   const secMkts = result ? [
-    { label: 'Corners totales', est: result.sec.co, isOver: result.sec.co > 10, pick: `${result.sec.co > 10 ? 'Over' : 'Under'} ${result.sec.co - 2}.5`, fair: 1.85 },
-    { label: 'Tarjetas amarillas', est: result.sec.ta, isOver: null, pick: 'Orientativo', fair: null },
-    { label: `Tiros a puerta ${home}`, est: result.sec.sH, isOver: result.sec.sH > 4, pick: `${result.sec.sH > 4 ? 'Over' : 'Under'} ${result.sec.sH - 1}.5`, fair: 1.90, team: home },
-    { label: `Tiros a puerta ${away}`, est: result.sec.sA, isOver: result.sec.sA > 3, pick: `${result.sec.sA > 3 ? 'Over' : 'Under'} ${result.sec.sA - 1}.5`, fair: 1.90, team: away },
+    {
+      label: 'Córners totales',
+      est: result.sec.co,
+      detail: `${home} ~${result.sec.cornersH} · ${away} ~${result.sec.cornersA}`,
+      isOver: result.sec.co > 9,
+      pick: `${result.sec.co > 9 ? 'Over' : 'Under'} ${result.sec.co > 9 ? result.sec.co - 2 : result.sec.co + 1}.5`,
+      fair: 1.85,
+    },
+    {
+      label: 'Tarjetas amarillas',
+      est: result.sec.ta,
+      detail: `${home} ~${result.sec.yellowH} · ${away} ~${result.sec.yellowA}`,
+      isOver: result.sec.ta >= 4,
+      pick: `${result.sec.ta >= 4 ? 'Over' : 'Under'} ${result.sec.ta >= 4 ? result.sec.ta - 1 : result.sec.ta}.5`,
+      fair: 1.85,
+    },
+    {
+      label: `Tiros a puerta ${home}`,
+      est: result.sec.sH,
+      detail: null,
+      isOver: result.sec.sH > 4,
+      pick: `${result.sec.sH > 4 ? 'Over' : 'Under'} ${result.sec.sH - 1}.5`,
+      fair: 1.90,
+      team: home,
+    },
+    {
+      label: `Tiros a puerta ${away}`,
+      est: result.sec.sA,
+      detail: null,
+      isOver: result.sec.sA > 3,
+      pick: `${result.sec.sA > 3 ? 'Over' : 'Under'} ${result.sec.sA - 1}.5`,
+      fair: 1.90,
+      team: away,
+    },
   ] : [];
 
   const hasOdds = Object.values(odds).some(v => toD(v) !== null);
@@ -723,7 +778,7 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</span>
                           </td>
                           <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{m.est}</td>
-                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13, color: '#7a8aaa' }}>~{m.est - 1}</td>
+                          <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 12, color: '#7a8aaa' }}>{(m as any).detail ?? `~${m.est - 1}`}</td>
                           <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)' }}>
                             <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: hasPick ? 'rgba(58,174,108,.13)' : 'rgba(201,168,76,.1)', color: hasPick ? '#3aae6c' : '#c9a84c' }}>{m.pick}</span>
                           </td>
@@ -735,7 +790,9 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                     })}
                   </tbody>
                 </table>
-                <div style={{ padding: '10px 14px', fontSize: 11, color: '#7a8aaa' }}>Orientativo.</div>
+                <div style={{ padding: '10px 14px', fontSize: 11, color: '#7a8aaa' }}>
+                {result.sec.statsSource ? `Fuente: ${result.sec.statsSource} del Mundial 2026 (ESPN boxscore).` : 'Orientativo.'} Cifras promedio por partido.
+              </div>
               </div>
 
               <div className="mkt-cards" style={{ flexDirection: 'column', gap: 8 }}>
@@ -749,7 +806,7 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
                       ) : <div style={{ width: 16, flexShrink: 0 }} />}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</div>
-                        <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>Estimado: {m.est} · referencia ~{m.est - 1}</div>
+                        <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>Estimado: {m.est}{(m as any).detail ? ` · ${(m as any).detail}` : ` · ref ~${m.est - 1}`}</div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: hasPick ? 'rgba(58,174,108,.13)' : 'rgba(201,168,76,.1)', color: hasPick ? '#3aae6c' : '#c9a84c' }}>{m.pick}</span>

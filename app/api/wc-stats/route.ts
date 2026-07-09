@@ -35,12 +35,13 @@ export async function GET() {
       };
     }
 
-    // Promedios del torneo completo (para usar como fallback cuando un equipo tiene pocos partidos)
-    const tournamentAvg = rows.length > 0 ? {
-      avgCorners: rows.reduce((s, r) => s + parseFloat(r.avg_corners), 0) / rows.length,
-      avgYellow: rows.reduce((s, r) => s + parseFloat(r.avg_yellow), 0) / rows.length,
-      avgShots: rows.reduce((s, r) => s + parseFloat(r.avg_shots), 0) / rows.length,
-      avgShotsOnTarget: rows.reduce((s, r) => s + parseFloat(r.avg_shots_on_target), 0) / rows.length,
+    const n = rows.length;
+    const typedRows = rows as any[];
+    const tournamentAvg = n > 0 ? {
+      avgCorners: typedRows.reduce((s: number, r) => s + parseFloat(r.avg_corners), 0) / n,
+      avgYellow: typedRows.reduce((s: number, r) => s + parseFloat(r.avg_yellow), 0) / n,
+      avgShots: typedRows.reduce((s: number, r) => s + parseFloat(r.avg_shots), 0) / n,
+      avgShotsOnTarget: typedRows.reduce((s: number, r) => s + parseFloat(r.avg_shots_on_target), 0) / n,
     } : null;
 
     return NextResponse.json({ wcStats, tournamentAvg });
