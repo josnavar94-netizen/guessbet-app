@@ -76,6 +76,47 @@ export async function fetchEspnGoals(espnEventId: string): Promise<EspnGoal[]> {
   return goals;
 }
 
+export type EspnMatchStats = {
+  eventId: string;
+  team: string;
+  wonCorners: number | null;
+  yellowCards: number | null;
+  redCards: number | null;
+  totalShots: number | null;
+  shotsOnTarget: number | null;
+  foulsCommitted: number | null;
+  possessionPct: number | null;
+};
+
+// Extrae stats de boxscore de un partido terminado (córners, amarillas, tiros, posesión).
+export async function fetchEspnMatchStats(espnEventId: string, homeTeam: string, awayTeam: string): Promise<EspnMatchStats[]> {
+  const summary = await espnGet(`/summary?event=${espnEventId}`);
+  if (!summary?.boxscore?.teams) return [];
+
+  const result: EspnMatchStats[] = [];
+  for (const bt of summary.boxscore.teams as any[]) {
+    const side: 'home' | 'away' = bt.homeAway ?? (result.length === 0 ? 'home' : 'away');
+    const teamName = side === 'home' ? homeTeam : awayTeam;
+    const stats = (bt.statistics ?? []) as { name: string; displayValue: string }[];
+    const get = (name: string) => {
+      const s = stats.find(s => s.name === name);
+      return s ? parseFloat(s.displayValue) : null;
+    };
+    result.push({
+      eventId: espnEventId,
+      team: teamName,
+      wonCorners: get('wonCorners'),
+      yellowCards: get('yellowCards'),
+      redCards: get('redCards'),
+      totalShots: get('totalShots'),
+      shotsOnTarget: get('shotsOnTarget'),
+      foulsCommitted: get('foulsCommitted'),
+      possessionPct: get('possessionPct'),
+    });
+  }
+  return result;
+}
+
 // Devuelve todos los eventos ESPN de una fecha con sus IDs.
 export async function fetchEspnEventsByDate(dateISO: string): Promise<{ id: string; home: string; away: string }[]> {
   const dateStr = dateISO.replace(/-/g, '');

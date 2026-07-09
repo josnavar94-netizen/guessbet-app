@@ -218,6 +218,23 @@ CREATE TABLE IF NOT EXISTS wc_scorers (
   UNIQUE(espn_event_id, team, player_name, minute)
 );
 
+-- Stats de partido por equipo (córners, amarillas, tiros) — desde ESPN boxscore
+CREATE TABLE IF NOT EXISTS wc_match_stats (
+  id SERIAL PRIMARY KEY,
+  espn_event_id VARCHAR(20) NOT NULL,
+  team VARCHAR(100) NOT NULL,
+  won_corners INTEGER,
+  yellow_cards INTEGER,
+  red_cards INTEGER,
+  total_shots INTEGER,
+  shots_on_target INTEGER,
+  fouls_committed INTEGER,
+  possession_pct NUMERIC(5,2),
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(espn_event_id, team)
+);
+CREATE INDEX IF NOT EXISTS idx_wc_match_stats_team ON wc_match_stats(team);
+
 -- Tabla para trackear notificaciones push ya enviadas, independiente del guardado de datos.
 -- Evita reenviar la misma notificación si el cron corre varias veces.
 CREATE TABLE IF NOT EXISTS match_notifications (
