@@ -180,51 +180,62 @@ def render(svg, slug):
 
 SLIDES = [
     ('slide1_cover', slide_cover),
+
+    # 01 — Marcador exacto
     ('slide2_marcador', lambda: feature_slide(
         1, '01 / 05', '🎯', 'Marcador', 'exacto.',
-        'Ahora sabes cuál es el resultado más probable.',
+        'Ahora sabes el resultado más probable, no solo el ganador.',
         [
-            'Más allá del ganador | el modelo predice el marcador final más probable del partido.',
-            'No es magia | es distribución estadística aplicada a los datos del torneo.',
-            'Úsalo para decidir mejor | no para adivinar.',
+            'El modelo calcula los 6 marcadores más probables | con su porcentaje y su cuota justa.',
+            'El resultado más probable aparece destacado | para que no tengas que interpretar nada.',
+            '1-0, 0-0, 2-1... | con probabilidad real, no intuición.',
         ]
     )),
+
+    # 02 — Factor goleadores
     ('slide3_goleadores', lambda: feature_slide(
         2, '02 / 05', '⚽', 'Si el crack', 'no juega, cambia.',
-        'El once titular importa más de lo que crees.',
+        'El análisis se ajusta según quién está en el once.',
         [
-            'Si el goleador del torneo no está | el análisis cambia automáticamente.',
-            'El modelo detecta las alineaciones | y ajusta las probabilidades en consecuencia.',
-            'Porque no es lo mismo jugar con Mbappé | que sin él.',
+            'Detectamos si el goleador del torneo juega o no | y ajustamos el peligro ofensivo.',
+            'Cada gol que marcó en el torneo sube ligeramente el ataque de su equipo | hasta un tope razonable.',
+            'Porque Mbappé en cancha no es lo mismo que Mbappé en la tribuna.',
         ]
     )),
+
+    # 03 — Alineaciones -1h
     ('slide4_alineaciones', lambda: feature_slide(
-        3, '03 / 05', '📋', 'Alineaciones', '1 hora antes.',
-        'Antes del kickoff, ya tienes el once confirmado.',
+        3, '03 / 05', '📋', 'El once,', '1 hora antes.',
+        'La alineación confirmada aparece en la app antes del pitazo.',
         [
-            'La app muestra quién juega | aproximadamente una hora antes del partido.',
-            'Sin necesidad de buscar en otro lado | todo en un solo lugar.',
-            'Para que tomes tu decisión | con la información más fresca posible.',
+            'Usamos FotMob, que publica los onces cuando los equipos los anuncian oficialmente.',
+            'Sin tener que buscar en Twitter ni en otro lado | está todo en un solo lugar.',
+            'El análisis siempre parte del once real | no de suposiciones.',
         ]
     )),
+
+    # 04 — Sección "Basado en" + stats reales
     ('slide5_basado_en', lambda: feature_slide(
         4, '04 / 05', '📊', 'Nada es', 'una caja negra.',
-        'Ves exactamente en qué se basó el análisis.',
+        'Ves exactamente qué datos respaldan cada predicción.',
         [
-            'Cada predicción muestra sus fuentes | qué datos del torneo la respaldan.',
-            'No confíes a ciegas en ningún modelo | ni en el nuestro.',
-            'Por eso te lo mostramos todo | para que tú decidas.',
+            'Mostramos el xG, el ELO y los stats reales del torneo por equipo | córners, tiros, amarillas.',
+            'Los datos vienen de los partidos ya jugados en el Mundial | no de promedios históricos genéricos.',
+            'Para que sepas si el modelo tiene base sólida | o está operando con poca información.',
         ]
     )),
+
+    # 05 — Stats reales en Otras Opciones
     ('slide6_cuota_justa', lambda: feature_slide(
-        5, '05 / 05', '💰', 'La cuota que', 'deberías pedir.',
-        'Compara lo que el modelo dice con lo que paga tu bookie.',
+        5, '05 / 05', '💰','Otras opciones', 'con datos reales.',
+        'Over/Under y BTTS calculados con stats del torneo.',
         [
-            'Para Over/Under, calculamos la cuota justa | basada en las probabilidades reales.',
-            'Si tu bookie paga menos | probablemente no vale la pena apostar.',
-            'La ventaja está en la diferencia | no en el resultado.',
+            'Córners, goles, tiros: usamos los promedios reales del Mundial | no datos de temporada.',
+            'Si el equipo jugó 2+ partidos, el modelo usa sus propios números | si no, usa el promedio del torneo.',
+            'Y te mostramos la fuente: sabes si viene de datos propios | o del promedio general.',
         ]
     )),
+
     ('slide7_cta', slide_cta),
 ]
 
