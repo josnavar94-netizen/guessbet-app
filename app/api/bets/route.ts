@@ -114,12 +114,9 @@ export async function POST(req: NextRequest) {
       RETURNING *
     `;
 
-    if (plan !== 'premium') {
-      await sql`
-        INSERT INTO bet_usage (user_id, device_id, ip, used_date)
-        VALUES (${s.userId}, ${deviceId}, ${ip}, (NOW() AT TIME ZONE 'America/Santiago')::date)
-      `;
-    }
+    // El cupo diario se registra al ver el análisis (POST /api/bets/usage), no aquí.
+    // Si alguien llega a este punto sin haber pasado por ese endpoint (ataque), el check
+    // de bet_usage arriba ya lo bloquea. No insertamos de nuevo para no duplicar el registro.
 
     const res = NextResponse.json({ bet: result.rows[0] });
     res.cookies.set(DEVICE_COOKIE, deviceId, {

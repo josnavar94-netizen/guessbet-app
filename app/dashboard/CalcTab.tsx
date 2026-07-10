@@ -66,7 +66,7 @@ const label12: React.CSSProperties = { fontSize: 11, color: '#7a8aaa', display: 
 const card: React.CSSProperties = { background: 'var(--sur)', border: '1px solid rgba(201,168,76,.12)', borderRadius: 12, padding: '1.25rem', marginBottom: '1rem' };
 const secTitle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#7a8aaa', textTransform: 'uppercase' as const, letterSpacing: '.08em', marginBottom: 12 };
 
-export default function CalcTab({ onRegister, locked, onUpgrade, league, setLeague }: { onRegister: (bet: any) => void; locked?: boolean; onUpgrade?: () => void; league: string; setLeague: (id: string) => void }) {
+export default function CalcTab({ onRegister, locked, isPremium, onUpgrade, league, setLeague }: { onRegister: (bet: any) => void; locked?: boolean; isPremium?: boolean; onUpgrade?: () => void; league: string; setLeague: (id: string) => void }) {
   if (locked) {
     return (
       <div style={{ maxWidth: 480, margin: '3rem auto', textAlign: 'center' }}>
@@ -81,7 +81,7 @@ export default function CalcTab({ onRegister, locked, onUpgrade, league, setLeag
       </div>
     );
   }
-  return <CalcTabUnlocked onRegister={onRegister} league={league} setLeague={setLeague} />;
+  return <CalcTabUnlocked onRegister={onRegister} isPremium={isPremium} onUpgrade={onUpgrade} league={league} setLeague={setLeague} />;
 }
 
 type LiveFixture = { h: string; a: string; t: string; group: string; kickoffAt: string | null; live: { minute: number | null; homeGoals: number; awayGoals: number } | null };
@@ -92,7 +92,7 @@ type LiveFixture = { h: string; a: string; t: string; group: string; kickoffAt: 
 const dayFmt = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
 const timeFmt = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: any) => void; league: string; setLeague: (id: string) => void }) {
+function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }: { onRegister: (bet: any) => void; isPremium?: boolean; onUpgrade?: () => void; league: string; setLeague: (id: string) => void }) {
   // Próximos partidos leídos en vivo desde /api/fixtures (tabla `matches`), no de un
   // fixture escrito a mano: así nunca muestra partidos ya jugados ni se queda corto
   // cuando avanza el torneo a la siguiente jornada o a eliminatorias.
@@ -127,6 +127,9 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
   const [selected, setSelected] = useState<Bet[]>([]);
   const [stake, setStake] = useState('1');
   const [bookie, setBookie] = useState('Coolbet');
+  // Estado de bloqueo dentro de la sesión: true = ya vio el análisis, no puede analizar otro partido
+  const [analysisLocked, setAnalysisLocked] = useState(false);
+  const [limitError, setLimitError] = useState<string | null>(null);
 
   // WC_REAL en vivo, calculado en el servidor desde la tabla `matches` (fallback al estático si falla)
   const [wcRealLive, setWcRealLive] = useState<typeof WC_REAL | null>(null);
@@ -266,7 +269,21 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
 
   function toD(v: string) { const n = parseFloat(v); return (!v || isNaN(n) || n < 1.01) ? null : n; }
 
-  function calc() {
+  async function calc() {
+    // Usuarios free: registrar el cupo diario al ver el análisis, no al registrar la apuesta
+    if (!isPremium) {
+      const res = await fetch('/api/bets/usage', { method: 'POST' });
+      if (res.status === 403) {
+        const data = await res.json().catch(() => ({}));
+        setLimitError(data.error || 'Ya usaste tu análisis gratuito de hoy.');
+        return;
+      }
+      if (!res.ok) {
+        setLimitError('Error al verificar el plan. Intenta de nuevo.');
+        return;
+      }
+      setAnalysisLocked(true); // bloquear el partido mientras no registre la apuesta
+    }
     const wcReal = wcRealLive || WC_REAL;
     // xgH = goles esperados del local → sube con ataque local + defensa visitante mala
     // xgA = goles esperados del visitante → sube con ataque visitante + defensa local mala
@@ -347,6 +364,7 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
     const ev = parseFloat(((combProb * combOdd - 1) * 100).toFixed(1));
     await onRegister({ match_name: `${home} vs ${away}`, pick_label: pickText, odds: parseFloat(combOdd.toFixed(2)), stake: stakeN, ev, bookie, competition: 'Mundial 2026', match_date: null });
     setSelected([]);
+    setAnalysisLocked(false); // ya registró — desbloquear (el cupo ya está consumido para hoy)
   }
 
   const mkts = result ? [
@@ -433,10 +451,21 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
       {/* PASO 1 — PARTIDO */}
       <div style={card}>
         <div style={secTitle}>1 — Elige el partido</div>
+        {analysisLocked && (
+          <div style={{ background: 'rgba(201,168,76,.08)', border: '1px solid rgba(201,168,76,.25)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#c9a84c', marginBottom: 10 }}>
+            Ya analizaste un partido hoy. Registra tu apuesta abajo y vuelve mañana para analizar otro.
+          </div>
+        )}
+        {limitError && (
+          <div style={{ background: 'rgba(217,80,80,.08)', border: '1px solid rgba(217,80,80,.25)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#d95050', marginBottom: 10 }}>
+            {limitError}
+            {onUpgrade && <button onClick={onUpgrade} style={{ marginLeft: 10, background: 'linear-gradient(135deg,#e8c96a,#c9a84c)', color: '#0a0f1e', border: 'none', borderRadius: 6, padding: '3px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit',sans-serif" }}>Ver PRO →</button>}
+          </div>
+        )}
         {fixturesLoaded && upcoming.length === 0 ? (
           <div style={{ fontSize: 13, color: '#7a8aaa', marginBottom: 10 }}>No hay partidos pendientes por ahora. Vuelve cuando se confirme la próxima jornada.</div>
         ) : (
-          <select onChange={e => { const m = upcoming[parseInt(e.target.value)]; onFixtureChange(m); }} style={{ ...inp, marginBottom: 10, appearance: 'none' as const }}>
+          <select disabled={analysisLocked} onChange={e => { const m = upcoming[parseInt(e.target.value)]; onFixtureChange(m); }} style={{ ...inp, marginBottom: 10, appearance: 'none' as const, opacity: analysisLocked ? 0.5 : 1, cursor: analysisLocked ? 'not-allowed' : 'default' }}>
             {upcomingByDay.map((d, gi) => (
               <optgroup key={gi} label={d.day}>
                 {d.items.map(({ m, idx }) => (
@@ -572,8 +601,8 @@ function CalcTabUnlocked({ onRegister, league, setLeague }: { onRegister: (bet: 
         )}
       </div>
 
-      <button onClick={calc} style={{ width: '100%', height: 48, background: 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: '#0a0f1e', fontFamily: "'Outfit',sans-serif", fontSize: 15, fontWeight: 700, border: 'none', borderRadius: 10, cursor: 'pointer', marginBottom: '1.5rem' }}>
-        Ver el análisis →
+      <button onClick={calc} disabled={analysisLocked} style={{ width: '100%', height: 48, background: analysisLocked ? 'rgba(201,168,76,.15)' : 'linear-gradient(135deg,#e8c96a,#c9a84c,#8a6a1f)', color: analysisLocked ? '#7a8aaa' : '#0a0f1e', fontFamily: "'Outfit',sans-serif", fontSize: 15, fontWeight: 700, border: analysisLocked ? '1px solid rgba(201,168,76,.2)' : 'none', borderRadius: 10, cursor: analysisLocked ? 'not-allowed' : 'pointer', marginBottom: '1.5rem' }}>
+        {analysisLocked ? 'Análisis gratuito usado hoy — registra tu apuesta abajo' : 'Ver el análisis →'}
       </button>
 
       {result && (

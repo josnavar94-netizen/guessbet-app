@@ -324,7 +324,7 @@ export default function App({ username, email, plan, avatar, emailVerified, isAd
       {/* PAGES */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.25rem 5rem' }}>
         {tab === 'home' && <HomeTab username={username} setTab={setTab} bets={bets} results={results} lastSyncAt={lastSyncAt} league={league} setLeague={setLeague} />}
-        {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} onUpgrade={() => setTab('premium')} league={league} setLeague={setLeague} />}
+        {tab === 'calc' && <CalcTab onRegister={saveBet} locked={plan !== 'premium' && usedToday} isPremium={plan === 'premium'} onUpgrade={() => setTab('premium')} league={league} setLeague={setLeague} />}
         {tab === 'hist' && <HistTab results={results} league={league} setLeague={setLeague} />}
         {tab === 'mybet' && <MyBetsTab bets={bets} loading={loadingBets} updateBet={updateBet} deleteBet={isAdmin ? deleteBet : undefined} />}
         {tab === 'premium' && <PremiumTab plan={plan} />}
