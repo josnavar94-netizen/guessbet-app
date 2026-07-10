@@ -100,7 +100,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
   const [fixturesLoaded, setFixturesLoaded] = useState(false);
   // Ref para restaurar el análisis de un usuario free que vuelve a la pestaña tras haber consumido su cupo.
   // Dos refs para coordinar la carrera entre la carga de fixtures y la consulta a /api/bets/usage.
-  const pendingRestoreRef = useRef<{ home: string; away: string; result: any } | null>(null);
+  const pendingRestoreRef = useRef<{ home: string; away: string; result: any; lock: boolean } | null>(null);
   const fixturesLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -116,15 +116,29 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
       setFixturesLoaded(true);
       fixturesLoadedRef.current = true;
       if (pendingRestoreRef.current) {
-        // El check de usage ya terminó y encontró un análisis guardado — restaurarlo
         const r = pendingRestoreRef.current;
         pendingRestoreRef.current = null;
-        setHome(r.home); setAway(r.away); setResult(r.result); setAnalysisLocked(true);
+        setHome(r.home); setAway(r.away); setResult(r.result);
+        if (r.lock) setAnalysisLocked(true);
       } else if (list[0]) {
         onFixtureChange(list[0]);
       }
     }).catch(() => { setFixturesLoaded(true); fixturesLoadedRef.current = true; });
   }, []);
+
+  // Al montar: para premium, restaurar el último análisis desde localStorage (sin check de uso)
+  useEffect(() => {
+    if (!isPremium) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem('gb_last_analysis') || 'null');
+      if (!saved?.home || !saved?.away || !saved?.result) return;
+      if (fixturesLoadedRef.current) {
+        setHome(saved.home); setAway(saved.away); setResult(saved.result);
+      } else {
+        pendingRestoreRef.current = { ...saved, lock: false };
+      }
+    } catch {}
+  }, [isPremium]);
 
   // Al montar: si el usuario free ya usó su cupo hoy, restaurar el análisis del partido que analizó
   useEffect(() => {
@@ -137,11 +151,9 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
         const today = new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' });
         if (saved.date !== today) return;
         if (fixturesLoadedRef.current) {
-          // Fixtures ya cargaron — aplicar restore de inmediato
           setHome(saved.home); setAway(saved.away); setResult(saved.result); setAnalysisLocked(true);
         } else {
-          // Fixtures aún no cargan — guardar para cuando lleguen
-          pendingRestoreRef.current = saved;
+          pendingRestoreRef.current = { ...saved, lock: true };
         }
       } catch {}
     }).catch(() => {});
@@ -378,12 +390,14 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
     const statsSource = statsH && statsA ? `${statsH.pj}p/${statsA.pj}p reales` : statsH || statsA ? 'datos parciales' : 'modelo';
     const resultData = { p, mH, mA, wcH, wcA, hd, eloFav, h2hExpl, live, lv: { min, gh, ga, rh, ra }, dcHomeDraw, dcAwayDraw, dcHomeAway, bttsNo, dnbHome, dnbAway, sec: { co, sH, sA, ta, statsSource, cornersH: Math.round(cornersH * 10) / 10, cornersA: Math.round(cornersA * 10) / 10, yellowH: Math.round(yellowH * 10) / 10, yellowA: Math.round(yellowA * 10) / 10 } };
     setResult(resultData);
-    if (!isPremium) {
-      try {
+    try {
+      if (isPremium) {
+        localStorage.setItem('gb_last_analysis', JSON.stringify({ home, away, result: resultData }));
+      } else {
         const today = new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' });
         localStorage.setItem('gb_free_analysis', JSON.stringify({ date: today, home, away, result: resultData }));
-      } catch {}
-    }
+      }
+    } catch {}
   }
 
   function toggleMarket(label: string, prob: number, userOddStr: string, fairOdd: number) {
