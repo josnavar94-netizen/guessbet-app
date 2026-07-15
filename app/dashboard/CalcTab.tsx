@@ -115,6 +115,21 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
       setUpcoming(list);
       setFixturesLoaded(true);
       fixturesLoadedRef.current = true;
+
+      // Restore premium: solo si el partido guardado sigue en la lista de próximos partidos
+      if (isPremium) {
+        try {
+          const saved = JSON.parse(sessionStorage.getItem('gb_last_analysis') || 'null');
+          if (saved?.home && saved?.away && saved?.result) {
+            const stillUpcoming = list.some(f => f.h === saved.home && f.a === saved.away);
+            if (stillUpcoming) {
+              setHome(saved.home); setAway(saved.away); setResult(saved.result);
+              return;
+            }
+          }
+        } catch {}
+      }
+
       if (pendingRestoreRef.current) {
         const r = pendingRestoreRef.current;
         pendingRestoreRef.current = null;
@@ -125,20 +140,6 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
       }
     }).catch(() => { setFixturesLoaded(true); fixturesLoadedRef.current = true; });
   }, []);
-
-  // Al montar: para premium, restaurar el último análisis desde localStorage (sin check de uso)
-  useEffect(() => {
-    if (!isPremium) return;
-    try {
-      const saved = JSON.parse(sessionStorage.getItem('gb_last_analysis') || 'null');
-      if (!saved?.home || !saved?.away || !saved?.result) return;
-      if (fixturesLoadedRef.current) {
-        setHome(saved.home); setAway(saved.away); setResult(saved.result);
-      } else {
-        pendingRestoreRef.current = { ...saved, lock: false };
-      }
-    } catch {}
-  }, [isPremium]);
 
   // Al montar: si el usuario free ya usó su cupo hoy, restaurar el análisis del partido que analizó
   useEffect(() => {
