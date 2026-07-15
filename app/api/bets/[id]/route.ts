@@ -9,7 +9,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (isNaN(id)) return NextResponse.json({ error: 'ID inválido.' }, { status: 400 });
   try {
     const { result } = await req.json();
-    if (!['open', 'won', 'lost'].includes(result))
+    if (!['open', 'won', 'lost', 'push'].includes(result))
       return NextResponse.json({ error: 'Resultado inválido.' }, { status: 400 });
     const betRes = await sql`SELECT * FROM bets WHERE id=${id} AND user_id=${s.userId}`;
     const bet = betRes.rows[0];

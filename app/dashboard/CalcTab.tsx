@@ -130,7 +130,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
   useEffect(() => {
     if (!isPremium) return;
     try {
-      const saved = JSON.parse(localStorage.getItem('gb_last_analysis') || 'null');
+      const saved = JSON.parse(sessionStorage.getItem('gb_last_analysis') || 'null');
       if (!saved?.home || !saved?.away || !saved?.result) return;
       if (fixturesLoadedRef.current) {
         setHome(saved.home); setAway(saved.away); setResult(saved.result);
@@ -392,7 +392,9 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
     setResult(resultData);
     try {
       if (isPremium) {
-        localStorage.setItem('gb_last_analysis', JSON.stringify({ home, away, result: resultData }));
+        // sessionStorage: persiste al cambiar de pestaña en la misma sesión,
+        // pero se borra al cerrar el navegador → no interfiere con la próxima visita
+        sessionStorage.setItem('gb_last_analysis', JSON.stringify({ home, away, result: resultData }));
       } else {
         const today = new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' });
         localStorage.setItem('gb_free_analysis', JSON.stringify({ date: today, home, away, result: resultData }));

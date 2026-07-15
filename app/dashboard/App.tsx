@@ -43,7 +43,7 @@ type DbBet = {
   bookie: string;
   competition: string;
   match_date: string | null;
-  result: 'open' | 'won' | 'lost';
+  result: 'open' | 'won' | 'lost' | 'push';
   pl: number;
   created_at: string;
 };
@@ -221,7 +221,7 @@ export default function App({ username, email, plan, avatar, emailVerified, isAd
     }
   }
 
-  async function updateBet(id: number, result: 'won' | 'lost') {
+  async function updateBet(id: number, result: 'won' | 'lost' | 'push') {
     const res = await apiFetch(`/api/bets/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -921,7 +921,8 @@ function HomeTab({ username, setTab, bets, results: liveResults, lastSyncAt, lea
   const awP = totalMatches ? 100-hwP-dwP : 0;
   const closedBets = bets.filter(b => b.result !== 'open');
   const wonBets = closedBets.filter(b => b.result === 'won');
-  const wr = closedBets.length ? Math.round(wonBets.length/closedBets.length*100) : null;
+  const decidedBets = closedBets.filter(b => b.result !== 'push');
+  const wr = decidedBets.length ? Math.round(wonBets.length/decidedBets.length*100) : null;
 
   return (
     <div style={{ maxWidth: 700, margin: '0 auto' }}>
@@ -1116,19 +1117,22 @@ function MatchTitle({ matchName }: { matchName: string }) {
 }
 
 function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loading: boolean; updateBet: Function; deleteBet?: (id: number) => void }) {
-  const [filter, setFilter] = useState<'all'|'open'|'won'|'lost'>('all');
+  const [filter, setFilter] = useState<'all'|'open'|'won'|'lost'|'push'>('all');
 
   const closed = bets.filter(b => b.result !== 'open');
   const open = bets.filter(b => b.result === 'open');
   const won = bets.filter(b => b.result === 'won');
+  const pushed = bets.filter(b => b.result === 'push');
+  // El P&L y el win rate excluyen pushes (dinero devuelto no cuenta como ganancia ni pérdida)
+  const closedNoP = closed.filter(b => b.result !== 'push');
   const totalPL = closed.reduce((s,b) => s + Number(b.pl), 0);
-  const totalStake = bets.reduce((s,b) => s + Number(b.stake), 0);
-  const wr = closed.length ? Math.round(won.length/closed.length*100) : null;
+  const totalStake = bets.filter(b => b.result !== 'push').reduce((s,b) => s + Number(b.stake), 0);
+  const wr = closedNoP.length ? Math.round(won.length/closedNoP.length*100) : null;
   const roi = totalStake > 0 ? ((totalPL/totalStake)*100).toFixed(1) : null;
   const filtered = filter === 'all' ? bets : bets.filter(b => b.result === filter);
 
-  // Racha actual (recorre desde la apuesta cerrada más reciente hacia atrás)
-  const closedDesc = [...closed].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  // Racha actual — push no corta racha ni suma (se salta)
+  const closedDesc = [...closed].filter(b => b.result !== 'push').sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   let streak = 0;
   let streakType: 'won'|'lost'|null = closedDesc[0]?.result === 'lost' ? 'lost' : closedDesc[0]?.result === 'won' ? 'won' : null;
   for (const b of closedDesc) {
@@ -1193,7 +1197,7 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
       )}
 
       <div style={{ display:'flex', gap:6, marginBottom:'1rem', flexWrap:'wrap' }}>
-        {[{k:'all',l:'Todas'},{k:'open',l:'Esperando'},{k:'won',l:'Ganadas'},{k:'lost',l:'Perdidas'}].map(f => (
+        {[{k:'all',l:'Todas'},{k:'open',l:'Esperando'},{k:'won',l:'Ganadas'},{k:'lost',l:'Perdidas'},{k:'push',l:`Devueltas${pushed.length?` (${pushed.length})`:''}` }].map(f => (
           <button key={f.k} onClick={()=>setFilter(f.k as any)} style={{ height:32, padding:'0 14px', fontSize:12, fontFamily:"'Outfit',sans-serif", background:filter===f.k?'rgba(201,168,76,.15)':'transparent', border:`1px solid ${filter===f.k?'rgba(201,168,76,.4)':'rgba(201,168,76,.15)'}`, color:filter===f.k?'#c9a84c':'#7a8aaa', borderRadius:20, cursor:'pointer', fontWeight:filter===f.k?600:400 }}>
             {f.l}
           </button>
@@ -1204,7 +1208,7 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
           {bets.length === 0 ? 'Todavía no has anotado ninguna apuesta. Ve a "Analizar un partido" para registrar la primera.' : 'No hay apuestas con este filtro.'}
         </div>
       ) : filtered.map(b => {
-            const bc = b.result==='won'?'#3aae6c':b.result==='lost'?'#d95050':'#c9a84c';
+            const bc = b.result==='won'?'#3aae6c':b.result==='lost'?'#d95050':b.result==='push'?'#6b9fd4':'#c9a84c';
             const pl = Number(b.pl);
             const stake = Number(b.stake);
             const odds = Number(b.odds);
@@ -1220,6 +1224,7 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
                     {b.result==='open' && <>
                       <button onClick={()=>updateBet(b.id,'won')} style={{ height:26, padding:'0 8px', fontSize:11, borderRadius:6, border:'1px solid rgba(58,174,108,.4)', background:'rgba(58,174,108,.1)', color:'#3aae6c', cursor:'pointer' }}>✓ Gané</button>
                       <button onClick={()=>updateBet(b.id,'lost')} style={{ height:26, padding:'0 8px', fontSize:11, borderRadius:6, border:'1px solid rgba(217,80,80,.3)', background:'rgba(217,80,80,.1)', color:'#d95050', cursor:'pointer' }}>✗ Perdí</button>
+                      <button onClick={()=>updateBet(b.id,'push')} style={{ height:26, padding:'0 8px', fontSize:11, borderRadius:6, border:'1px solid rgba(107,159,212,.3)', background:'rgba(107,159,212,.1)', color:'#6b9fd4', cursor:'pointer' }}>↩ Devuelto</button>
                     </>}
                     {deleteBet && <button onClick={()=>deleteBet(b.id)} style={{ height:26, padding:'0 8px', fontSize:11, borderRadius:6, border:'1px solid rgba(201,168,76,.15)', background:'transparent', color:'#7a8aaa', cursor:'pointer' }}>🗑</button>}
                   </div>
@@ -1229,10 +1234,10 @@ function MyBetsTab({ bets, loading, updateBet, deleteBet }: { bets: DbBet[]; loa
                   <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, color:'#6b9fd4' }}>@ {odds.toFixed(2)}</span>
                   <span style={{ color:'#7a8aaa' }}>Aposté: {stake}</span>
                   <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:`${bc}22`, color:bc }}>
-                    {b.result==='won'?'✓ Ganaste':b.result==='lost'?'✗ Perdiste':'⏳ Esperando'}
+                    {b.result==='won'?'✓ Ganaste':b.result==='lost'?'✗ Perdiste':b.result==='push'?'↩ Devuelto':'⏳ Esperando'}
                   </span>
                   <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, color:bc, marginLeft:'auto' }}>
-                    {b.result==='open'?`Podrías ganar +${potWin}`:(pl>=0?'Ganaste +':'Perdiste ')+Math.abs(pl).toFixed(2)}
+                    {b.result==='open'?`Podrías ganar +${potWin}`:b.result==='push'?'Dinero devuelto':(pl>=0?'Ganaste +':'Perdiste ')+Math.abs(pl).toFixed(2)}
                   </span>
                 </div>
               </div>

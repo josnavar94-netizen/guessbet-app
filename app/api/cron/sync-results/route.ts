@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
       for (const bet of openBets.rows) {
         const grade = gradeBet(bet.pick_label, home, away, m.home_goals, m.away_goals);
         if (!grade) continue;
-        const pl = grade === 'won' ? (Number(bet.odds) - 1) * Number(bet.stake) : -Number(bet.stake);
+        const pl = grade === 'won' ? (Number(bet.odds) - 1) * Number(bet.stake) : grade === 'push' ? 0 : -Number(bet.stake);
         await sql`UPDATE bets SET result=${grade}, pl=${pl} WHERE id=${bet.id} AND result='open'`;
         settled++;
       }
