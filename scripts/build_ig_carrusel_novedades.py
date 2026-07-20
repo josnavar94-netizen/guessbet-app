@@ -189,9 +189,20 @@ def render(svg, slug):
 SLIDES = [
     ('slide1_cover', slide_cover),
 
-    # 01 — Marcador exacto
-    ('slide2_marcador', lambda: feature_slide(
-        1, '01 / 06', '🎯', 'Marcador', 'exacto.',
+    # 01 — Nuevas ligas
+    ('slide2_ligas', lambda: feature_slide(
+        1, '01 / 06', '🌍', 'Premier League', 'ya disponible.',
+        'El mismo modelo, ahora con los 20 equipos de Inglaterra.',
+        [
+            'La Premier League ya se puede analizar en GuessBet | con el modelo ELO + Poisson entrenado en 5 temporadas.',
+            'Y vienen La Liga, Serie A, Bundesliga, Ligue 1 y el Futbol Chileno | los estamos construyendo.',
+            'El objetivo: que puedas analizar cualquier partido que te importe | no solo el Mundial.',
+        ]
+    )),
+
+    # 02 — Marcador exacto
+    ('slide3_marcador', lambda: feature_slide(
+        2, '02 / 06', '🎯', 'Marcador', 'exacto.',
         'Ahora sabes el resultado más probable, no solo el ganador.',
         [
             'El modelo calcula los 6 marcadores más probables | con su porcentaje y su cuota justa.',
@@ -200,9 +211,9 @@ SLIDES = [
         ]
     )),
 
-    # 02 — Factor goleadores
-    ('slide3_goleadores', lambda: feature_slide(
-        2, '02 / 06', '⚽', 'Si el crack', 'no juega, cambia.',
+    # 03 — Factor goleadores
+    ('slide4_goleadores', lambda: feature_slide(
+        3, '03 / 06', '⚽', 'Si el crack', 'no juega, cambia.',
         'El análisis se ajusta según quién está en el once.',
         [
             'Detectamos si el goleador del torneo juega o no | y ajustamos el peligro ofensivo.',
@@ -211,9 +222,9 @@ SLIDES = [
         ]
     )),
 
-    # 03 — Alineaciones -1h
-    ('slide4_alineaciones', lambda: feature_slide(
-        3, '03 / 06', '📋', 'El once,', '1 hora antes.',
+    # 04 — Alineaciones -1h
+    ('slide5_alineaciones', lambda: feature_slide(
+        4, '04 / 06', '📋', 'El once,', '1 hora antes.',
         'La alineación confirmada aparece en la app antes del pitazo.',
         [
             'Usamos FotMob, que publica los onces cuando los equipos los anuncian oficialmente.',
@@ -222,9 +233,9 @@ SLIDES = [
         ]
     )),
 
-    # 04 — Sección "Basado en" + stats reales
-    ('slide5_basado_en', lambda: feature_slide(
-        4, '04 / 06', '📊', 'Nada es', 'una caja negra.',
+    # 05 — Sección "Basado en" + stats reales
+    ('slide6_basado_en', lambda: feature_slide(
+        5, '05 / 06', '📊', 'Nada es', 'una caja negra.',
         'Ves exactamente qué datos respaldan cada predicción.',
         [
             'Mostramos el xG, el ELO y los stats reales del torneo por equipo | córners, tiros, amarillas.',
@@ -233,25 +244,14 @@ SLIDES = [
         ]
     )),
 
-    # 05 — Stats reales en Otras Opciones
-    ('slide6_cuota_justa', lambda: feature_slide(
-        5, '05 / 06', '💰','Otras opciones', 'con datos reales.',
+    # 06 — Stats reales en Otras Opciones
+    ('slide7_cuota_justa', lambda: feature_slide(
+        6, '06 / 06', '💰', 'Otras opciones', 'con datos reales.',
         'Over/Under y BTTS calculados con stats del torneo.',
         [
             'Córners, goles, tiros: usamos los promedios reales del Mundial | no datos de temporada.',
             'Si el equipo jugó 2+ partidos, el modelo usa sus propios números | si no, usa el promedio del torneo.',
             'Y te mostramos la fuente: sabes si viene de datos propios | o del promedio general.',
-        ]
-    )),
-
-    # 06 — Nuevas ligas
-    ('slide7_ligas', lambda: feature_slide(
-        6, '06 / 06', '🌍', 'Premier League', 'ya disponible.',
-        'El mismo modelo, ahora con los 20 equipos de Inglaterra.',
-        [
-            'La Premier League ya se puede analizar en GuessBet | con el modelo ELO + Poisson entrenado en 5 temporadas.',
-            'Y vienen La Liga, Serie A, Bundesliga, Ligue 1 y el Futbol Chileno | los estamos construyendo.',
-            'El objetivo: que puedas analizar cualquier partido que te importe | no solo el Mundial.',
         ]
     )),
 
