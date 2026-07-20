@@ -4,7 +4,7 @@ export type League = { id: string; name: string; flag: string; available: boolea
 
 export const LEAGUES: League[] = [
   { id: 'wc', name: 'Mundial 2026', flag: '🌎', available: true },
-  { id: 'pl', name: 'Premier League', flag: '🏴', available: false },
+  { id: 'pl', name: 'Premier League', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', available: true },
   { id: 'seriea', name: 'Serie A', flag: '🇮🇹', available: false },
   { id: 'laliga', name: 'La Liga', flag: '🇪🇸', available: false },
   { id: 'bundesliga', name: 'Bundesliga', flag: '🇩🇪', available: false },

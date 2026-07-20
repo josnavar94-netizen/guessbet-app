@@ -11,10 +11,11 @@ import { fetchSofascoreRatings } from '@/lib/sofascore';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
-// código football-data.org -> { filtro de torneo y fecha de inicio en el CSV de GitHub }
-const COMPETITIONS: Record<string, { ghTournament: string; ghFromDate: string }> = {
+// código football-data.org -> config de validación cruzada con GitHub (solo selecciones nacionales)
+// Los clubes no tienen validación cruzada (el dataset de GitHub solo cubre internacionales).
+const COMPETITIONS: Record<string, { ghTournament: string | null; ghFromDate: string | null }> = {
   WC: { ghTournament: 'FIFA World Cup', ghFromDate: '2026-01-01' },
-  // agregar más a futuro, ej: PL: { ghTournament: '', ghFromDate: '' } (GitHub solo cubre selecciones, no clubes)
+  PL: { ghTournament: null, ghFromDate: null }, // sin validación cruzada para clubes
 };
 
 export async function GET(req: NextRequest) {
@@ -102,14 +103,16 @@ export async function GET(req: NextRequest) {
     `;
 
     let discrepancies: Discrepancy[] = [];
-    try {
-      const ghMatches = await fetchGithubResults({ fromDate: ghConfig.ghFromDate, tournamentIncludes: ghConfig.ghTournament });
-      discrepancies = crossValidate(dbMatches as any, ghMatches);
-      if (discrepancies.length > 0) {
-        console.warn(`[sync-results] ${code}: ${discrepancies.length} discrepancia(s) entre football-data.org y GitHub`, discrepancies);
+    if (ghConfig.ghTournament) {
+      try {
+        const ghMatches = await fetchGithubResults({ fromDate: ghConfig.ghFromDate!, tournamentIncludes: ghConfig.ghTournament });
+        discrepancies = crossValidate(dbMatches as any, ghMatches);
+        if (discrepancies.length > 0) {
+          console.warn(`[sync-results] ${code}: ${discrepancies.length} discrepancia(s) entre football-data.org y GitHub`, discrepancies);
+        }
+      } catch (err) {
+        console.error(`[sync-results] ${code}: falló la validación cruzada con GitHub`, err);
       }
-    } catch (err) {
-      console.error(`[sync-results] ${code}: falló la validación cruzada con GitHub`, err);
     }
 
     // Gradúa automáticamente las apuestas abiertas de partidos ya finalizados.

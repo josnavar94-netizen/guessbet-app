@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { modelProbs, getH2H, MODEL, WC_REAL, FLAG_CODES, overProb, exactTotalProb } from '@/lib/model';
+import { PL_MODEL, PL_REAL, PL_CLUBS, PL_LEAGUE_AVG } from '@/lib/pl-model';
 import LeagueSelector from './LeagueSelector';
 
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
@@ -13,6 +14,30 @@ function Flag({ name, size = 16 }: { name: string; size?: number }) {
       <img src={`https://flagcdn.com/h${size === 16 ? 20 : 40}/${code}.png`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
     </span>
   );
+}
+
+function ClubBadge({ name, size = 16 }: { name: string; size?: number }) {
+  const club = PL_CLUBS[name];
+  if (!club) return <span style={{ fontSize: size * 0.7, color: '#7a8aaa', flexShrink: 0 }}>{name.slice(0,3).toUpperCase()}</span>;
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: size, height: size, flexShrink: 0, verticalAlign: 'middle' }}>
+      <img src={club.crest} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+    </span>
+  );
+}
+
+function TeamIcon({ name, league, size = 16 }: { name: string; league: string; size?: number }) {
+  if (league === 'pl') return <ClubBadge name={name} size={size} />;
+  return <Flag name={name} size={size} />;
+}
+
+function hasIcon(name: string, league: string) {
+  return league === 'pl' ? !!PL_CLUBS[name] : !!FLAG_CODES[name];
+}
+
+function teamDisplayName(name: string, league: string) {
+  if (league === 'pl') return PL_CLUBS[name]?.short || name;
+  return name;
 }
 
 type Bet = { label: string; prob: number; odd: number };
@@ -104,7 +129,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
   const fixturesLoadedRef = useRef(false);
 
   useEffect(() => {
-    fetch('/api/fixtures').then(r => r.json()).then(d => {
+    fetch(`/api/fixtures?league=${league}`).then(r => r.json()).then(d => {
       const list: LiveFixture[] = (d.fixtures || []).map((f: any) => ({
         h: f.home, a: f.away,
         t: f.kickoffAt ? timeFmt.format(new Date(f.kickoffAt)) : '--:--',
@@ -167,7 +192,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
   });
   const [home, setHome] = useState('');
   const [away, setAway] = useState('');
-  const [neutral, setNeutral] = useState(true);
+  const [neutral, setNeutral] = useState(league !== 'pl'); // WC: sede neutral; PL: local/visitante
   const [odds, setOdds] = useState<Record<string, string>>({});
   const [result, setResult] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'main' | 'sec'>('main');
@@ -178,18 +203,19 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
   const [analysisLocked, setAnalysisLocked] = useState(false);
   const [limitError, setLimitError] = useState<string | null>(null);
 
-  // WC_REAL en vivo, calculado en el servidor desde la tabla `matches` (fallback al estático si falla)
+  // Estadísticas de la temporada/torneo en curso por equipo (WC_REAL para WC, PL_REAL para PL)
   const [wcRealLive, setWcRealLive] = useState<typeof WC_REAL | null>(null);
   useEffect(() => {
-    fetch('/api/wc-real').then(r => r.json()).then(d => setWcRealLive(d.wcReal)).catch(() => {});
-  }, []);
+    fetch(`/api/wc-real?league=${league}`).then(r => r.json()).then(d => setWcRealLive(d.wcReal)).catch(() => {});
+  }, [league]);
 
-  // Stats reales del Mundial 2026 (córners, amarillas, tiros) por equipo — desde ESPN boxscore
+  // Stats reales de córners/amarillas/tiros por equipo — solo disponible para WC (fuente: ESPN boxscore)
   type TeamMatchStats = { pj: number; avgCorners: number; avgYellow: number; avgShots: number; avgShotsOnTarget: number; avgFouls: number; avgPossession: number };
   const [wcMatchStats, setWcMatchStats] = useState<{ wcStats: Record<string, TeamMatchStats>; tournamentAvg: { avgCorners: number; avgYellow: number; avgShots: number; avgShotsOnTarget: number } | null } | null>(null);
   useEffect(() => {
+    if (league !== 'wc') return; // estadísticas ESPN solo disponibles para el Mundial
     fetch('/api/wc-stats').then(r => r.json()).then(d => setWcMatchStats(d)).catch(() => {});
-  }, []);
+  }, [league]);
 
   // Cambios de alineación titular vs. el partido anterior de cada equipo en este Mundial
   // (solo si ya hay alineación confirmada del partido elegido, ~30-40 min antes del kickoff).
@@ -331,9 +357,10 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
       }
       setAnalysisLocked(true);
     }
-    const wcReal = wcRealLive || WC_REAL;
-    // xgH = goles esperados del local → sube con ataque local + defensa visitante mala
-    // xgA = goles esperados del visitante → sube con ataque visitante + defensa local mala
+    const isPL = league === 'pl';
+    const modelSrc = isPL ? PL_MODEL : MODEL;
+    const leagueAvgSrc = isPL ? PL_LEAGUE_AVG : undefined;
+    const wcReal = wcRealLive || (isPL ? PL_REAL : WC_REAL);
     const homeSF = (lineupChanges?.home as any)?.starFactors ?? { attackFactor: 1, defenseFactor: 1 };
     const awaySF = (lineupChanges?.away as any)?.starFactors ?? { attackFactor: 1, defenseFactor: 1 };
     const homeRot = (lineupChanges?.home as any)?.rotationFactor ?? 1;
@@ -344,9 +371,10 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
       home: homeRot * homeSF.attackFactor * awaySF.defenseFactor * homeGoalF,
       away: awayRot * awaySF.attackFactor * homeSF.defenseFactor * awayGoalF,
     } : undefined;
-    const pFull = modelProbs(home, away, neutral, wcReal, realH2H || undefined, rotationOverride);
+    const pFull = modelProbs(home, away, neutral, wcReal, realH2H || undefined, rotationOverride, modelSrc, leagueAvgSrc);
     const mH = MODEL[home], mA = MODEL[away];
-    const wcH = wcReal[home], wcA = wcReal[away];
+    const wcH = wcReal[home] ?? null, wcA = wcReal[away] ?? null;
+    const leagueName = isPL ? 'Premier League' : 'Mundial 2026';
     const hd = realH2H ? { data: realH2H, t1First: true } : getH2H(home, away);
     const min = parseInt(liveMin) || 0;
     const gh = parseInt(liveGh) || 0;
@@ -389,7 +417,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
     const sH = Math.round(blend(statsH?.avgShotsOnTarget, statsH?.pj, tAvgShots));
     const sA = Math.round(blend(statsA?.avgShotsOnTarget, statsA?.pj, tAvgShots));
     const statsSource = statsH && statsA ? `${statsH.pj}p/${statsA.pj}p reales` : statsH || statsA ? 'datos parciales' : 'modelo';
-    const resultData = { p, mH, mA, wcH, wcA, hd, eloFav, h2hExpl, live, lv: { min, gh, ga, rh, ra }, dcHomeDraw, dcAwayDraw, dcHomeAway, bttsNo, dnbHome, dnbAway, sec: { co, sH, sA, ta, statsSource, cornersH: Math.round(cornersH * 10) / 10, cornersA: Math.round(cornersA * 10) / 10, yellowH: Math.round(yellowH * 10) / 10, yellowA: Math.round(yellowA * 10) / 10 } };
+    const resultData = { p, mH, mA, wcH, wcA, hd, eloFav, h2hExpl, live, lv: { min, gh, ga, rh, ra }, dcHomeDraw, dcAwayDraw, dcHomeAway, bttsNo, dnbHome, dnbAway, leagueName, sec: { co, sH, sA, ta, statsSource, cornersH: Math.round(cornersH * 10) / 10, cornersA: Math.round(cornersA * 10) / 10, yellowH: Math.round(yellowH * 10) / 10, yellowA: Math.round(yellowA * 10) / 10 } };
     setResult(resultData);
     try {
       if (isPremium) {
@@ -420,7 +448,8 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
     if (!selected.length) return;
     const pickText = selected.length > 1 ? `Combinada (${selected.length}): ${selected.map(m => m.label).join(' + ')}` : selected[0].label;
     const ev = parseFloat(((combProb * combOdd - 1) * 100).toFixed(1));
-    await onRegister({ match_name: `${home} vs ${away}`, pick_label: pickText, odds: parseFloat(combOdd.toFixed(2)), stake: stakeN, ev, bookie, competition: 'Mundial 2026', match_date: null });
+    const compName = league === 'pl' ? 'Premier League' : 'Mundial 2026';
+    await onRegister({ match_name: `${home} vs ${away}`, pick_label: pickText, odds: parseFloat(combOdd.toFixed(2)), stake: stakeN, ev, bookie, competition: compName, match_date: null });
     setSelected([]);
     setAnalysisLocked(false); // ya registró — desbloquear (el cupo ya está consumido para hoy)
   }
@@ -527,7 +556,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
             {upcomingByDay.map((d, gi) => (
               <optgroup key={gi} label={d.day}>
                 {d.items.map(({ m, idx }) => (
-                  <option key={idx} value={idx}>{m.t} · {m.h} vs {m.a}</option>
+                  <option key={idx} value={idx}>{m.t} · {teamDisplayName(m.h, league)} vs {teamDisplayName(m.a, league)}</option>
                 ))}
               </optgroup>
             ))}
@@ -535,13 +564,13 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
         )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 32px 1fr', gap: 8, marginBottom: 10, alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
-            {FLAG_CODES[home] && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><Flag name={home} /></span>}
-            <input value={home} readOnly style={{ ...inp, paddingLeft: FLAG_CODES[home] ? 38 : 12, cursor: 'default', color: '#f0ece0' }} />
+            {hasIcon(home, league) && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><TeamIcon name={home} league={league} /></span>}
+            <input value={teamDisplayName(home, league)} readOnly style={{ ...inp, paddingLeft: hasIcon(home, league) ? 38 : 12, cursor: 'default', color: '#f0ece0' }} />
           </div>
           <div style={{ textAlign: 'center', fontSize: 11, color: '#7a8aaa' }}>VS</div>
           <div style={{ position: 'relative' }}>
-            {FLAG_CODES[away] && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><Flag name={away} /></span>}
-            <input value={away} readOnly style={{ ...inp, paddingLeft: FLAG_CODES[away] ? 38 : 12, cursor: 'default', color: '#f0ece0' }} />
+            {hasIcon(away, league) && <span style={{ position: 'absolute', left: 10, top: 0, height: 42, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}><TeamIcon name={away} league={league} /></span>}
+            <input value={teamDisplayName(away, league)} readOnly style={{ ...inp, paddingLeft: hasIcon(away, league) ? 38 : 12, cursor: 'default', color: '#f0ece0' }} />
           </div>
         </div>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#7a8aaa', cursor: 'pointer' }}>
@@ -577,7 +606,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
           {[['home', `Gana ${home}`, home], ['draw', 'Empatan', null], ['away', `Gana ${away}`, away]].map(([k, ph, team]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
-              <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>{team && <Flag name={team} />}{ph}</span>
+              <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>{team && <TeamIcon name={team} league={league} />}{ph}</span>
               <input type="number" step="0.01" placeholder="–" value={odds[k as string] || ''} onChange={e => setOddsField(k as string, e.target.value)} style={{ ...inp, width: 80, textAlign: 'center', flex: 'none', color: oddsInputColor(k as string), fontWeight: autoFilledKeys.has(k as string) ? 700 : 400 }} />
             </div>
           ))}
@@ -631,11 +660,11 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
             <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>Marcador</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
-                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>Goles <Flag name={home} />{home}</span>
+                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>Goles <TeamIcon name={home} league={league} />{home}</span>
                 <input type="number" value={liveGh} onChange={e=>setLiveField(setLiveGh, e.target.value)} min="0" placeholder="–" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none', color: liveFieldColor(liveGh), fontWeight: liveAutoFilled ? 700 : 400 }} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(201,168,76,.15)', borderRadius: 9, padding: '6px 10px' }}>
-                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>Goles <Flag name={away} />{away}</span>
+                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>Goles <TeamIcon name={away} league={league} />{away}</span>
                 <input type="number" value={liveGa} onChange={e=>setLiveField(setLiveGa, e.target.value)} min="0" placeholder="–" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none', color: liveFieldColor(liveGa), fontWeight: liveAutoFilled ? 700 : 400 }} />
               </div>
             </div>
@@ -643,11 +672,11 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
             <div style={{ fontSize: 11, fontWeight: 600, color: '#7a8aaa', textTransform: 'uppercase', marginBottom: 6 }}>🟥 Expulsados</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(217,80,80,.18)', borderRadius: 9, padding: '6px 10px' }}>
-                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><Flag name={home} />{home}</span>
+                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><TeamIcon name={home} league={league} />{home}</span>
                 <input type="number" value={liveRh} onChange={e=>setLiveRh(e.target.value)} min="0" max="5" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} placeholder="0" />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--sur)', border: '1px solid rgba(217,80,80,.18)', borderRadius: 9, padding: '6px 10px' }}>
-                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><Flag name={away} />{away}</span>
+                <span style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><TeamIcon name={away} league={league} />{away}</span>
                 <input type="number" value={liveRa} onChange={e=>setLiveRa(e.target.value)} min="0" max="5" style={{ ...inp, width: 70, textAlign: 'center', flex: 'none' }} placeholder="0" />
               </div>
             </div>
@@ -676,7 +705,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
           {/* xG strip */}
           <div style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.2)', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1rem', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
             {[{name:home,xg:result.p.xgH},{name:away,xg:result.p.xgA}].map((t,i) => (
-              <div key={i}><div style={{fontSize:11,color:'#7a8aaa',display:'flex',alignItems:'center',gap:5}}><Flag name={t.name} size={12} />{t.name}</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:28,color:'#c9a84c'}}>{t.xg.toFixed(2)}</div><div style={{fontSize:10,color:'#7a8aaa'}}>{live?'goles que le faltan':'goles esperados'}</div></div>
+              <div key={i}><div style={{fontSize:11,color:'#7a8aaa',display:'flex',alignItems:'center',gap:5}}><TeamIcon name={t.name} league={league} size={12} />{t.name}</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:28,color:'#c9a84c'}}>{t.xg.toFixed(2)}</div><div style={{fontSize:10,color:'#7a8aaa'}}>{live?'goles que le faltan':'goles esperados'}</div></div>
             ))}
             <div style={{ marginLeft: 'auto', fontSize: 11, color: '#7a8aaa', textAlign: 'right' }}>ELO {result.p.eloH.toFixed(0)} vs {result.p.eloA.toFixed(0)}<br/>{neutral?'Sede neutral':'Con ventaja local'}</div>
           </div>
@@ -688,7 +717,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
                 {[{l:`${home} ganó`, team: home, v: result.hd.t1First ? result.hd.data.w1 : result.hd.data.l1},{l:'Empates',team:null,v:result.hd.data.d},{l:`${away} ganó`,team:away,v:result.hd.t1First?result.hd.data.l1:result.hd.data.w1},{l:'Total partidos',team:null,v:result.hd.data.n}].map((s,i)=>(
                   <div key={i} style={{background:'rgba(107,159,212,.08)',border:'1px solid rgba(107,159,212,.18)',borderRadius:7,padding:'6px 14px',textAlign:'center', minWidth: '90px'}}>
-                    <div style={{fontSize:10,color:'#7a8aaa', marginBottom: 2, whiteSpace: 'nowrap', display:'flex', alignItems:'center', justifyContent:'center', gap:4}}>{s.team && <Flag name={s.team} size={11} />}{s.l}</div>
+                    <div style={{fontSize:10,color:'#7a8aaa', marginBottom: 2, whiteSpace: 'nowrap', display:'flex', alignItems:'center', justifyContent:'center', gap:4}}>{s.team && <TeamIcon name={s.team} league={league} size={11} />}{s.l}</div>
                     <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:800,fontSize:18,color:'#6b9fd4'}}>{s.v}</div>
                   </div>
                 ))}
@@ -734,7 +763,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
                             <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, userOdd, fairOdd)} style={{ width: 15, height: 15, accentColor: '#3aae6c' }} />
                           </td>
                           <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontWeight: 500, fontSize: 13 }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <TeamIcon name={(m as any).team} league={league} />}{m.label}</span>
                             {(m as any).pushNote && <div style={{ fontSize: 10, color: '#6b9fd4', marginTop: 2 }}>{(m as any).pushNote}</div>}
                           </td>
                           <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{(m.prob * 100).toFixed(1)}%</td>
@@ -755,7 +784,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
                     <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isSelected ? 'rgba(58,174,108,.08)' : 'var(--sur)', border: `1px solid ${isSelected ? 'rgba(58,174,108,.3)' : 'rgba(201,168,76,.12)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer' }}>
                       <input type="checkbox" checked={isSelected} onChange={() => toggleMarket(m.label, m.prob, userOdd, fairOdd)} style={{ width: 16, height: 16, accentColor: '#3aae6c', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <TeamIcon name={(m as any).team} league={league} />}{m.label}</div>
                         <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>
                           Modelo {(m.prob * 100).toFixed(1)}%
                           {uOdd && <> · Tu cuota {((1 / uOdd) * 100).toFixed(1)}%</>}
@@ -797,7 +826,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
                     <div style={{ color: '#7a8aaa', marginTop: 3 }}>
                       Histórico: {result.mH?.avgGF?.toFixed(2) ?? '—'} goles/p · ELO {result.p.eloH}
                     </div>
-                    {result.wcH && <div style={{ color: '#7a8aaa', marginTop: 2 }}>Mundial 2026: {result.wcH.avgGF?.toFixed(2)} goles/p ({result.wcH.pj} partidos)</div>}
+                    {result.wcH && <div style={{ color: '#7a8aaa', marginTop: 2 }}>{result.leagueName}: {result.wcH.avgGF?.toFixed(2)} goles/p ({result.wcH.pj} partidos)</div>}
                 {(() => {
                   const sf = (lineupChanges?.home as any)?.scorerFactor;
                   if (!sf) return null;
@@ -813,7 +842,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
                     <div style={{ color: '#7a8aaa', marginTop: 3 }}>
                       Histórico: {result.mA?.avgGF?.toFixed(2) ?? '—'} goles/p · ELO {result.p.eloA}
                     </div>
-                    {result.wcA && <div style={{ color: '#7a8aaa', marginTop: 2 }}>Mundial 2026: {result.wcA.avgGF?.toFixed(2)} goles/p ({result.wcA.pj} partidos)</div>}
+                    {result.wcA && <div style={{ color: '#7a8aaa', marginTop: 2 }}>{result.leagueName}: {result.wcA.avgGF?.toFixed(2)} goles/p ({result.wcA.pj} partidos)</div>}
                 {(() => {
                   const sf = (lineupChanges?.away as any)?.scorerFactor;
                   if (!sf) return null;
@@ -862,7 +891,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
                             {hasPick && m.fair && <input type="checkbox" checked={isSelected} onChange={() => toggleSecMarket(m.label + ': ' + m.pick, 0.55, m.fair!)} style={{ width: 15, height: 15, accentColor: '#3aae6c' }} />}
                           </td>
                           <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <TeamIcon name={(m as any).team} league={league} />}{m.label}</span>
                           </td>
                           <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 13 }}>{m.est}</td>
                           <td style={{ padding: '9px 10px', borderBottom: '1px solid rgba(201,168,76,.08)', fontSize: 12, color: '#7a8aaa' }}>{(m as any).detail ?? `~${m.est - 1}`}</td>
@@ -878,7 +907,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
                   </tbody>
                 </table>
                 <div style={{ padding: '10px 14px', fontSize: 11, color: '#7a8aaa' }}>
-                {result.sec.statsSource ? `Fuente: ${result.sec.statsSource} del Mundial 2026 (ESPN boxscore).` : 'Orientativo.'} Cifras promedio por partido.
+                {result.sec.statsSource ? `Fuente: ${result.sec.statsSource} de la temporada (ESPN boxscore).` : 'Orientativo.'} Cifras promedio por partido.
               </div>
               </div>
 
@@ -892,7 +921,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
                         <input type="checkbox" checked={isSelected} onChange={() => toggleSecMarket(m.label + ': ' + m.pick, 0.55, m.fair!)} style={{ width: 16, height: 16, accentColor: '#3aae6c', flexShrink: 0 }} />
                       ) : <div style={{ width: 16, flexShrink: 0 }} />}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <Flag name={(m as any).team} />}{m.label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{(m as any).team && <TeamIcon name={(m as any).team} league={league} />}{m.label}</div>
                         <div style={{ fontSize: 10, color: '#7a8aaa', marginTop: 2 }}>Estimado: {m.est}{(m as any).detail ? ` · ${(m as any).detail}` : ` · ref ~${m.est - 1}`}</div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -912,7 +941,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 10 }}>
               {[{name:home,m:result.mH,wc:result.wcH,xg:result.p.xgH},{name:away,m:result.mA,wc:result.wcA,xg:result.p.xgA}].map((t,i)=>(
                 <div key={i} style={{background:'var(--sur)',border:'1px solid rgba(201,168,76,.1)',borderRadius:8,padding:'10px 12px'}}>
-                  <div style={{fontWeight:600,marginBottom:6,display:'flex',alignItems:'center',gap:6}}><Flag name={t.name} />{t.name}</div>
+                  <div style={{fontWeight:600,marginBottom:6,display:'flex',alignItems:'center',gap:6}}><TeamIcon name={t.name} league={league} />{t.name}</div>
                   <div style={{fontSize:11,color:'#7a8aaa'}}>Datos: {t.wc&&t.m?'Mundial + histórico':t.wc?'WC real':t.m?'Histórico':'Estimado'}</div>
                   <div style={{fontSize:11,color:'#7a8aaa'}}>Nivel del equipo: <strong style={{color:'#6b9fd4'}}>{t.m?.elo||1500}</strong></div>
                   <div style={{fontSize:11,color:'#7a8aaa'}}>Goles por partido: {t.m?t.m.avgGF.toFixed(2):'—'}</div>
@@ -923,7 +952,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
             </div>
             <div style={{ borderTop: '1px solid rgba(201,168,76,.1)', paddingTop: 8, color: '#7a8aaa' }}>
               {result.eloFav ? (
-                <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>El favorito según el nivel histórico es <strong style={{color:'#6b9fd4',display:'flex',alignItems:'center',gap:5}}><Flag name={result.eloFav} size={13} />{result.eloFav}</strong>.</div>
+                <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>El favorito según el nivel histórico es <strong style={{color:'#6b9fd4',display:'flex',alignItems:'center',gap:5}}><TeamIcon name={result.eloFav} league={league} size={13} />{result.eloFav}</strong>.</div>
               ) : (
                 <div>Según el nivel histórico (Elo) ambos equipos están muy parejos — la diferencia no es significativa.</div>
               )}
@@ -951,7 +980,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                       {[{ name: home, c: lineupChanges.home }, { name: away, c: lineupChanges.away }].map((t, i) => (
                         <div key={i} style={{ background: 'var(--sur)', border: '1px solid rgba(201,168,76,.1)', borderRadius: 8, padding: '10px 12px' }}>
-                          <div style={{ fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><Flag name={t.name} />{t.name}</div>
+                          <div style={{ fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><TeamIcon name={t.name} league={league} />{t.name}</div>
                           {!t.c || t.c.status === 'no_lineup' ? (
                             <div style={{ fontSize: 11, color: '#7a8aaa' }}>Alineación todavía no confirmada.</div>
                           ) : t.c.status === 'no_previous' ? (

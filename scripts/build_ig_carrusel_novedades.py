@@ -31,7 +31,7 @@ def svg_open():
         f'<rect x="0" y="{H-5}" width="{W}" height="5" fill="{GOLD}"/>'
     )
 
-def header_row(slide_idx, total=7):
+def header_row(slide_idx, total=8):
     dots = ''.join(
         f'<circle cx="{W-44-(total-1-i)*20}" cy="50" r="5" fill="{"#C9A227" if i==slide_idx else "rgba(255,255,255,0.15)"}"/>'
         for i in range(total)
@@ -76,19 +76,27 @@ def slide_cover():
 
     parts.append(divider(600))
 
-    parts.append(f'<text x="{W//2}" y="654" font-family="{FONT}" font-size="28" fill="rgba(255,255,255,0.50)" text-anchor="middle">5 mejoras que cambian la experiencia.</text>')
+    parts.append(f'<text x="{W//2}" y="654" font-family="{FONT}" font-size="28" fill="rgba(255,255,255,0.50)" text-anchor="middle">6 mejoras que cambian la experiencia.</text>')
     parts.append(f'<text x="{W//2}" y="700" font-family="{FONT}" font-size="28" fill="rgba(255,255,255,0.50)" text-anchor="middle">Desliza para verlas 👉</text>')
 
     parts.append(divider(748))
 
-    features = ['Marcador exacto','Factor goleadores','Alineaciones -1h','Datos transparentes','Cuota justa']
-    pill_w = 290
+    features = ['Marcador exacto','Factor goleadores','Alineaciones -1h','Datos transparentes','Cuota justa','Nuevas ligas']
+    pill_w = 270
+    cols = [60, W - 60 - pill_w]
     for i, feat in enumerate(features):
-        px = 60 if i % 2 == 0 else W - 60 - pill_w
-        if i == 4: px = (W - pill_w) // 2
-        py = 772 + (i // 2) * 62
+        if i < 4:
+            px = cols[i % 2]
+            py = 772 + (i // 2) * 62
+        else:
+            # última fila centrada — 2 pills centradas con gap
+            gap = 20
+            total = pill_w * 2 + gap
+            start = (W - total) // 2
+            px = start + (i - 4) * (pill_w + gap)
+            py = 772 + 2 * 62
         parts.append(f'<rect x="{px}" y="{py}" width="{pill_w}" height="46" rx="23" fill="rgba(201,162,39,0.08)" stroke="rgba(201,162,39,0.22)" stroke-width="1"/>')
-        parts.append(f'<text x="{px+pill_w//2}" y="{py+30}" font-family="{FONT}" font-size="20" font-weight="500" fill="rgba(255,255,255,0.70)" text-anchor="middle">✦ {esc(feat)}</text>')
+        parts.append(f'<text x="{px+pill_w//2}" y="{py+30}" font-family="{FONT}" font-size="19" font-weight="500" fill="rgba(255,255,255,0.70)" text-anchor="middle">✦ {esc(feat)}</text>')
 
     parts.append('</svg>')
     return ''.join(parts)
@@ -139,7 +147,7 @@ def feature_slide(slide_idx, num_label, emoji, title1, title2, hook, body_bullet
 
 # ─── SLIDE 7: CTA FINAL ──────────────────────────────────────────────────────
 def slide_cta():
-    parts = [svg_open(), header_row(6)]
+    parts = [svg_open(), header_row(7)]
 
     cy = 300
     for r, op in [(200,0.04),(150,0.06),(100,0.09)]:
@@ -147,17 +155,17 @@ def slide_cta():
     parts.append(f'<circle cx="{W//2}" cy="{cy}" r="72" fill="rgba(201,162,39,0.10)" stroke="rgba(201,162,39,0.28)" stroke-width="2"/>')
     parts.append(f'<text x="{W//2}" y="{cy+26}" font-family="{FONT}" font-size="60" font-weight="900" fill="{GOLD}" text-anchor="middle">✓</text>')
 
-    parts.append(f'<text x="{W//2}" y="{cy+140}" font-family="{FONT}" font-size="52" font-weight="900" fill="{WHITE}" text-anchor="middle">5 mejoras.</text>')
+    parts.append(f'<text x="{W//2}" y="{cy+140}" font-family="{FONT}" font-size="52" font-weight="900" fill="{WHITE}" text-anchor="middle">6 mejoras.</text>')
     parts.append(f'<text x="{W//2}" y="{cy+206}" font-family="{FONT}" font-size="52" font-weight="900" fill="{GOLD}" text-anchor="middle">Un solo objetivo.</text>')
     parts.append(f'<text x="{W//2}" y="{cy+262}" font-family="{FONT}" font-size="28" fill="rgba(255,255,255,0.42)" text-anchor="middle">Que apuestes con datos, no con el corazón.</text>')
 
     parts.append(divider(cy+302))
 
-    items = ['Marcador exacto','Factor goleadores','Alineaciones -1h','Datos transparentes','Cuota justa']
+    items = ['Marcador exacto','Factor goleadores','Alineaciones -1h','Datos transparentes','Cuota justa','Nuevas ligas']
+    cx_list = [270, 810, 270, 810, 270, 810]
     for i, item in enumerate(items):
-        cx_list = [270, 810, 270, 810, W//2]
-        iy = cy + 366 + (i // 2) * 64
-        parts.append(f'<text x="{cx_list[i]}" y="{iy}" font-family="{FONT}" font-size="26" font-weight="500" fill="rgba(255,255,255,0.62)" text-anchor="middle">✦ {esc(item)}</text>')
+        iy = cy + 350 + (i // 2) * 58
+        parts.append(f'<text x="{cx_list[i]}" y="{iy}" font-family="{FONT}" font-size="24" font-weight="500" fill="rgba(255,255,255,0.62)" text-anchor="middle">✦ {esc(item)}</text>')
 
     bw, bh = 860, 72
     bx = (W-bw)//2
@@ -183,7 +191,7 @@ SLIDES = [
 
     # 01 — Marcador exacto
     ('slide2_marcador', lambda: feature_slide(
-        1, '01 / 05', '🎯', 'Marcador', 'exacto.',
+        1, '01 / 06', '🎯', 'Marcador', 'exacto.',
         'Ahora sabes el resultado más probable, no solo el ganador.',
         [
             'El modelo calcula los 6 marcadores más probables | con su porcentaje y su cuota justa.',
@@ -194,7 +202,7 @@ SLIDES = [
 
     # 02 — Factor goleadores
     ('slide3_goleadores', lambda: feature_slide(
-        2, '02 / 05', '⚽', 'Si el crack', 'no juega, cambia.',
+        2, '02 / 06', '⚽', 'Si el crack', 'no juega, cambia.',
         'El análisis se ajusta según quién está en el once.',
         [
             'Detectamos si el goleador del torneo juega o no | y ajustamos el peligro ofensivo.',
@@ -205,7 +213,7 @@ SLIDES = [
 
     # 03 — Alineaciones -1h
     ('slide4_alineaciones', lambda: feature_slide(
-        3, '03 / 05', '📋', 'El once,', '1 hora antes.',
+        3, '03 / 06', '📋', 'El once,', '1 hora antes.',
         'La alineación confirmada aparece en la app antes del pitazo.',
         [
             'Usamos FotMob, que publica los onces cuando los equipos los anuncian oficialmente.',
@@ -216,7 +224,7 @@ SLIDES = [
 
     # 04 — Sección "Basado en" + stats reales
     ('slide5_basado_en', lambda: feature_slide(
-        4, '04 / 05', '📊', 'Nada es', 'una caja negra.',
+        4, '04 / 06', '📊', 'Nada es', 'una caja negra.',
         'Ves exactamente qué datos respaldan cada predicción.',
         [
             'Mostramos el xG, el ELO y los stats reales del torneo por equipo | córners, tiros, amarillas.',
@@ -227,7 +235,7 @@ SLIDES = [
 
     # 05 — Stats reales en Otras Opciones
     ('slide6_cuota_justa', lambda: feature_slide(
-        5, '05 / 05', '💰','Otras opciones', 'con datos reales.',
+        5, '05 / 06', '💰','Otras opciones', 'con datos reales.',
         'Over/Under y BTTS calculados con stats del torneo.',
         [
             'Córners, goles, tiros: usamos los promedios reales del Mundial | no datos de temporada.',
@@ -236,10 +244,21 @@ SLIDES = [
         ]
     )),
 
-    ('slide7_cta', slide_cta),
+    # 06 — Nuevas ligas
+    ('slide7_ligas', lambda: feature_slide(
+        6, '06 / 06', '🌍', 'Premier League', 'ya disponible.',
+        'El mismo modelo, ahora con los 20 equipos de Inglaterra.',
+        [
+            'La Premier League ya se puede analizar en GuessBet | con el modelo ELO + Poisson entrenado en 5 temporadas.',
+            'Y vienen La Liga, Serie A, Bundesliga, Ligue 1 y el Futbol Chileno | los estamos construyendo.',
+            'El objetivo: que puedas analizar cualquier partido que te importe | no solo el Mundial.',
+        ]
+    )),
+
+    ('slide8_cta', slide_cta),
 ]
 
 if __name__ == '__main__':
     for slug, fn in SLIDES:
         render(fn(), slug)
-    print(f'\nListo. {len(SLIDES)} slides en public/marketing/ig-posts/novedades/')
+    print(f'\nListo. {len(SLIDES)} slides (8) en public/marketing/ig-posts/novedades/')

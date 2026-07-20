@@ -122,9 +122,9 @@ export function getH2H(t1,t2){
   return null;
 }
 
-export function getXG(team,asAtt,neutral,isHome,wcRealOverride){
+export function getXG(team,asAtt,neutral,isHome,wcRealOverride,modelOverride?){
   const wcSource=wcRealOverride||WC_REAL;
-  const m=MODEL[team],wc=wcSource[team];
+  const m=(modelOverride||MODEL)[team],wc=wcSource[team];
   if(!m)return asAtt?1.2:1.1;
   let base=asAtt
     ?(!neutral&&isHome&&m.homeGF!=null?m.homeGF:!neutral&&!isHome&&m.awayGF!=null?m.awayGF:m.avgGF)
@@ -161,15 +161,17 @@ export function exactTotalProb(xgH,xgA,n){
 
 // rotationOverride: { home: number; away: number } — multiplicador sobre xG atacante de cada equipo.
 // Calculado en /api/lineup-changes comparando alineaciones del partido actual vs anterior vs antepenúltimo.
-export function modelProbs(home,away,neutral,wcRealOverride,h2hOverride,rotationOverride?){
-  const mH=MODEL[home]||{avgGF:1.35,avgGA:1.1,elo:1500};
-  const mA=MODEL[away]||{avgGF:1.35,avgGA:1.1,elo:1500};
+export function modelProbs(home,away,neutral,wcRealOverride,h2hOverride,rotationOverride?,modelOverride?,leagueAvgOverride?){
+  const src=modelOverride||MODEL;
+  const lgAvg=leagueAvgOverride||LEAGUE_AVG;
+  const mH=src[home]||{avgGF:1.35,avgGA:1.1,elo:1500};
+  const mA=src[away]||{avgGF:1.35,avgGA:1.1,elo:1500};
   const eloH=(mH.elo||1500)+(neutral?0:60);
   const eloA=mA.elo||1500;
   const eloExpH=1/(1+Math.pow(10,(eloA-eloH)/400));
   const eloExpA=1-eloExpH;
-  let xgH=Math.max(0.15,(getXG(home,true,neutral,true,wcRealOverride)*getXG(away,false,neutral,false,wcRealOverride))/LEAGUE_AVG);
-  let xgA=Math.max(0.15,(getXG(away,true,neutral,false,wcRealOverride)*getXG(home,false,neutral,true,wcRealOverride))/LEAGUE_AVG);
+  let xgH=Math.max(0.15,(getXG(home,true,neutral,true,wcRealOverride,src)*getXG(away,false,neutral,false,wcRealOverride,src))/lgAvg);
+  let xgA=Math.max(0.15,(getXG(away,true,neutral,false,wcRealOverride,src)*getXG(home,false,neutral,true,wcRealOverride,src))/lgAvg);
   // Ajuste por rotación: si el partido anterior de un equipo fue rotación masiva, su xG base está
   // contaminado por ese partido → se aplica un boost. Si hoy rotan, se penaliza.
   if(rotationOverride){

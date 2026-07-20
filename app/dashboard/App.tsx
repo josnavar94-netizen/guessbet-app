@@ -115,8 +115,8 @@ export default function App({ username, email, plan, avatar, emailVerified, isAd
   // Resultados ya jugados, leídos en vivo de la tabla `matches` en vez del fixture estático
   const [results, setResults] = useState<PastResult[] | null>(null);
   useEffect(() => {
-    fetch('/api/results').then(r => r.json()).then(d => setResults(d.results)).catch(() => setResults([]));
-  }, []);
+    fetch(`/api/results?league=${league}`).then(r => r.json()).then(d => setResults(d.results)).catch(() => setResults([]));
+  }, [league]);
 
   // Hora de la última sincronización con football-data.org, para mostrarle al usuario
   // una confirmación real (no inventada) de que el cron sigue actualizando la base.
