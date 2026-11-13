@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { modelProbs, getH2H, MODEL, WC_REAL, FLAG_CODES, overProb, exactTotalProb } from '@/lib/model';
-import { PL_MODEL, PL_REAL, PL_CLUBS, PL_LEAGUE_AVG } from '@/lib/pl-model';
+import { getClubLeagueData, isClubLeague } from '@/lib/club-leagues';
+import { LEAGUES } from '@/lib/leagues';
 import LeagueSelector from './LeagueSelector';
 
 function Flag({ name, size = 16 }: { name: string; size?: number }) {
@@ -16,9 +17,10 @@ function Flag({ name, size = 16 }: { name: string; size?: number }) {
   );
 }
 
-function ClubBadge({ name, size = 16 }: { name: string; size?: number }) {
-  const club = PL_CLUBS[name];
-  if (!club) return <span style={{ fontSize: size * 0.7, color: '#7a8aaa', flexShrink: 0 }}>{name.slice(0,3).toUpperCase()}</span>;
+function ClubBadge({ name, league, size = 16 }: { name: string; league: string; size?: number }) {
+  const data = getClubLeagueData(league);
+  const club = data?.clubs[name];
+  if (!club?.crest) return <span style={{ fontSize: size * 0.7, color: '#7a8aaa', flexShrink: 0 }}>{name.slice(0,3).toUpperCase()}</span>;
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: size, height: size, flexShrink: 0, verticalAlign: 'middle' }}>
       <img src={club.crest} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
@@ -27,16 +29,17 @@ function ClubBadge({ name, size = 16 }: { name: string; size?: number }) {
 }
 
 function TeamIcon({ name, league, size = 16 }: { name: string; league: string; size?: number }) {
-  if (league === 'pl') return <ClubBadge name={name} size={size} />;
+  if (isClubLeague(league)) return <ClubBadge name={name} league={league} size={size} />;
   return <Flag name={name} size={size} />;
 }
 
 function hasIcon(name: string, league: string) {
-  return league === 'pl' ? !!PL_CLUBS[name] : !!FLAG_CODES[name];
+  if (isClubLeague(league)) return !!getClubLeagueData(league)?.clubs[name];
+  return !!FLAG_CODES[name];
 }
 
 function teamDisplayName(name: string, league: string) {
-  if (league === 'pl') return PL_CLUBS[name]?.short || name;
+  if (isClubLeague(league)) return getClubLeagueData(league)?.clubs[name]?.short || name;
   return name;
 }
 
@@ -192,7 +195,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
   });
   const [home, setHome] = useState('');
   const [away, setAway] = useState('');
-  const [neutral, setNeutral] = useState(league !== 'pl'); // WC: sede neutral; PL: local/visitante
+  const [neutral, setNeutral] = useState(!isClubLeague(league)); // ligas de clubes: local/visitante; selecciones: neutral
   const [odds, setOdds] = useState<Record<string, string>>({});
   const [result, setResult] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'main' | 'sec'>('main');
@@ -357,10 +360,10 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
       }
       setAnalysisLocked(true);
     }
-    const isPL = league === 'pl';
-    const modelSrc = isPL ? PL_MODEL : MODEL;
-    const leagueAvgSrc = isPL ? PL_LEAGUE_AVG : undefined;
-    const wcReal = wcRealLive || (isPL ? PL_REAL : WC_REAL);
+    const clubData = getClubLeagueData(league);
+    const modelSrc = clubData ? clubData.model : MODEL;
+    const leagueAvgSrc = clubData ? clubData.leagueAvg : undefined;
+    const wcReal = wcRealLive || (clubData ? clubData.real : WC_REAL);
     const homeSF = (lineupChanges?.home as any)?.starFactors ?? { attackFactor: 1, defenseFactor: 1 };
     const awaySF = (lineupChanges?.away as any)?.starFactors ?? { attackFactor: 1, defenseFactor: 1 };
     const homeRot = (lineupChanges?.home as any)?.rotationFactor ?? 1;
@@ -374,7 +377,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
     const pFull = modelProbs(home, away, neutral, wcReal, realH2H || undefined, rotationOverride, modelSrc, leagueAvgSrc);
     const mH = MODEL[home], mA = MODEL[away];
     const wcH = wcReal[home] ?? null, wcA = wcReal[away] ?? null;
-    const leagueName = isPL ? 'Premier League' : 'Mundial 2026';
+    const leagueName = LEAGUES.find(l => l.id === league)?.name ?? league;
     const hd = realH2H ? { data: realH2H, t1First: true } : getH2H(home, away);
     const min = parseInt(liveMin) || 0;
     const gh = parseInt(liveGh) || 0;
@@ -448,7 +451,7 @@ function CalcTabUnlocked({ onRegister, isPremium, onUpgrade, league, setLeague }
     if (!selected.length) return;
     const pickText = selected.length > 1 ? `Combinada (${selected.length}): ${selected.map(m => m.label).join(' + ')}` : selected[0].label;
     const ev = parseFloat(((combProb * combOdd - 1) * 100).toFixed(1));
-    const compName = league === 'pl' ? 'Premier League' : 'Mundial 2026';
+    const compName = LEAGUES.find(l => l.id === league)?.name ?? league;
     await onRegister({ match_name: `${home} vs ${away}`, pick_label: pickText, odds: parseFloat(combOdd.toFixed(2)), stake: stakeN, ev, bookie, competition: compName, match_date: null });
     setSelected([]);
     setAnalysisLocked(false); // ya registró — desbloquear (el cupo ya está consumido para hoy)

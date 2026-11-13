@@ -14,8 +14,12 @@ export const fetchCache = 'force-no-store';
 // código football-data.org -> config de validación cruzada con GitHub (solo selecciones nacionales)
 // Los clubes no tienen validación cruzada (el dataset de GitHub solo cubre internacionales).
 const COMPETITIONS: Record<string, { ghTournament: string | null; ghFromDate: string | null }> = {
-  WC: { ghTournament: 'FIFA World Cup', ghFromDate: '2026-01-01' },
-  PL: { ghTournament: null, ghFromDate: null }, // sin validación cruzada para clubes
+  WC:  { ghTournament: 'FIFA World Cup', ghFromDate: '2026-01-01' },
+  UNL: { ghTournament: null, ghFromDate: null }, // UEFA Nations League — selecciones, sin CSV de GitHub
+  PL:  { ghTournament: null, ghFromDate: null },
+  PD:  { ghTournament: null, ghFromDate: null }, // La Liga
+  BL1: { ghTournament: null, ghFromDate: null }, // Bundesliga
+  SA:  { ghTournament: null, ghFromDate: null }, // Serie A
 };
 
 export async function GET(req: NextRequest) {
